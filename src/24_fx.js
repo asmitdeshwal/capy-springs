@@ -151,6 +151,13 @@
       } else Cam.bump(2);
     });
     Bus.on('guest:paid', e => { const S = cur(); FX.pop(S, '+' + e.value, e.g.x, e.g.y - 40, 20, PAL.coin, 'plus'); });
+    // the Ridge: a hot body hits cold water (steam burst); inside the window it is the HOT-COLD moment
+    Bus.on('plunge', e => {
+      const S = cur(), w = e.bath.def.water;
+      FX.droplets(S, e.g.x, e.g.y - 4, 10); for (let i = 0; i < 4; i++) FX.steam(S, e.g.x + (i - 1.5) * 10, e.g.y - 8, 12, 0.6);
+      if (e.hot) { FX.pop(S, 'HOT-COLD x2!', w.x, w.y - w.h / 2 - 62, 34, PAL.ripple, 'label'); FX.ring(S, w.x, w.y, 90); for (let i = 0; i < 6; i++) FX.steam(S, w.x + (i - 2.5) * 22, w.y - 6, 16, 0.55); Cam.punch(C.PLUNGE_PUNCH, C.PUNCH_T); Cam.bump(6); FX.flash(S, 0.12); }
+    });
+    Bus.on('ridge:open', () => { const S = cur(), b = DATA.MAP.BRIDGE; FX.confetti(S, b.x, b.y0 + 40, C.CONFETTI_BIG); FX.confetti(S, b.x, b.y1, C.CONFETTI_BIG); FX.flash(S, 0.3); Cam.shake(6, 0.4); });
     Bus.on('guest:mochi', e => { const S = cur(); FX.pop(S, '+' + e.value, e.g.x, e.g.y - 40, 20, PAL.coin, 'plus'); });
     Bus.on('guest:lost', e => { const S = cur(); FX.droplets(S, e.g.x, e.g.y - 30, 3); });
     Bus.on('guest:heart', e => { const S = cur(); FX.heart(S, e.g.x + 8, e.g.y - 34); FX.steam(S, e.g.x - 6, e.g.y - 10, 8, 0.4); });

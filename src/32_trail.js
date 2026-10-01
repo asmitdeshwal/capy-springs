@@ -56,6 +56,9 @@
   }
   // the only removers: takeFirst (drop-off path) and removeNode (impatient guest)
   Trail.takeFirst = function (S, kind) { for (let i = 0; i < S.trail.length; i++) if (S.trail[i].kind === kind) return unlink(S, i); return null; };
+  // first guest the predicate accepts (a station may refuse some wants, e.g. the Cold Plunge takes only sauna leavers)
+  Trail.takeFirstGuest = function (S, pred) { for (let i = 0; i < S.trail.length; i++) { const n = S.trail[i]; if (n.kind === 'guest' && (!pred || pred(n.ref))) return unlink(S, i); } return null; };
+  Trail.countGuests = function (S, pred) { let n = 0; for (let i = 0; i < S.trail.length; i++) { const t = S.trail[i]; if (t.kind === 'guest' && (!pred || pred(t.ref))) n++; } return n; };
   Trail.removeNode = function (S, node) { const i = S.trail.indexOf(node); if (i >= 0) unlink(S, i); };
 
   Trail.update = function (S, dt) {

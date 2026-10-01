@@ -109,6 +109,10 @@
       case 'bowl': S.ellipse(ctx, 0, -2, 8, 5, PAL.cream); S.fillRRect(ctx, -11, 0, 22, 9, 4, PAL.cedarDark); S.fillRRect(ctx, -8, 7, 16, 3, 1, PAL.cedarDark); S.ellipse(ctx, 0, 0, 10, 2.5, PAL.cedar); break;      // a bowl with a mound of mochi
       case 'question': ctx.strokeStyle = PAL.stoneDark; ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(0, -4, 6, Math.PI, Math.PI * 2.4); ctx.lineTo(0, 4); ctx.stroke(); S.circle(ctx, 0, 10, 2.2, PAL.stoneDark); ctx.lineCap = 'butt'; break;
       case 'leaf': ctx.save(); ctx.rotate(-0.6); S.ellipse(ctx, 0, 0, 10, 5, PAL.red); ctx.restore(); ctx.strokeStyle = PAL.coinRim; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-7, 5); ctx.lineTo(7, -5); ctx.stroke(); break;
+      case 'plunge':   // an icy pool with a wave and two ice cubes: "I want the Cold Plunge"
+        S.fillRRect(ctx, -11, -4, 22, 14, 5, '#BFE3EC'); S.strokeRRect(ctx, -11, -4, 22, 14, 5, PAL.cream, 2);
+        ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-8, 2); ctx.quadraticCurveTo(-4, -2, 0, 2); ctx.quadraticCurveTo(4, 6, 8, 2); ctx.stroke();
+        S.fillRRect(ctx, -6, -11, 6, 6, 1.5, '#FFFFFF'); S.fillRRect(ctx, 2, -12, 6, 6, 1.5, '#FFFFFF'); break;
       default: S.circle(ctx, 0, 0, 8, PAL.stoneDark);
     }
     ctx.restore();

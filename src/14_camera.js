@@ -4,15 +4,16 @@
   const C = G.C, U = G.U, MAP = G.DATA.MAP;
   const Camera = G.Camera = { x: 0, y: 1440, look: 0, shakeX: 0, shakeY: 0, shakeMag: 0, shakeT: 0, shakeDur: 0, shakeOn: true, z: 1, punchMag: 0, punchT: 0, punchDur: 0 };
 
-  function clampY(y) { const H = G.Canvas.H; return U.clamp(y, MAP.CAM_MIN_Y, Math.max(MAP.CAM_MIN_Y, MAP.H - H)); }
+  Camera.minY = S => (G.Ridge ? G.Ridge.minY(S) : MAP.CAM_MIN_Y);                 // the clamp moves up when the Ridge opens
+  function clampY(S, y) { const H = G.Canvas.H, lo = Camera.minY(S); return U.clamp(y, lo, Math.max(lo, MAP.H - H)); }
   function target(S) { return S.kit.y - C.CAM_KIT_FRAC * G.Canvas.H + Camera.look; }
 
-  Camera.init = function (S) { Camera.look = 0; Camera.y = clampY(target(S)); Camera.shakeX = Camera.shakeY = 0; Camera.shakeMag = 0; Camera.shakeT = 0; Camera.z = 1; Camera.punchT = 0; Camera.punchMag = 0; };
+  Camera.init = function (S) { Camera.look = 0; Camera.y = clampY(S, target(S)); Camera.shakeX = Camera.shakeY = 0; Camera.shakeMag = 0; Camera.shakeT = 0; Camera.z = 1; Camera.punchT = 0; Camera.punchMag = 0; };
   Camera.update = function (S, dt) {
     const lookTarget = S.kit.moving ? U.sign(S.kit.vy) * C.CAM_LOOK : 0;
     Camera.look += (lookTarget - Camera.look) * (1 - Math.exp(-4 * dt));
     Camera.y += (target(S) - Camera.y) * (1 - Math.exp(-C.CAM_FOLLOW * dt));
-    Camera.y = clampY(Camera.y);
+    Camera.y = clampY(S, Camera.y);
     Camera.shakeOn = !S.settings || S.settings.shakeFlash !== false;
     if (Camera.shakeT > 0) {
       Camera.shakeT -= dt;

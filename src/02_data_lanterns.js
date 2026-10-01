@@ -12,7 +12,10 @@
     { id: 'stall',  label: 'Snack Stall',  x: 430, y: 1585, costs: [120],                             requires: ['grove'],                      effect: 'build:stall' },
     { id: 'kero',   label: 'Hire Kero',    x: 350, y: 1450, costs: [150],                             requires: ['stall'],                      effect: 'hire:kero' },
     { id: 'bamboo', label: 'Bamboo Tub',   x: 235, y: 1530, costs: [180],                             requires: ['car'],                        effect: 'build:bamboo' },
-    { id: 'bridge', label: 'Ridge Bridge', x: 270, y: 1180, costs: [1500, 2000, 2500, 3000, 4000],    requires: ['bamboo', 'trail:2', 'car:2'], effect: 'famous:1.25,1.30,1.35,1.40,1.45' }
+    { id: 'bridge', label: 'Ridge Bridge', x: 270, y: 1180, costs: [1500, 2000, 2500, 3000, 4000],    requires: ['bamboo', 'trail:2', 'car:2'], effect: 'famous:1.25,1.30,1.35,1.40,1.45' },   // level 1 also opens the Ridge
+    // the Ridge (GDD 19)
+    { id: 'sauna',  label: 'Sauna Hut',    x: 480, y: 905,  costs: [1500],                            requires: ['bridge'],                     effect: 'build:sauna' },
+    { id: 'plunge', label: 'Cold Plunge',  x: 120, y: 905,  costs: [1200],                            requires: ['sauna'],                      effect: 'build:plunge' }
     // the Season Pass to the (hidden) Mochi Terrace, kept for reference: { id: 'travel', label: 'Season Pass', x: 420, y: 1200, costs: [5000], requires: ['bridge'], effect: 'travel:2' }
   ];
 })(window.G);

@@ -22,7 +22,7 @@
     let n = lv.capys + (lv.spread ? U.randInt(-lv.spread, lv.spread) : 0), kind = 'capy', golden = false;
     if (G.Events.isGolden(index)) { golden = true; n = n * C.GOLDEN_GUESTS; }
     else if (S.car.level >= 1 && !S.night.active && index % C.DUCK_EVERY === 0) { kind = 'duck'; n = lv.ducks; }
-    n = Math.max(0, Math.min(n, MAP.PLATFORM.cap - G.Guests.countWaiting(S)));
+    n = Math.max(0, Math.min(n, MAP.PLATFORM.cap - G.Guests.countWaiting(S, 'platform')));
     // the VIP (a season's DATA.VIP) rides the golden car that docks during the night event, once its station is built; one extra seat, one extra guest
     const vip = DATA.VIP; PLAN.vip = !!(vip && golden && n > 0 && S.night.active && S.built[vip.requires]);
     PLAN.kind = kind; PLAN.n = n + (PLAN.vip ? 1 : 0); PLAN.golden = golden;

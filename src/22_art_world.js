@@ -11,6 +11,7 @@
   // ---------- static layer ----------
   W.terrain = function (ctx, y0, y1) {
     const S_ = A();
+    if (MAP.RIDGE && y0 < MAP.RIDGE.y1) { W.ridgeTerrain(ctx, y0, MAP.RIDGE.y1); y0 = MAP.RIDGE.y1; }   // the snowy ridge above, the green deck below
     ctx.fillStyle = PAL.pine; ctx.fillRect(0, y0, MAP.W, y1 - y0);
     for (let i = 0; i < 26; i++) {                                  // darker patches
       const x = U.hash(i, 1) * 540, y = y0 + U.hash(i, 2) * (y1 - y0), rx = 40 + U.hash(i, 3) * 70, ry = 14 + U.hash(i, 4) * 22;
@@ -29,6 +30,44 @@
       S_.ellipse(ctx, x + 6, y + 3, 7, 3, PAL.pineDark);
       for (let k = 0; k < 3; k++) { const fx = x + (k - 1) * 9, fy = y - (k & 1) * 5; S_.circle(ctx, fx, fy, 4, col); S_.circle(ctx, fx, fy, 1.5, PAL.amberDeep); }
     }
+  };
+  // ---------- the Ridge: snow-dusted stone, drifts, the chasm the bridge crosses, snow-capped pines ----------
+  const SNOW = '#E9EEF2', SNOW_D = '#C6D1D8', RIDGE_STONE = '#A9B6BF', CHASM = '#2F3D47';
+  W.ridgeTerrain = function (ctx, y0, y1) {
+    const S_ = A(), r = MAP.RIDGE;
+    ctx.fillStyle = RIDGE_STONE; ctx.fillRect(0, y0, MAP.W, y1 - y0);
+    for (let i = 0; i < 22; i++) { const x = U.hash(i, 61) * 540, y = y0 + U.hash(i, 62) * (y1 - y0), rx = 40 + U.hash(i, 63) * 70, ry = 12 + U.hash(i, 64) * 18; S_.ellipse(ctx, x, y, rx, ry, (i & 1) ? SNOW_D : SNOW); }   // drifts
+    for (let i = 0; i < 16; i++) { const x = U.hash(i, 65) * 540, y = y0 + U.hash(i, 66) * (y1 - y0); S_.ellipse(ctx, x, y, 10 + U.hash(i, 67) * 14, 5, PAL.rgba(PAL.stoneDark, 0.35)); }   // bare stone
+    // the chasm either side of the bridge: dark drop with a mist floor and a stone lip
+    const ch = r.chasm;
+    for (let i = 0; i < ch.length; i++) {
+      const c = ch[i]; ctx.fillStyle = CHASM; ctx.fillRect(c[0], c[1], c[2] - c[0], c[3] - c[1]);
+      const g = ctx.createLinearGradient(0, c[1], 0, c[3]); g.addColorStop(0, PAL.rgba(PAL.mist, 0)); g.addColorStop(1, PAL.rgba(PAL.mist, 0.8)); ctx.fillStyle = g; ctx.fillRect(c[0], c[1], c[2] - c[0], c[3] - c[1]);
+      S_.fillRRect(ctx, c[0], c[1] - 6, c[2] - c[0], 10, 4, SNOW_D);
+    }
+  };
+  W.snowPine = function (ctx, x, y) {
+    const S_ = A();
+    W.pine(ctx, x, y);
+    S_.tri(ctx, x - 15, y - 30, x + 15, y - 30, x, y - 62, SNOW); S_.tri(ctx, x - 8, y - 42, x + 8, y - 42, x, y - 62, PAL.rgba(SNOW_D, 0.6));
+    S_.tri(ctx, x - 20, y - 8, x - 4, y - 8, x - 10, y - 30, SNOW);
+  };
+  W.ridgeDecor = function (ctx) {
+    const S_ = A(), r = MAP.RIDGE;
+    for (let i = 0; i < r.rocks.length; i++) { const k = r.rocks[i]; S_.ellipse(ctx, k[0] + 6, k[1] + 2, 16, 9, PAL.stoneDark); S_.ellipse(ctx, k[0], k[1] - 4, 18, 11, PAL.stone); S_.ellipse(ctx, k[0] - 4, k[1] - 10, 12, 5, SNOW); }
+    for (let i = 0; i < r.pines.length; i++) W.snowPine(ctx, r.pines[i][0], r.pines[i][1]);
+  };
+  // the sauna hut: a log cabin on a cedar porch; the interior (the 'water' rect) is where guests sit, so the roof stays above it
+  W.saunaBody = function (ctx, def) {
+    const S_ = A(), d = def.deck, w = def.water, x0 = d.x - d.w / 2, y0 = d.y - d.h / 2;
+    S_.shadow(ctx, d.x, y0 + d.h + 8, d.w / 2 + 4, 12, 0.16);
+    S_.plate(ctx, x0, y0, d.w, d.h, 14, PAL.cedar, PAL.cedarDark, 10);                                    // porch
+    const wx0 = w.x - w.w / 2 - 14, wy0 = w.y - w.h / 2 - 8, ww = w.w + 28, wh = w.h + 16;
+    S_.fillRRect(ctx, wx0, wy0, ww, wh, 10, PAL.cedarDark);                                                 // log walls
+    ctx.strokeStyle = PAL.rgba(PAL.ink, 0.25); ctx.lineWidth = 1; ctx.beginPath(); for (let y = wy0 + 10; y < wy0 + wh; y += 10) { ctx.moveTo(wx0 + 4, y); ctx.lineTo(wx0 + ww - 4, y); } ctx.stroke();
+    S_.fillRRect(ctx, wx0 - 10, wy0 - 26, ww + 20, 30, 8, '#4A3A30'); S_.fillRRect(ctx, wx0 - 10, wy0 - 26, ww + 20, 8, 4, SNOW);   // roof with snow
+    S_.fillRRect(ctx, wx0 + ww - 34, wy0 - 46, 14, 24, 3, PAL.boiler);                                     // chimney
+    S_.fillRRect(ctx, wx0 + ww / 2 - 12, wy0 + wh - 4, 24, 12, 4, PAL.cedarDark);                            // step down to the porch
   };
   // drifting petals over the whole scene (presentation; hash-driven so it never touches the seeded RNG)
   W.ambient = function (ctx, camY, H, t, low) {
@@ -52,9 +91,9 @@
     ctx.fillStyle = g; ctx.fillRect(0, v.y0, MAP.W, v.y1 - v.y0);
   };
   W.lane = function (ctx) {
-    const S_ = A(), L = MAP.LANE;
-    ctx.globalAlpha = 0.6; ctx.fillStyle = PAL.stone; ctx.fillRect(L.x0, L.y0, L.x1 - L.x0, L.y1 - L.y0); ctx.globalAlpha = 1;
-    for (let y = L.y0 + 20; y < L.y1; y += 40) S_.circle(ctx, L.cx + (U.hash(y, 9) - 0.5) * 16, y, 9, PAL.mix(PAL.stone, PAL.cream, 0.35));
+    const S_ = A(), L = MAP.LANE, y0 = MAP.RIDGE ? MAP.RIDGE.laneY0 : L.y0;      // the stepping-stone path runs on up the Ridge
+    ctx.globalAlpha = 0.6; ctx.fillStyle = PAL.stone; ctx.fillRect(L.x0, y0, L.x1 - L.x0, L.y1 - y0); ctx.globalAlpha = 1;
+    for (let y = y0 + 20; y < L.y1; y += 40) S_.circle(ctx, L.cx + (U.hash(y, 9) - 0.5) * 16, y, 9, PAL.mix(PAL.stone, PAL.cream, 0.35));
   };
   W.rocks = function (ctx) { const S_ = A(); for (let i = 0; i < MAP.ROCKS.length; i++) { const r = MAP.ROCKS[i]; S_.ellipse(ctx, r[0] + 6, r[1] + 2, 16, 9, PAL.stoneDark); S_.ellipse(ctx, r[0], r[1] - 4, 18, 11, PAL.stone); S_.ellipse(ctx, r[0] - 6, r[1] - 9, 8, 4, PAL.mix(PAL.stone, PAL.cream, 0.4)); } };
   W.pine = function (ctx, x, y) {
@@ -89,10 +128,11 @@
     A().line(ctx, b.x - b.w / 2 - 4, b.y0, b.x - b.w / 2 - 4, b.y1, PAL.cedarDark, 3); A().line(ctx, b.x + b.w / 2 + 4, b.y0, b.x + b.w / 2 + 4, b.y1, PAL.cedarDark, 3);
   };
   // mist over the Ridge (dynamic: only when the camera sees it); gradient built once
-  let mistG = null, mistCtx = null;
+  let mistG = null, mistCtx = null, mistKey = 0;
   W.mist = function (ctx, camY, H) {
-    const m = MAP.MIST; if (camY > m.y1 + 10) return;
-    if (!mistG || mistCtx !== ctx) { mistCtx = ctx; mistG = ctx.createLinearGradient(0, m.y1, 0, m.y0); mistG.addColorStop(0, PAL.rgba(PAL.mist, 0)); mistG.addColorStop(1, PAL.rgba(PAL.mist, 0.95)); }
+    const m = (MAP.RIDGE && G.S && G.S.built.ridge) ? MAP.RIDGE.mist : MAP.MIST;      // the mist lifts to the top of the Ridge once it opens
+    if (camY > m.y1 + 10) return;
+    if (!mistG || mistCtx !== ctx || mistKey !== m.y0) { mistCtx = ctx; mistKey = m.y0; mistG = ctx.createLinearGradient(0, m.y1, 0, m.y0); mistG.addColorStop(0, PAL.rgba(PAL.mist, 0)); mistG.addColorStop(1, PAL.rgba(PAL.mist, 0.95)); }
     ctx.fillStyle = mistG; ctx.fillRect(0, m.y0 - 200, MAP.W, m.y1 - m.y0 + 200);
   };
   W.sign = function (ctx, x, y) { const S_ = A(); S_.fillRRect(ctx, x - 3, y - 30, 6, 30, 2, PAL.cedarDark); S_.plate(ctx, x - 40, y - 52, 80, 26, 5, PAL.cedar, PAL.cedarDark, 4); S_.text(ctx, 'RIDGE', x, y - 39, 14, PAL.cream); };
@@ -100,7 +140,14 @@
   // ---------- decks and water ----------
   W.deckPlate = function (ctx, def) {
     const S_ = A(), d = def.deck, x0 = d.x - d.w / 2, y0 = d.y - d.h / 2;
+    if (def.look === 'sauna') return W.saunaBody(ctx, def);
     S_.shadow(ctx, d.x, y0 + d.h + 8, d.w / 2 + 4, 12, 0.16);                                   // the deck sits on the ground
+    if (def.look === 'plunge') {                                                                 // a stone rim pool in the snow
+      S_.plate(ctx, x0, y0, d.w, d.h, 14, PAL.stone, PAL.stoneDark, 10);
+      for (let i = 0; i < 9; i++) S_.ellipse(ctx, x0 + 16 + i * (d.w - 32) / 8, y0 + 10, 9, 5, (i & 1) ? SNOW : PAL.mix(PAL.stone, PAL.cream, 0.3));
+      for (let i = 0; i < 9; i++) S_.ellipse(ctx, x0 + 16 + i * (d.w - 32) / 8, y0 + d.h - 10, 9, 5, (i & 1) ? SNOW : PAL.mix(PAL.stone, PAL.cream, 0.3));
+      return;
+    }
     S_.plate(ctx, x0, y0, d.w, d.h, 14, PAL.cedar, PAL.cedarDark, 10);
     ctx.strokeStyle = PAL.plank; ctx.lineWidth = 1; ctx.beginPath();
     for (let y = y0 + 18; y < y0 + d.h - 4; y += 18) { ctx.moveTo(x0 + 8, y); ctx.lineTo(x0 + d.w - 8, y); }
@@ -114,6 +161,21 @@
   // state: { cold, yuzu, lowFx }
   W.water = function (ctx, def, state, t) {
     const S_ = A(), w = def.water, x0 = w.x - w.w / 2, y0 = w.y - w.h / 2;
+    if (def.look === 'sauna') {                                                                   // the hut's interior: bench, stove glow, steam
+      S_.fillRRect(ctx, x0, y0, w.w, w.h, 8, state.cold ? '#4A4A50' : '#3A2A20');
+      S_.fillRRect(ctx, x0 + 10, y0 + w.h * 0.55, w.w - 20, 8, 3, PAL.cedar);                       // the bench
+      const glow = state.cold ? 0 : 0.6 + 0.3 * Math.sin(t * 6);
+      S_.fillRRect(ctx, x0 + w.w - 34, y0 + 10, 24, 30, 5, PAL.boiler); if (glow > 0) S_.fillRRect(ctx, x0 + w.w - 30, y0 + 18, 16, 16, 3, PAL.rgba(PAL.amberDeep, glow));   // the stove
+      if (state.cold) S_.strokeRRect(ctx, x0 + 1, y0 + 1, w.w - 2, w.h - 2, 7, PAL.cream, 2, true);
+      return;
+    }
+    if (def.look === 'plunge') {                                                                  // ice-blue water, white rim, bobbing ice
+      S_.strokeRRect(ctx, x0, y0, w.w, w.h, 18, PAL.stone, 6);
+      S_.fillRRect(ctx, x0, y0, w.w, w.h, 18, state.yuzu ? PAL.waterYuzu : '#BFE3EC');
+      S_.strokeRRect(ctx, x0 + 2, y0 + 2, w.w - 4, w.h - 4, 16, '#FFFFFF', 3);
+      if (!state.lowFx) for (let i = 0; i < 3; i++) { const ix = w.x + (i - 1) * w.w * 0.28 + Math.sin(t * 0.9 + i * 2) * 4, iy = w.y + 14 + Math.cos(t * 1.2 + i) * 3; S_.fillRRect(ctx, ix - 7, iy - 6, 14, 12, 3, PAL.rgba('#FFFFFF', 0.85)); }
+      return;
+    }
     const fill = state.cold ? PAL.waterCold : state.yuzu ? PAL.waterYuzu : PAL.waterHot;
     S_.strokeRRect(ctx, x0, y0, w.w, w.h, 18, PAL.stone, 6);
     S_.fillRRect(ctx, x0, y0, w.w, w.h, 18, fill);

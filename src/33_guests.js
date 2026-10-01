@@ -37,19 +37,34 @@
 
   Guests.spawn = function (S, kind, carId, golden, x0, y0) {
     const g = G.State.newGuest(S, kind, carId); if (!g) return null;
-    g.golden = !!golden; g.tutorial = carId === 1; g.x = x0; g.y = y0; g.state = 'arrive'; g.walking = false;
+    g.golden = !!golden; g.tutorial = carId === 1; g.x = x0; g.y = y0; g.state = 'arrive'; g.walking = false; g.area = 'platform'; g.millRect = MAP.PLATFORM.mill;
     const m = MAP.PLATFORM.mill, h = g.hopObj;
     h.x0 = x0; h.y0 = y0; h.x1 = U.rand(m.x0, m.x1); h.y1 = U.rand(m.y0, m.y1); h.t = 0; h.dur = C.HOP_OUT_T; h.h = 18; g.hop = h;
     faceTo(g, h.x1);
     return g;
   };
   Guests.waiting = function (S) { WAITING.length = 0; for (let i = 0; i < S.guests.length; i++) { const g = S.guests[i]; if (g.state === 'wait' && g.want === 'bath') WAITING.push(g); } return WAITING; };
-  Guests.nearestWaiting = function (S, x, y, maxDist) {
+  // preferPlunge: a sauna guest whose hot-cold window is still open comes first (the arrow's LEAD)
+  Guests.nearestWaiting = function (S, x, y, maxDist, preferPlunge) {
     let best = null, bd = maxDist * maxDist;
+    if (preferPlunge) {
+      for (let i = 0; i < S.guests.length; i++) { const g = S.guests[i]; if (g.state !== 'wait' || g.want !== 'plunge' || g.plungeT > C.PLUNGE_WINDOW) continue; const d = U.dist2(g.x, g.y, x, y); if (d <= bd) { bd = d; best = g; } }
+      if (best) return best;
+    }
     for (let i = 0; i < S.guests.length; i++) { const g = S.guests[i]; if (g.state !== 'wait') continue; const d = U.dist2(g.x, g.y, x, y); if (d <= bd) { bd = d; best = g; } }
     return best;
   };
-  Guests.countWaiting = function (S) { let n = 0; for (let i = 0; i < S.guests.length; i++) { const s = S.guests[i].state; if (s === 'wait' || s === 'arrive') n++; } return n; };
+  // area: 'platform' (the cable car's cap) | 'ridge' | undefined = everyone waiting anywhere
+  Guests.countWaiting = function (S, area) { let n = 0; for (let i = 0; i < S.guests.length; i++) { const g = S.guests[i], s = g.state; if ((s === 'wait' || s === 'arrive') && (!area || g.area === area)) n++; } return n; };
+  // out of the sauna: this guest now wants the Cold Plunge, waits beside the hut and the hot-cold window starts ticking (GDD 19)
+  Guests.wantPlunge = function (S, g) {
+    const m = MAP.RIDGE.mill;
+    g.want = 'plunge'; g.plungeT = 0; g.hotCold = false; g.yuzuHat = false; g.area = 'ridge'; g.millRect = m;
+    g.state = 'wait'; g.walking = false; g.moving = false; g.hop = null; g.batch = null; g.bathId = null; g.slot = -1; g.sleepy = 0;
+    g.patienceMax = C.PLUNGE_PATIENCE; g.patience = g.patienceMax;
+    g.millT = U.rand(C.MILL_MIN, C.MILL_MAX); g.mx = U.rand(m.x0, m.x1); g.my = U.rand(m.y0, m.y1); faceTo(g, g.mx);
+    evG.g = g; G.Bus.emit('guest:plungewant', evG);
+  };
   Guests.seat = function (S, g, bathId, slot, hop) { g.state = 'soak'; g.bathId = bathId; g.slot = slot; g.hop = hop; g.walking = false; g.moving = false; g.heartT = 0; g.sleepy = 0; g.shiver = false; };
   Guests.finishSoak = function (S, g, bath) {
     g.state = 'pay'; g.bathId = bath.id; g.slot = -1; g.walking = false; g.shiver = false;
@@ -60,7 +75,7 @@
     if (g.node) G.Trail.removeNode(S, g.node);
     g.want = null; S.stats.lost++;
     evG.g = g; G.Bus.emit('guest:lost', evG);
-    Guests.startWalk(S, g, MAP.PLATFORM.exit.x, MAP.PLATFORM.exit.y, 'leave');
+    const ex = G.Ridge.exitFor(S, g); Guests.startWalk(S, g, ex.x, ex.y, 'leave');
   };
   Guests.remove = function (S, g) { evG.g = g; G.Bus.emit('guest:gone', evG); G.State.freeGuest(S, g); };
 
@@ -93,12 +108,14 @@
         }
         case 'wait': {
           g.millT -= dt;
-          if (g.millT <= 0) { const m = MAP.PLATFORM.mill; g.millT = U.rand(C.MILL_MIN, C.MILL_MAX); g.mx = U.rand(m.x0, m.x1); g.my = U.rand(m.y0, m.y1); faceTo(g, g.mx); }
+          if (g.millT <= 0) { const m = g.millRect || MAP.PLATFORM.mill; g.millT = U.rand(C.MILL_MIN, C.MILL_MAX); g.mx = U.rand(m.x0, m.x1); g.my = U.rand(m.y0, m.y1); faceTo(g, g.mx); }
           if (Math.abs(g.mx - g.x) > 1 || Math.abs(g.my - g.y) > 1) { g.moving = true; g.bobPhase += dt * g.walk / 30; U.moveToward(g, g.mx, g.my, g.walk * 0.6, dt); } else g.moving = false;
+          if (g.want === 'plunge') g.plungeT += dt;
           if (g.patienceMax !== Infinity) { g.patience -= dt; if (g.patience <= 0) { Guests.leaveImpatient(S, g); } }
           break;
         }
         case 'trail': {
+          if (g.want === 'plunge') g.plungeT += dt;
           if (g.patienceMax !== Infinity) { g.patience -= dt * (S.heat.cold && stokeRule ? C.COLD_PATIENCE_MULT : 1); if (g.patience <= 0) Guests.leaveImpatient(S, g); }
           break;
         }
@@ -112,10 +129,11 @@
               g.paid = value; G.Coins.burst(S, value, g.x, g.y, bath.id);
               evPaid.g = g; evPaid.value = value; G.Bus.emit('guest:paid', evPaid);
               S.stats.served++; if (g.kind === 'duck') S.stats.ducks++; if (DATA.GUESTS[g.kind].vip) S.stats.vip++;
+              if (bath.def.sauna && S.built.plunge) { Guests.wantPlunge(S, g); break; }       // the Ridge chain: sauna -> plunge
               let spot = -1;
-              if (S.built.stall && g.kind === 'capy' && U.rand() < C.STALL_WANT) spot = G.Stall.reserve(S, g);
+              if (S.built.stall && g.kind === 'capy' && g.area !== 'ridge' && U.rand() < C.STALL_WANT) spot = G.Stall.reserve(S, g);
               if (spot >= 0) { g.want = 'mochi'; g.queueT = 0; const q = DATA.STATIONS.stall.queue[spot]; Guests.startWalk(S, g, q[0], q[1], 'stall'); }
-              else { g.want = null; Guests.startWalk(S, g, MAP.PLATFORM.exit.x, MAP.PLATFORM.exit.y, 'leave'); }
+              else { g.want = null; const ex = G.Ridge.exitFor(S, g); Guests.startWalk(S, g, ex.x, ex.y, 'leave'); }
             }
           }
           break;
@@ -123,7 +141,7 @@
         case 'stall': {
           if (advanceWalk(g, dt) && g.queueSpot >= 0) {
             g.queueT += dt;
-            if (g.queueT >= C.STALL_PATIENCE) { G.Stall.release(S, g); g.want = null; evG.g = g; G.Bus.emit('guest:bored', evG); Guests.startWalk(S, g, MAP.PLATFORM.exit.x, MAP.PLATFORM.exit.y, 'leave'); }
+            if (g.queueT >= C.STALL_PATIENCE) { G.Stall.release(S, g); g.want = null; evG.g = g; G.Bus.emit('guest:bored', evG); const ex = G.Ridge.exitFor(S, g); Guests.startWalk(S, g, ex.x, ex.y, 'leave'); }
           }
           break;
         }
@@ -155,7 +173,7 @@
     }
   };
   function bubbleKind(S, g) {
-    if (g.state === 'wait' || g.state === 'trail') { if (g.patienceMax !== Infinity && g.patience / g.patienceMax < C.SWEAT_AT) return 'sweat'; return g.state === 'wait' ? 'bath' : null; }
+    if (g.state === 'wait' || g.state === 'trail') { if (g.patienceMax !== Infinity && g.patience / g.patienceMax < C.SWEAT_AT) return 'sweat'; if (g.want === 'plunge') return 'plunge'; return g.state === 'wait' ? 'bath' : null; }
     if (g.state === 'soak') { const b = S.baths[g.bathId]; return (b && !G.Baths.isWarm(S, b)) ? 'snow' : null; }
     if (g.state === 'stall' && !g.walking) return g.queueT > (1 - C.SWEAT_AT) * C.STALL_PATIENCE ? 'sweat' : 'mochi';
     return null;
@@ -166,6 +184,8 @@
     if (p.bubble === 'snow') p.bubble = G.Seasons.text('coldBubble', 'snow');       // "the station cannot serve you right now" in the season's own icon
     if (p.bubble === 'sweat') { const u = g.state === 'stall' ? g.queueT / C.STALL_PATIENCE : 1 - g.patience / g.patienceMax; p.bubbleScale = 0.8 + 0.6 * U.clamp((u - (1 - C.SWEAT_AT)) / C.SWEAT_AT, 0, 1); }
     Ch.bubble(ctx, p);
+    // the hot-cold window: a ring around the plunge bubble that empties as the chance fades
+    if (g.want === 'plunge' && g.plungeT < C.PLUNGE_WINDOW && (g.state === 'wait' || g.state === 'trail')) G.Art.S.ring(ctx, p.x + 6, p.y - 66, 25, 1 - g.plungeT / C.PLUNGE_WINDOW, 3, PAL.cta, PAL.rgba(PAL.cream, 0.45));
   }
   Guests.fillPose = function (S, g, p) {
     p.x = g.x; p.y = g.y; p.z = g.z || 0; p.face = g.face; p.moving = !!g.moving; p.walk = g.bobPhase; p.sx = g.sx; p.sy = g.sy; p.alpha = g.alpha; p.t = S.t;

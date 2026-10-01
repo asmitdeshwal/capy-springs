@@ -36,7 +36,7 @@
     if (obj.lanterns) for (const id in S.lanterns) if (obj.lanterns[id]) { S.lanterns[id].level = Math.max(0, obj.lanterns[id].level | 0); S.lanterns[id].sunk = Math.max(0, obj.lanterns[id].sunk | 0); }
     if (obj.levels) for (const id in S.levels) if (obj.levels[id]) { S.levels[id].speed = obj.levels[id].speed | 0; S.levels[id].slots = obj.levels[id].slots | 0; S.levels[id].pay = obj.levels[id].pay | 0; }
     if (obj.heat) { if (typeof obj.heat.v === 'number') S.heat.v = obj.heat.v; S.heat.rushSeen = !!obj.heat.rushSeen; }
-    if (obj.kit && typeof obj.kit.x === 'number') { S.kit.x = U.clamp(obj.kit.x, DATA.MAP.BOUNDS.x0, DATA.MAP.BOUNDS.x1); S.kit.y = U.clamp(obj.kit.y, DATA.MAP.BOUNDS.y0, DATA.MAP.BOUNDS.y1); }
+    if (obj.kit && typeof obj.kit.x === 'number') { S.kit.x = U.clamp(obj.kit.x, DATA.MAP.BOUNDS.x0, DATA.MAP.BOUNDS.x1); S.kit.y = U.clamp(obj.kit.y, (DATA.MAP.RIDGE ? DATA.MAP.RIDGE.boundsY0 : DATA.MAP.BOUNDS.y0), DATA.MAP.BOUNDS.y1); }
     if (obj.baths) for (const id in S.baths) if (obj.baths[id]) S.baths[id].yuzuT = Math.max(0, Number(obj.baths[id].yuzuT) || 0);
     if (obj.grove && Array.isArray(obj.grove.trees)) for (let i = 0; i < S.grove.trees.length && i < obj.grove.trees.length; i++) { const t = obj.grove.trees[i]; S.grove.trees[i].progress = U.clamp(Number(t.progress) || 0, 0, 1); S.grove.trees[i].ripe = !!t.ripe; }
     if (obj.stall) { S.stall.stock = Math.max(0, obj.stall.stock | 0); S.stall.pending = Math.max(0, obj.stall.pending | 0); }
@@ -52,6 +52,7 @@
     S.heat.max = G.Upgrades.heatMax(S); S.heat.v = U.clamp(S.heat.v, 0, S.heat.max);
     if (S.stall.stock > G.Upgrades.counter(S)) S.stall.stock = G.Upgrades.counter(S);
     if (G.Seasons.finaleLit(S)) G.Seasons.markDone(S);
+    if (G.Ridge) S.kit.y = Math.max(S.kit.y, G.Ridge.boundsY0(S) + C.KIT_RADIUS);     // a Kit saved on a Ridge that is not open (should not happen) comes down
     // runtime after a load: empty platform and trail, the car slides in after CAR_RESUME_T
     const c = S.car; c.phase = 'away'; c.timer = C.CAR_RESUME_T; c.phaseT = 0; c.warned = false; c.toSpawn = 0; c.x = DATA.MAP.CABLE.enterX; c.golden = false; c.empty = false; c.vip = false;
     S.mode = 'play'; S.introT = C.INTRO_T;

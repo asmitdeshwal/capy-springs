@@ -11,7 +11,14 @@
       exit: { x: 309, y: 1900 }, tray: { x: 328, y: 1920 }, lane: 290 },
     { id: 'bamboo', name: 'Bamboo Tub', heated: true,  slots: 5, maxSlots: 8, soak: 7, lantern: 'bamboo', stripes: true,
       water: { x: 120, y: 1430, w: 150, h: 90 }, deck: { x: 120, y: 1430, w: 210, h: 150 },
-      exit: { x: 236, y: 1470 }, tray: { x: 212, y: 1492 }, lane: 250 }
+      exit: { x: 236, y: 1470 }, tray: { x: 212, y: 1492 }, lane: 250 },
+    // the Ridge (GDD 19): the sauna sends its guests out wanting a plunge; the plunge takes only those, and pays x2 if they arrive within the hot-cold window
+    { id: 'sauna',  name: 'Sauna Hut',   heated: true,  slots: 4, maxSlots: 6, soak: 6, lantern: 'sauna', payMult: 1.25, look: 'sauna', sauna: true,
+      water: { x: 420, y: 800, w: 150, h: 90 }, deck: { x: 420, y: 800, w: 210, h: 150 },
+      exit: { x: 309, y: 840 }, tray: { x: 328, y: 860 }, lane: 290 },
+    { id: 'plunge', name: 'Cold Plunge', heated: false, slots: 3, maxSlots: 6, soak: 4, lantern: 'plunge', payMult: 1.5, look: 'plunge', plungeOnly: true,
+      water: { x: 120, y: 800, w: 150, h: 90 }, deck: { x: 120, y: 800, w: 210, h: 150 },
+      exit: { x: 236, y: 840 }, tray: { x: 212, y: 860 }, lane: 250 }
   ];
   // drop zone = deck rect; Kit collides with the water rect; koban land in the tray (lane-side deck strip); guests reappear at exit when climbing out.
   G.DATA.STATIONS = {
@@ -23,7 +30,7 @@
     platform: { x: 270, y: 2060, w: 320, h: 80 }
   };
   // Sheet-capable stations (a tap opens the upgrade sheet)
-  G.DATA.SHEET_STATIONS = ['rock', 'cedar', 'bamboo', 'boiler', 'grove', 'stall'];
+  G.DATA.SHEET_STATIONS = ['rock', 'cedar', 'bamboo', 'boiler', 'grove', 'stall', 'sauna', 'plunge'];
   // cost(level) = round5(base * 1.6 ** level), level = current level (0-based). title / blurb = what the upgrade sheet says in plain words (GDD 10.4)
   const BATH_TRACKS = {
     speed: { title: 'Quicker soaks', blurb: 'Guests finish sooner, so more fit in between cars' },
@@ -42,6 +49,12 @@
               pay:   { label: 'Ripe',    base: 70,  max: 6, title: 'Longer gold',   blurb: 'A yuzu bath stays golden (x2 pay) for longer' } },
     stall:  { speed: { label: 'Prep',   base: 80,  max: 6, title: 'Faster prep',   blurb: 'Mochi are ready for the queue sooner' },
               slots: { label: 'Counter', base: 100, max: 3, title: 'Bigger counter', blurb: 'More mochi kept ready at once' },
-              pay:   { label: 'Price',   base: 90,  max: 6, title: 'Pricier mochi', blurb: 'Each mochi sells for more' } }
+              pay:   { label: 'Price',   base: 90,  max: 6, title: 'Pricier mochi', blurb: 'Each mochi sells for more' } },
+    sauna:  { speed: { label: 'Heat',   base: 150, max: 6, title: 'Hotter sauna',  blurb: 'Guests are steamed and out sooner' },
+              slots: { label: 'Benches', base: 200, max: 2, title: 'More benches',  blurb: 'Seat bigger groups before the plunge' },
+              pay:   { label: 'Tips',    base: 180, max: 6, title: 'Better tips',   blurb: 'Every sauna guest pays more' } },
+    plunge: { speed: { label: 'Chill',  base: 150, max: 4, title: 'Colder water',  blurb: 'The plunge is over quicker' },
+              slots: { label: 'Width',   base: 200, max: 3, title: 'Wider pool',    blurb: 'More guests can plunge at once' },
+              pay:   { label: 'Tips',    base: 180, max: 6, title: 'Better tips',   blurb: 'Every plunge pays more' } }
   };
 })(window.G);

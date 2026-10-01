@@ -18,6 +18,7 @@
     if (S.built.stall) { const s = DATA.STATIONS.stall; addRect(s.x - s.solid.w / 2, s.y - s.solid.h / 2, s.x + s.solid.w / 2, s.y + s.solid.h / 2); }
     if (S.built.grove) { const n = G.Upgrades.treeCount(S), tr = DATA.STATIONS.grove.trunk; for (let i = 0; i < n && i < S.grove.trees.length; i++) { const t = S.grove.trees[i]; addRect(t.x - tr.w / 2, t.y - tr.h, t.x + tr.w / 2, t.y); } }
     const cb = MAP.CABLE; for (let i = 0; i < cb.pylons.length; i++) addRect(cb.pylons[i] - 5, cb.pylonTop, cb.pylons[i] + 5, cb.y);
+    if (MAP.RIDGE && S.built.ridge) { const ch = MAP.RIDGE.chasm; for (let i = 0; i < ch.length; i++) addRect(ch[i][0], ch[i][1], ch[i][2], ch[i][3]); }   // only the bridge crosses
     return SOLIDS;
   };
   Player.markSolidsDirty = function () { solidsDirty = true; };
@@ -47,14 +48,14 @@
     const sp = Player.speed(S), kk = 1 - Math.exp(-dt / C.KIT_ACCEL_T * 3);
     k.vx += (ix * sp - k.vx) * kk; k.vy += (iy * sp - k.vy) * kk;
     if (Math.abs(k.vx) < 0.5 && !ix) k.vx = 0; if (Math.abs(k.vy) < 0.5 && !iy) k.vy = 0;
-    const solids = Player.solids(S), r = C.KIT_RADIUS, B = MAP.BOUNDS;
+    const solids = Player.solids(S), r = C.KIT_RADIUS, B = MAP.BOUNDS, y0 = G.Ridge ? G.Ridge.boundsY0(S) : B.y0;
     // x then y, resolving against expanded rects
     k.x += k.vx * dt;
     for (let i = 0; i < solids.length; i++) { const s = solids[i]; if (k.x > s.x0 - r && k.x < s.x1 + r && k.y > s.y0 - r && k.y < s.y1 + r) { k.x = k.vx > 0 ? s.x0 - r : s.x1 + r; k.vx = 0; } }
     k.x = U.clamp(k.x, B.x0 + r, B.x1 - r);
     k.y += k.vy * dt;
     for (let i = 0; i < solids.length; i++) { const s = solids[i]; if (k.x > s.x0 - r && k.x < s.x1 + r && k.y > s.y0 - r && k.y < s.y1 + r) { k.y = k.vy > 0 ? s.y0 - r : s.y1 + r; k.vy = 0; } }
-    k.y = U.clamp(k.y, B.y0 + r, B.y1 - r);
+    k.y = U.clamp(k.y, y0 + r, B.y1 - r);
     const v = Math.sqrt(k.vx * k.vx + k.vy * k.vy);
     k.moving = v > 8;
     if (k.moving) {

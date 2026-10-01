@@ -4,7 +4,7 @@
   const C = G.C, U = G.U, DATA = G.DATA, PAL = G.PAL;
   const Baths = G.Baths = {};
   const LIST = [], HP = { x: 0, y: 0, z: 0 }, SP = { x: 0, y: 0 };
-  const evSplash = { bath: null, g: null, count: 0, mult: 1 }, evSeated = { g: null, bath: null }, evHeart = { g: null }, evCold = { bath: null }, evYuzu = { bath: null };
+  const evSplash = { bath: null, g: null, count: 0, mult: 1 }, evSeated = { g: null, bath: null }, evHeart = { g: null }, evCold = { bath: null }, evYuzu = { bath: null }, evPlunge = { g: null, bath: null, hot: false };
   const WSTATE = { cold: false, yuzu: false, lowFx: false };
 
   Baths.init = function (S) { LIST.length = 0; };
@@ -30,6 +30,10 @@
     return out;
   };
   Baths.inZone = (bath, x, y) => U.defHas(bath.def.deck, x, y);
+  // the Cold Plunge takes only guests fresh out of the sauna; every other station takes everyone else
+  Baths.accepts = (S, bath, g) => bath.def.plungeOnly ? g.want === 'plunge' : g.want !== 'plunge';
+  const wantsPlunge = g => g.want === 'plunge', wantsBath = g => g.want !== 'plunge';
+  Baths.trailFor = (S, bath) => G.Trail.countGuests(S, bath.def.plungeOnly ? wantsPlunge : wantsBath);
   Baths.soakTime = function (S, bath, g) { const base = g.tutorial ? C.TUTORIAL_SOAK : G.Upgrades.soak(S, bath.id); return base * DATA.GUESTS[g.kind].soakMult; };
   Baths.plop = function (S, bath, g, slot) {
     const n = Baths.slotCount(S, bath); Baths.slotPos(bath, slot, n, SP);
@@ -46,6 +50,10 @@
     g.soakMax = g.soakT = Baths.soakTime(S, bath, g);
     g.yuzuHat = g.yuzuHat || bath.yuzuT > 0;
     g.squashT = C.SQUASH_T; g.heartT = 0; g.sleepy = 0;
+    if (bath.def.plungeOnly) {                                   // the hot-cold moment: in the window since the sauna = x2
+      g.hotCold = g.plungeT <= C.PLUNGE_WINDOW; S.stats.plunges++; if (g.hotCold) S.stats.hotCold++;
+      evPlunge.g = g; evPlunge.bath = bath; evPlunge.hot = g.hotCold; G.Bus.emit('plunge', evPlunge);
+    }
     if (sp.count === 3 && !sp.c3) { sp.c3 = true; S.stats.combos[3]++; }
     if (sp.count === 4 && !sp.c4) { sp.c4 = true; S.stats.combos[4]++; }
     if (sp.count === 5 && !sp.c5) { sp.c5 = true; S.stats.combos[5]++; }
@@ -54,7 +62,7 @@
   };
   Baths.payout = function (S, g) {
     const bath = S.baths[g.bathId], base = DATA.GUESTS[g.kind].pay * (bath.def.payMult || 1);     // a season may price its stations differently
-    const ev = (g.batch ? g.batch.mult : 1) * Math.max(g.yuzuHat ? C.YUZU_PAY : 1, g.golden ? C.GOLDEN_PAY : 1) * G.Heat.payMult(S, bath) * (S.night.active ? C.NIGHT_PAY : 1);
+    const ev = (g.batch ? g.batch.mult : 1) * Math.max(g.yuzuHat ? C.YUZU_PAY : 1, g.golden ? C.GOLDEN_PAY : 1) * G.Heat.payMult(S, bath) * (S.night.active ? C.NIGHT_PAY : 1) * (g.hotCold ? C.HOTCOLD_PAY : 1);
     return Math.round(base * G.Upgrades.payMult(S, bath.id) * G.Upgrades.famousMult(S) * G.Upgrades.starMult(S) * Math.min(C.MULT_CAP, ev));
   };
   Baths.applyYuzu = function (S, bath) {
@@ -80,11 +88,15 @@
           if (warm) {
             bath.coldOnce = false;
             const slot = Baths.freeSlot(S, bath);
-            if (slot >= 0 && S.t - bath.lastPlop >= C.PLOP_GAP) { const node = Trail.takeFirst(S, 'guest'); if (node) { Baths.plop(S, bath, node.ref, slot); bath.lastPlop = S.t; } }
+            if (slot >= 0 && S.t - bath.lastPlop >= C.PLOP_GAP) {
+              const node = Trail.takeFirstGuest(S, g => Baths.accepts(S, bath, g));
+              if (node) { Baths.plop(S, bath, node.ref, slot); bath.lastPlop = S.t; }
+              else if (!bath.refusedOnce) { bath.refusedOnce = true; evCold.bath = bath; G.Bus.emit('ui:cold-refusal', evCold); }   // nobody in the line belongs here
+            }
           } else if (!bath.coldOnce) { bath.coldOnce = true; evCold.bath = bath; G.Bus.emit('ui:cold-refusal', evCold); }
         }
-        if (Trail.hasKind(S, 'yuzu') && (bath.yuzuT <= 0 || bath.yuzuT < C.YUZU_REFRESH_BELOW)) Baths.applyYuzu(S, bath);
-      } else bath.coldOnce = false;
+        if (Trail.hasKind(S, 'yuzu') && !bath.def.plungeOnly && (bath.yuzuT <= 0 || bath.yuzuT < C.YUZU_REFRESH_BELOW)) Baths.applyYuzu(S, bath);
+      } else { bath.coldOnce = false; bath.refusedOnce = false; }
       // seated guests
       const n = bath.slots.length, rushM = Baths.rushHere(S, bath) ? C.RUSH_SOAK : 1;
       let occ = false;

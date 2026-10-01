@@ -51,6 +51,7 @@
     chirp: (ac, d, t, o) => { tone(ac, d, 'sine', 1800, 2400, 0.05, 0.12 * o.gain, t); tone(ac, d, 'sine', 2000, 2600, 0.05, 0.1 * o.gain, t + 0.07); },
     thump: (ac, d, t, o) => { tone(ac, d, 'sine', 90, 45, 0.18, 0.3 * o.gain, t); noise(ac, d, 0.08, 'lowpass', 400, 0.2 * o.gain, t); },
     lap: (ac, d, t, o) => { const n = [110, 147, 196]; for (let i = 0; i < 3; i++) { tone(ac, d, 'sine', n[i], n[i] * 0.6, 0.16, 0.22 * o.gain, t + i * 0.1); } },
+    sizzle: (ac, d, t, o) => noise(ac, d, 0.35, 'highpass', 2600, 0.22 * o.gain, t, 5000),
     boom: (ac, d, t, o) => { tone(ac, d, 'sine', 90, 36, 0.45, 0.4 * o.gain, t); noise(ac, d, 0.3, 'lowpass', 320, 0.3 * o.gain, t); tone(ac, d, 'triangle', 1046, 0, 0.3, 0.1 * o.gain, t + 0.05); },
     caw: (ac, d, t, o) => { const q = ac.createBiquadFilter(); q.type = 'bandpass'; q.frequency.value = 1200; q.connect(d); tone(ac, q, 'sawtooth', 520, 380, 0.18, 0.2 * o.gain, t); tone(ac, q, 'sawtooth', 560, 400, 0.14, 0.16 * o.gain, t + 0.2); }
   };
@@ -77,6 +78,8 @@
     Bus.on('heat:rush:end', () => Audio.layer('shaker', false));
     Bus.on('heat:stoke', () => Audio.play(G.Seasons.text('sfxStoke', 'stoke')));
     Bus.on('lap:step', e => Audio.play('tick', 1 + e.i * 0.3)); Bus.on('lap:done', () => Audio.play('lap'));
+    Bus.on('plunge', e => { Audio.play('splash', 0.8); Audio.play('sizzle'); if (e.hot) { Audio.play('chime'); Audio.haptic(cur(), 25); } });
+    Bus.on('ridge:open', () => { Audio.play('fanfare'); Audio.play('chime'); });
     Bus.on('kaa:land', () => Audio.play('caw')); Bus.on('kaa:steal', () => Audio.play('caw', 0.8)); Bus.on('kaa:tap', () => { Audio.play('chime'); Audio.play('fanfare', 1, 0.6); });
     Bus.on('heat:cold', () => Audio.play('shiver')); Bus.on('ui:cold-refusal', () => Audio.play('shiver'));
     Bus.on('yuzu:apply', () => Audio.play('yuzu')); Bus.on('yuzu:pick', () => Audio.play('yuzu')); Bus.on('night:light', () => Audio.play('yuzu'));

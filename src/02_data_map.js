@@ -3,7 +3,12 @@
   'use strict';
   G.DATA = G.DATA || {};
   G.DATA.MAP = {
-    W: 540, H: 2400, CAM_MIN_Y: 1100, STATIC_Y0: 1100,
+    W: 540, H: 2400, CAM_MIN_Y: 1100, STATIC_Y0: 500,       // the static cache covers the Ridge too; the camera clamp moves up when the bridge opens
+    // THE RIDGE (GDD 19): the snowy terrace above the bridge. Opens with Ridge Bridge level 1; Kit's bounds, the camera clamp, the lane and the mist move up.
+    RIDGE: { y0: 500, y1: 1100, camMinY: 500, boundsY0: 560, laneY0: 560, mist: { y0: 420, y1: 580 },
+             chasm: [[0, 1000, 238, 1150], [302, 1000, 540, 1150]],                  // solid drops either side of the bridge
+             mill: { x0: 320, x1: 430, y0: 895, y1: 960 }, exit: { x: 270, y: 580 },  // where sauna guests wait for their plunge; where Ridge guests leave
+             pines: [[40, 620], [500, 620], [30, 760], [510, 760], [200, 640], [340, 640], [40, 960], [500, 960]], rocks: [[90, 700], [450, 700], [160, 990], [500, 990]] },
     VALLEY: { y0: 2200, y1: 2400 },
     BOUNDS: { x0: 14, x1: 526, y0: 1150, y1: 2100 },
     LANE: { x0: 240, x1: 300, cx: 270, y0: 1150, y1: 2020, snap: 30 },

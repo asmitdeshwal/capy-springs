@@ -25,7 +25,7 @@
     S.stats.mochi++;
     evMochi.g = g; evMochi.value = pay; G.Bus.emit('guest:mochi', evMochi);
     Stall.release(S, g); g.want = null;
-    G.Guests.startWalk(S, g, MAP.PLATFORM.exit.x, MAP.PLATFORM.exit.y, 'leave');
+    const ex = G.Ridge.exitFor(S, g); G.Guests.startWalk(S, g, ex.x, ex.y, 'leave');
   };
   Stall.update = function (S, dt) {
     if (!S.built.stall) return;

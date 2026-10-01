@@ -106,7 +106,7 @@
     } else if (kind === 'trailCap') { S.trailCap = parseInt(vals[Math.min(level, vals.length) - 1], 10); }
     else if (kind === 'carLevel') { S.car.level = parseInt(vals[Math.min(level, vals.length) - 1], 10); }
     else if (kind === 'hire') { G.Helpers.hire(S, rest, opts); }
-    else if (kind === 'famous') { if (!silent) G.Events.famous(S, level); }
+    else if (kind === 'famous') { if (!silent) G.Events.famous(S, level); if (level === 1 && G.Ridge) G.Ridge.open(S, opts); }   // the finale also opens the Ridge
     else if (kind === 'travel') { G.Seasons.unlock(parseInt(rest, 10), opts); }
   };
 

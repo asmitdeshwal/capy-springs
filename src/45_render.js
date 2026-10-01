@@ -37,6 +37,7 @@
     const c = Render.sctx = cv.getContext('2d');
     c.setTransform(s, 0, 0, s, 0, -MAP.STATIC_Y0 * s);
     W.terrain(c, MAP.STATIC_Y0, MAP.H); W.valley(c); W.lane(c); W.rocks(c); W.pines(c); W.stoneLanterns(c, false); W.platform(c); W.cable(c); W.bridge(c);
+    if (MAP.RIDGE && W.ridgeDecor) W.ridgeDecor(c);
     for (let i = 0; i < DATA.BATHS.length; i++) { const d = DATA.BATHS[i]; if (S.built[d.id]) W.deckPlate(c, d); }
     if (S.built.woodpile) W.woodpile(c, DATA.STATIONS.woodpile.x, DATA.STATIONS.woodpile.y);
     if (S.built.stall) W.stallBody(c, DATA.STATIONS.stall.x, DATA.STATIONS.stall.y);

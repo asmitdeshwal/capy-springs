@@ -1,5 +1,15 @@
 # Capy Springs — changelog
 
+## 1.6.0 — the Ridge opens: Sauna Hut and Cold Plunge (2026-10-02)
+
+The first expansion of the one mountain. Lighting the **Ridge Bridge** (the old finale) now also **opens the Ridge** above it: the mist lifts, the camera and Kit's bounds extend 600 px upward, the lane continues across the bridge (solid drops either side), and two offering steps appear.
+
+- **Sauna Hut** (1,500, after the bridge): a heated log cabin, 4 seats → 6, 6 s, pay ×1.25. Guests who finish the sauna **climb out wanting a plunge**: a new want bubble with a ring that empties over 8 s.
+- **Cold Plunge** (1,200, after the sauna): an icy pool that takes **only** sauna leavers, 3 seats → 6, 4 s, pay ×1.5. Land them inside the window for **HOT-COLD x2** — steam burst, shockwave ring, zoom punch, chime — on top of the normal Splash Chain. Guests who wait too long wander off into the mist at the top.
+- The arrow learns **PLUNGE** (sauna guests in the line → the plunge), prefers waiting sauna guests whose window is still open for LEAD, weighs baths by what a seat is worth (the sauna → plunge chain counts for 3.5×), and never sends a yuzu to the plunge. The cable car's platform cap counts platform guests only. Ridge guests leave at the top, not the bottom.
+- Art: snow-dusted stone, drifts, bare rock, snow-capped pines, the chasm with mist, the log cabin with a snowy roof, chimney, bench and glowing stove, the stone-rim pool with bobbing ice; a `plunge` icon.
+- Harness: the Deck run is now 45 minutes (`npm test`): the Ridge opens by 40 min, both stations and at least one hot-cold by 45 min (seed 7: bridge 24:57, sauna 27:36, plunge 30:17, 11 hot-cold of 14 plunges; seeds 3 and 11 pass).
+
 ## 1.5.0 — one mountain: Terrace shelved, upgrades explained, bigger splashes, graphics pass (2026-10-02)
 
 Playtest verdict on the phone: chapter 1 was fun because it kept teaching something new; chapter 2 reused every verb under new names and reset progress, so it felt like a skip. Direction from here: **one mountain that keeps growing** (new areas open above the Deck with new mechanics, nothing resets), not separate chapters.

@@ -73,7 +73,7 @@ function invariants() {
   for (const g of S.guests) if (!isFinite(g.x) || !isFinite(g.y) || g.x < -80 || g.x > MAP.W + 80 || g.y < 0 || g.y > MAP.H) { fail('guest ' + g.id + ' (' + g.state + ') out of world at ' + t + ': ' + g.x + ',' + g.y); break; }
   if (S.coins < 0) fail('coins < 0 at ' + t); if (S.earned < S.coins) fail('earned < coins at ' + t);
   if (!(S.heat.v >= 0 && S.heat.v <= S.heat.max)) fail('heat out of range at ' + t + ': ' + S.heat.v + '/' + S.heat.max);
-  const cam = G.Camera; if (cam.y < MAP.CAM_MIN_Y - 0.01 || cam.y + G.Canvas.H > MAP.H + 0.01) fail('camera out of clamp at ' + t + ': y=' + cam.y + ' H=' + G.Canvas.H);
+  const cam = G.Camera; if (cam.y < G.Camera.minY(S) - 0.01 || cam.y + G.Canvas.H > MAP.H + 0.01) fail('camera out of clamp at ' + t + ': y=' + cam.y + ' H=' + G.Canvas.H);
   if (S.trail.length > S.trailCap) fail('trail over cap at ' + t);
   let trailGuests = 0;
   for (const n of S.trail) { if (n.kind === 'guest') { trailGuests++; if (!n.ref || n.ref.state !== 'trail' || n.ref.node !== n) fail('trail node/guest mismatch at ' + t); } }
@@ -124,7 +124,10 @@ const DECK_CHECKS = [
   [300, () => { if (S.earned < 1170) fail('300 s: earned ' + S.earned + ' < 1170'); if (S.lanterns.trail.level < 1) fail('300 s: Trail Rope not lit'); if (!S.built.grove) fail('300 s: grove not built'); }],
   [600, () => { if (S.earned < 3470) fail('600 s: earned ' + S.earned + ' < 3470'); if (!S.helpers.pon.hired) fail('600 s: Pon not hired'); if (S.stats.rushes < 1) fail('600 s: no rush'); const c = S.stats.combos; if (c[3] + c[4] + c[5] < 5) fail('600 s: fewer than 5 chains'); if (c[5] < 1) fail('600 s: no x5'); }],
   [1200, () => { if (S.earned < 10600) fail('1200 s: earned ' + S.earned + ' < 10600'); if (!S.built.bamboo) fail('1200 s: bamboo not built'); if (S.stats.nights < 2) fail('1200 s: nights ' + S.stats.nights + ' < 2'); if (S.earned > 1.4 * 15206) console.warn('BALANCE WARNING: earned ' + S.earned + ' at 1200 s > 1.4 x 15206. Knobs in order: YUZU_PAY, YUZU_DUR, SPLASH_MULT[5], RUSH_PAY, NIGHT_PAY'); }],
-  [1800, () => { if (S.earned < 22400) fail('1800 s: earned ' + S.earned + ' < 22400'); const r = S.stats.lost / Math.max(1, S.stats.served + S.stats.lost); if (r > 0.15) fail('1800 s: lost ratio ' + r.toFixed(2) + ' > 0.15'); }]
+  [1800, () => { if (S.earned < 22400) fail('1800 s: earned ' + S.earned + ' < 22400'); const r = S.stats.lost / Math.max(1, S.stats.served + S.stats.lost); if (r > 0.15) fail('1800 s: lost ratio ' + r.toFixed(2) + ' > 0.15'); }],
+  // the Ridge (GDD 19): opens with the bridge, then the sauna -> plunge chain lands at least one hot-cold
+  [2400, () => { if (!S.built.ridge) fail('2400 s: the Ridge did not open (bridge level ' + S.lanterns.bridge.level + ')'); }],
+  [2700, () => { if (!S.built.sauna) fail('2700 s: Sauna Hut not built'); if (!S.built.plunge) fail('2700 s: Cold Plunge not built'); if (S.stats.hotCold < 1) fail('2700 s: no hot-cold plunge (plunges ' + S.stats.plunges + ')'); }]
 ];
 // Season 2 (the Mochi Terrace): floors = 70 % of the measured curve (seed 7, build 1.3.0): 243 / 1259 / 4635 / 16803 / 32397 / 49909 at 2 / 5 / 10 / 20 / 30 / 40 min
 const TERRACE_CHECKS = [
@@ -194,7 +197,7 @@ if (!fails.length) {
 // ---- report ----
 if (opt.csv) { try { fs.mkdirSync(path.dirname(path.resolve(root, opt.csv)), { recursive: true }); fs.writeFileSync(path.resolve(root, opt.csv), csvRows.join('\n') + '\n'); log('csv written: ' + opt.csv); } catch (e) { warns.push('csv write failed: ' + e.message); } }
 const st = S.stats;
-log('season ' + G.SEASON.id + ' (' + G.SEASON.name + ') | ' + (fuzz ? 'fuzz ' : 'bot ') + total + ' s in ' + wall.toFixed(1) + ' s wall | earned ' + S.earned + ' coins ' + S.coins + ' | served ' + st.served + ' lost ' + st.lost + ' | combos x3/x4/x5 ' + st.combos[3] + '/' + st.combos[4] + '/' + st.combos[5] + ' | rushes ' + st.rushes + ' chains ' + st.chains + ' | fullCars ' + st.fullCars + ' nights ' + st.nights + ' golden ' + st.golden + ' mochi ' + st.mochi + ' | vip ' + st.vip + ' laps ' + st.laps + ' kaa ' + st.kaa + ' | trailCap ' + S.trailCap + ' car L' + S.car.level + ' | buys ' + bot.buys());
+log('season ' + G.SEASON.id + ' (' + G.SEASON.name + ') | ' + (fuzz ? 'fuzz ' : 'bot ') + total + ' s in ' + wall.toFixed(1) + ' s wall | earned ' + S.earned + ' coins ' + S.coins + ' | served ' + st.served + ' lost ' + st.lost + ' | combos x3/x4/x5 ' + st.combos[3] + '/' + st.combos[4] + '/' + st.combos[5] + ' | rushes ' + st.rushes + ' chains ' + st.chains + ' | fullCars ' + st.fullCars + ' nights ' + st.nights + ' golden ' + st.golden + ' mochi ' + st.mochi + ' | vip ' + st.vip + ' laps ' + st.laps + ' kaa ' + st.kaa + ' | plunges ' + st.plunges + ' hotCold ' + st.hotCold + ' | trailCap ' + S.trailCap + ' car L' + S.car.level + ' | buys ' + bot.buys());
 log('lanterns: ' + DATA.LANTERNS.map(d => d.id + ':' + S.lanterns[d.id].level).join(' '));
 if (opt.beats) {
   log('\nBEATS (first time, seconds):');
