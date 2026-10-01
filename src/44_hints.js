@@ -31,10 +31,11 @@
     }
     // 14. PLUNGE: sauna guests in the line, their hot-cold window ticking -> the Cold Plunge
     if (nPlunge > 0 && S.built.plunge && S.baths.plunge) { const b = S.baths.plunge; bathCentre(b, P); set(out, 14, 'bath', 'plunge', P.x, P.y); out.hide = Baths.inZone(b, kit.x, kit.y) && Baths.freeSlot(S, b) >= 0; return out; }
-    // 2. SOAK: the warm bath worth the most for the line (seats that fit x what a seat pays here); else the one whose next seat frees soonest
+    // 2. SOAK: the warm bath worth the most for the line (seats that fit x what a seat pays here, discounted by distance so a far station
+    //    must be clearly better); else the one whose next seat frees soonest
     if (nBath > 0) {
       let best = null, bs = -1, bd = Infinity;
-      for (let i = 0; i < baths.length; i++) { const b = baths[i]; if (b.def.plungeOnly || !Baths.isWarm(S, b)) continue; const s = Math.min(Baths.freeSlots(S, b), nBath) * worth(S, b); const d = U.dist2(kit.x, kit.y, b.def.deck.x, b.def.deck.y); if (s > bs || (s === bs && d < bd)) { bs = s; bd = d; best = b; } }
+      for (let i = 0; i < baths.length; i++) { const b = baths[i]; if (b.def.plungeOnly || !Baths.isWarm(S, b)) continue; const d = U.dist2(kit.x, kit.y, b.def.deck.x, b.def.deck.y); const s = Math.min(Baths.freeSlots(S, b), nBath) * worth(S, b) * (800 / (800 + Math.sqrt(d))); if (s > bs || (s === bs && d < bd)) { bs = s; bd = d; best = b; } }
       if (best && bs <= 0) { let bt = Infinity; best = null; for (let i = 0; i < baths.length; i++) { const b = baths[i]; if (b.def.plungeOnly || !Baths.isWarm(S, b)) continue; const t = Baths.nextFreeIn(S, b); if (t < bt) { bt = t; best = b; } } }
       if (!best) for (let i = 0; i < baths.length; i++) if (!baths[i].def.plungeOnly) { best = baths[i]; break; }
       if (best) { bathCentre(best, P); set(out, 2, 'bath', best.id, P.x, P.y); out.hide = Baths.inZone(best, kit.x, kit.y) && Baths.freeSlot(S, best) >= 0; return out; }
@@ -51,7 +52,9 @@
     // 4. YUZU: yuzu in the trail
     if (Trail.hasKind(S, 'yuzu')) {
       let best = null, bd = Infinity;
-      for (let i = 0; i < baths.length; i++) { const b = baths[i]; if (b.yuzuT > 0 || b.def.plungeOnly) continue; const d = U.dist2(kit.x, kit.y, b.def.deck.x, b.def.deck.y); if (d < bd) { bd = d; best = b; } }   // the plunge takes no yuzu
+      const up = MAP.RIDGE && kit.y < MAP.RIDGE.y1;                   // a yuzu goes to a bath on Kit's side of the bridge; never to the plunge
+      for (let i = 0; i < baths.length; i++) { const b = baths[i]; if (b.yuzuT > 0 || b.def.plungeOnly) continue; const d = U.dist2(kit.x, kit.y, b.def.deck.x, b.def.deck.y) + ((MAP.RIDGE && (b.def.deck.y < MAP.RIDGE.y1) !== up) ? 1e9 : 0); if (d < bd) { bd = d; best = b; } }
+      if (best && bd >= 1e9) best = null;
       if (best) { bathCentre(best, P); set(out, 4, 'bath', best.id, P.x, P.y); out.hide = Baths.inZone(best, kit.x, kit.y); return out; }
       if (S.built.stall && G.Stall.room(S)) return set(out, 4, 'stall', 'stall', ST.stall.home.x, ST.stall.home.y);
     }

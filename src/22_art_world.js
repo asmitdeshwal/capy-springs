@@ -69,6 +69,27 @@
     S_.fillRRect(ctx, wx0 + ww - 34, wy0 - 46, 14, 24, 3, PAL.boiler);                                     // chimney
     S_.fillRRect(ctx, wx0 + ww / 2 - 12, wy0 + wh - 4, 24, 12, 4, PAL.cedarDark);                            // step down to the porch
   };
+  // the massage pavilion: a roofed platform with upturned eaves; the chairs (the 'water' rect) sit below the roof band so guests are never under it
+  W.pavilionBody = function (ctx, def) {
+    const S_ = A(), d = def.deck, x0 = d.x - d.w / 2, y0 = d.y - d.h / 2;
+    S_.shadow(ctx, d.x, y0 + d.h + 8, d.w / 2 + 4, 12, 0.16);
+    S_.plate(ctx, x0, y0, d.w, d.h, 14, PAL.cedar, PAL.cedarDark, 10);                                    // platform
+    ctx.strokeStyle = PAL.rgba(PAL.cream, 0.22); ctx.beginPath(); for (let y = y0 + 6; y < y0 + d.h - 4; y += 18) { ctx.moveTo(x0 + 10, y); ctx.lineTo(x0 + d.w - 10, y); } ctx.stroke();
+    for (let i = 0; i < 4; i++) { const px = i & 1 ? x0 + d.w - 16 : x0 + 16, py = i < 2 ? y0 + 36 : y0 + d.h - 14; S_.fillRRect(ctx, px - 4, py - 60, 8, 60, 3, PAL.cedarDark); }   // posts
+    S_.fillRRect(ctx, x0 - 8, y0 - 26, d.w + 16, 40, 10, '#6B2F2A');                                       // roof
+    S_.fillRRect(ctx, x0 - 8, y0 - 26, d.w + 16, 8, 4, SNOW);                                               // snow on the ridge line
+    S_.tri(ctx, x0 - 8, y0 + 14, x0 - 22, y0 + 2, x0 - 8, y0 - 4, '#6B2F2A'); S_.tri(ctx, x0 + d.w + 8, y0 + 14, x0 + d.w + 22, y0 + 2, x0 + d.w + 8, y0 - 4, '#6B2F2A');   // upturned eaves
+    S_.fillRRect(ctx, x0 + 4, y0 + 10, d.w - 8, 6, 2, PAL.rgba(PAL.ink, 0.25));                              // eave shadow
+    S_.fillRRect(ctx, def.gongAt.x - 3, def.gongAt.y - 50, 6, 50, 2, PAL.cedarDark);                         // the gong stand's pole
+  };
+  // the gong: a brass disc on its stand with the countdown ring; it flashes while a massage session runs
+  W.gong = function (ctx, x, y, frac, session, t) {
+    const S_ = A();
+    S_.shadow(ctx, x, y, 10, 4);
+    S_.fillRRect(ctx, x - 14, y - 58, 28, 4, 2, PAL.cedarDark);
+    S_.circle(ctx, x, y - 36, 15, PAL.coinRim); S_.circle(ctx, x, y - 36, 12, session ? PAL.mix(PAL.coin, PAL.cream, 0.5 + 0.5 * Math.sin(t * 12)) : PAL.coin); S_.circle(ctx, x, y - 36, 4, PAL.coinRim);
+    S_.ring(ctx, x, y - 36, 22, frac, 4, PAL.cta, PAL.rgba(PAL.cream, 0.55));
+  };
   // drifting petals over the whole scene (presentation; hash-driven so it never touches the seeded RNG)
   W.ambient = function (ctx, camY, H, t, low) {
     if (low) return;
@@ -141,6 +162,7 @@
   W.deckPlate = function (ctx, def) {
     const S_ = A(), d = def.deck, x0 = d.x - d.w / 2, y0 = d.y - d.h / 2;
     if (def.look === 'sauna') return W.saunaBody(ctx, def);
+    if (def.look === 'pavilion') return W.pavilionBody(ctx, def);
     S_.shadow(ctx, d.x, y0 + d.h + 8, d.w / 2 + 4, 12, 0.16);                                   // the deck sits on the ground
     if (def.look === 'plunge') {                                                                 // a stone rim pool in the snow
       S_.plate(ctx, x0, y0, d.w, d.h, 14, PAL.stone, PAL.stoneDark, 10);
@@ -167,6 +189,12 @@
       const glow = state.cold ? 0 : 0.6 + 0.3 * Math.sin(t * 6);
       S_.fillRRect(ctx, x0 + w.w - 34, y0 + 10, 24, 30, 5, PAL.boiler); if (glow > 0) S_.fillRRect(ctx, x0 + w.w - 30, y0 + 18, 16, 16, 3, PAL.rgba(PAL.amberDeep, glow));   // the stove
       if (state.cold) S_.strokeRRect(ctx, x0 + 1, y0 + 1, w.w - 2, w.h - 2, 7, PAL.cream, 2, true);
+      return;
+    }
+    if (def.look === 'pavilion') {                                                                // a tatami mat with cushions
+      S_.fillRRect(ctx, x0, y0, w.w, w.h, 8, '#C9B977'); S_.strokeRRect(ctx, x0 + 2, y0 + 2, w.w - 4, w.h - 4, 7, '#8E7F3F', 2);
+      ctx.strokeStyle = PAL.rgba('#8E7F3F', 0.35); ctx.lineWidth = 1; ctx.beginPath(); for (let x = x0 + 12; x < x0 + w.w; x += 12) { ctx.moveTo(x, y0 + 4); ctx.lineTo(x, y0 + w.h - 4); } ctx.stroke();
+      for (let i = 0; i < 4; i++) S_.fillRRect(ctx, x0 + 10 + i * (w.w - 20) / 4 + 4, y0 + w.h - 26, (w.w - 20) / 4 - 8, 18, 7, i & 1 ? PAL.red : PAL.cream);
       return;
     }
     if (def.look === 'plunge') {                                                                  // ice-blue water, white rim, bobbing ice

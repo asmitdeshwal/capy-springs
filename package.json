@@ -1,13 +1,13 @@
 {
   "name": "capy-springs",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "private": true,
   "description": "Capy Springs - a one-thumb offline arcade-idle onsen builder (vanilla Canvas JS, no dependencies)",
   "scripts": {
     "start": "node tools/serve.js 5173",
     "share": "node tools/share.js 5173",
     "pack": "node tools/pack.js",
-    "test": "node test/headless.js --seconds 2700 && node test/headless.js --season 2 --seconds 2400 && node test/headless.js --fuzz 300 && node test/headless.js --fuzz 300 --season 2",
+    "test": "node test/headless.js --seconds 3000 && node test/headless.js --season 2 --seconds 2400 && node test/headless.js --fuzz 300 && node test/headless.js --fuzz 300 --season 2",
     "deploy": "node tools/deploy.js"
   }
 }

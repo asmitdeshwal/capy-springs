@@ -157,6 +157,13 @@
       FX.droplets(S, e.g.x, e.g.y - 4, 10); for (let i = 0; i < 4; i++) FX.steam(S, e.g.x + (i - 1.5) * 10, e.g.y - 8, 12, 0.6);
       if (e.hot) { FX.pop(S, 'HOT-COLD x2!', w.x, w.y - w.h / 2 - 62, 34, PAL.ripple, 'label'); FX.ring(S, w.x, w.y, 90); for (let i = 0; i < 6; i++) FX.steam(S, w.x + (i - 2.5) * 22, w.y - 6, 16, 0.55); Cam.punch(C.PLUNGE_PUNCH, C.PUNCH_T); Cam.bump(6); FX.flash(S, 0.12); }
     });
+    // the pavilion's gong: a session starts (FULL HOUSE when every chair was taken)
+    Bus.on('gong', e => {
+      const S = cur(), w = e.bath.def.water, g = e.bath.def.gongAt;
+      FX.ring(S, g.x, g.y - 36, 70); FX.sparkle(S, w.x, w.y - 20, 6);
+      if (e.full) { FX.pop(S, 'FULL HOUSE x' + e.bath.def.fullHouse + '!', w.x, w.y - w.h / 2 - 70, 32, PAL.amber, 'label'); FX.confetti(S, w.x, w.y - 10, C.CONFETTI_SMALL); Cam.punch(0.04, C.PUNCH_T); Cam.bump(5); }
+      else Cam.bump(3);
+    });
     Bus.on('ridge:open', () => { const S = cur(), b = DATA.MAP.BRIDGE; FX.confetti(S, b.x, b.y0 + 40, C.CONFETTI_BIG); FX.confetti(S, b.x, b.y1, C.CONFETTI_BIG); FX.flash(S, 0.3); Cam.shake(6, 0.4); });
     Bus.on('guest:mochi', e => { const S = cur(); FX.pop(S, '+' + e.value, e.g.x, e.g.y - 40, 20, PAL.coin, 'plus'); });
     Bus.on('guest:lost', e => { const S = cur(); FX.droplets(S, e.g.x, e.g.y - 30, 3); });

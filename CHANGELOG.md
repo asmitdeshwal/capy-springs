@@ -1,5 +1,12 @@
 # Capy Springs — changelog
 
+## 1.7.0 — the Massage Pavilion and the gong (2026-10-02)
+
+- **Massage Pavilion** (2,500, after the Cold Plunge): Madame Tsuru's roofed pavilion at the top right of the Ridge, 2 chairs → 4, pay ×5. It works to a **gong** every 20 s (a countdown ring on the gong stand): guests you seat **wait, relaxed**, until the gong; then every seated guest is massaged together for 10 s (→ 7 s with Quicker hands), eyes half closed, sparkles, Tsuru's neck and wing working. **Every chair full at the gong = FULL HOUSE ×1.5** with a pop, confetti and a zoom punch. Latecomers wait for the next gong. A second clock to plan around, and a "bring enough guests" decision.
+- The arrow's SOAK choice now discounts a station by distance (a far one must be clearly better), knows a pavilion chair stays taken until the gong and the massage after it, and sends a yuzu only to a bath on Kit's own side of the bridge.
+- New: Madame Tsuru (crane) drawn in the game for the first time; gong sound; `heart` icon on the pavilion's sheet.
+- Harness: the Deck run is now 50 minutes (`npm test`): pavilion by 50 min with ≥ 2 massages and a full house (seed 7: pavilion 43:51, 37 massages, 8 full houses, 154 hot-cold). The bot takes the lane when it carries guests across the bridge (walking straight across a deck drops them there), and a latent bot bug is documented: it walks straight and only plans when stuck, on purpose — a planning bot lost three times the guests.
+
 ## 1.6.0 — the Ridge opens: Sauna Hut and Cold Plunge (2026-10-02)
 
 The first expansion of the one mountain. Lighting the **Ridge Bridge** (the old finale) now also **opens the Ridge** above it: the mist lifts, the camera and Kit's bounds extend 600 px upward, the lane continues across the bridge (solid drops either side), and two offering steps appear.

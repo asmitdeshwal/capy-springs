@@ -5,6 +5,8 @@
   const Baths = G.Baths = {};
   const LIST = [], HP = { x: 0, y: 0, z: 0 }, SP = { x: 0, y: 0 };
   const evSplash = { bath: null, g: null, count: 0, mult: 1 }, evSeated = { g: null, bath: null }, evHeart = { g: null }, evCold = { bath: null }, evYuzu = { bath: null }, evPlunge = { g: null, bath: null, hot: false };
+  const evGong = { bath: null, n: 0, full: false };
+  const GONGS = {}, TSURUS = {};              // drawables for pavilion baths: the gong stand with its countdown, Madame Tsuru behind the chairs
   const WSTATE = { cold: false, yuzu: false, lowFx: false };
 
   Baths.init = function (S) { LIST.length = 0; };
@@ -19,6 +21,7 @@
     if (Baths.freeSlot(S, bath) >= 0) return 0;
     let best = Infinity; const n = Baths.slotCount(S, bath), m = Baths.rushHere(S, bath) ? C.RUSH_SOAK : 1;
     for (let i = 0; i < n; i++) { const g = bath.slots[i]; if (g) best = Math.min(best, g.hop ? g.soakMax : g.soakT / m); }
+    if (bath.def.gong && !bath.session) best += bath.gongT;          // chairs taken before the gong stay taken until the gong and the massage after it
     return best;
   };
   Baths.slotPos = function (bath, i, n, out) {
@@ -49,7 +52,7 @@
     sp.t = S.t; sp.bathId = bath.id; sp.mult = C.SPLASH_MULT[Math.min(sp.count, 5)]; g.batch = sp;
     g.soakMax = g.soakT = Baths.soakTime(S, bath, g);
     g.yuzuHat = g.yuzuHat || bath.yuzuT > 0;
-    g.squashT = C.SQUASH_T; g.heartT = 0; g.sleepy = 0;
+    g.squashT = C.SQUASH_T; g.heartT = 0; g.sleepy = 0; g.inSession = false; g.fullHouse = false;
     if (bath.def.plungeOnly) {                                   // the hot-cold moment: in the window since the sauna = x2
       g.hotCold = g.plungeT <= C.PLUNGE_WINDOW; S.stats.plunges++; if (g.hotCold) S.stats.hotCold++;
       evPlunge.g = g; evPlunge.bath = bath; evPlunge.hot = g.hotCold; G.Bus.emit('plunge', evPlunge);
@@ -62,7 +65,7 @@
   };
   Baths.payout = function (S, g) {
     const bath = S.baths[g.bathId], base = DATA.GUESTS[g.kind].pay * (bath.def.payMult || 1);     // a season may price its stations differently
-    const ev = (g.batch ? g.batch.mult : 1) * Math.max(g.yuzuHat ? C.YUZU_PAY : 1, g.golden ? C.GOLDEN_PAY : 1) * G.Heat.payMult(S, bath) * (S.night.active ? C.NIGHT_PAY : 1) * (g.hotCold ? C.HOTCOLD_PAY : 1);
+    const ev = (g.batch ? g.batch.mult : 1) * Math.max(g.yuzuHat ? C.YUZU_PAY : 1, g.golden ? C.GOLDEN_PAY : 1) * G.Heat.payMult(S, bath) * (S.night.active ? C.NIGHT_PAY : 1) * (g.hotCold ? C.HOTCOLD_PAY : 1) * (g.fullHouse ? (bath.def.fullHouse || 1) : 1);
     return Math.round(base * G.Upgrades.payMult(S, bath.id) * G.Upgrades.famousMult(S) * G.Upgrades.starMult(S) * Math.min(C.MULT_CAP, ev));
   };
   Baths.applyYuzu = function (S, bath) {
@@ -97,9 +100,27 @@
         }
         if (Trail.hasKind(S, 'yuzu') && !bath.def.plungeOnly && (bath.yuzuT <= 0 || bath.yuzuT < C.YUZU_REFRESH_BELOW)) Baths.applyYuzu(S, bath);
       } else { bath.coldOnce = false; bath.refusedOnce = false; }
+      // the pavilion's gong: seated guests wait for it, then everyone is massaged together (FULL HOUSE when every chair is taken)
+      if (bath.def.gong) {
+        bath.gongT -= dt;
+        if (bath.gongT <= 0) {
+          bath.gongT += bath.def.gong;
+          if (!bath.session) {
+            let seated = 0; const cap = Baths.slotCount(S, bath);
+            for (let i = 0; i < cap; i++) if (bath.slots[i] && !bath.slots[i].hop) seated++;
+            if (seated > 0) {
+              const full = seated >= cap; bath.session = true; bath.sparkT = 0;
+              for (let i = 0; i < cap; i++) { const g = bath.slots[i]; if (g && !g.hop) { g.fullHouse = full; g.inSession = true; g.soakMax = g.soakT = Baths.soakTime(S, bath, g); } }
+              S.stats.massages += seated; if (full) S.stats.fullHouses++;
+              evGong.bath = bath; evGong.n = seated; evGong.full = full; G.Bus.emit('gong', evGong);
+            }
+          }
+        }
+        if (bath.session) { bath.sparkT += dt; if (bath.sparkT >= 0.5) { bath.sparkT = 0; const cap = Baths.slotCount(S, bath); for (let i = 0; i < cap; i++) { const g = bath.slots[i]; if (g && g.inSession) G.FX.sparkle(S, g.x, g.y - 24, 1); } } }
+      }
       // seated guests
       const n = bath.slots.length, rushM = Baths.rushHere(S, bath) ? C.RUSH_SOAK : 1;
-      let occ = false;
+      let occ = false, massaging = false;
       for (let i = 0; i < n; i++) {
         const g = bath.slots[i]; if (!g) continue;
         occ = true;
@@ -108,6 +129,9 @@
           if (h.t >= h.dur) { g.hop = null; g.z = 0; g.x = h.x1; g.y = h.y1; Baths.land(S, bath, g); }
           continue;
         }
+        // in the pavilion a guest waits (relaxed, no timer) until a gong puts them in a session; latecomers wait for the next one
+        if (bath.def.gong && !g.inSession) { g.shiver = false; g.heartT += dt; if (g.heartT >= C.HEART_EVERY) { g.heartT = 0; evHeart.g = g; G.Bus.emit('guest:heart', evHeart); } continue; }
+        if (bath.def.gong) massaging = true;
         if (warm) {
           g.shiver = false;
           g.soakT -= dt * rushM;
@@ -118,16 +142,30 @@
         } else g.shiver = true;
       }
       bath.occupied = occ;
-      if (occ && warm && bath.rippleT >= C.RIPPLE_EVERY) { bath.rippleT = 0; for (let i = 0; i < n; i++) { const g = bath.slots[i]; if (g && !g.hop) G.FX.ripple(S, g.x, g.y + 6, bath.yuzuT > 0); } }
-      // steam
-      if (warm) {
+      if (bath.session && !massaging) bath.session = false;                               // the last massage finished: the chairs are free until the next gong
+      if (occ && warm && bath.rippleT >= C.RIPPLE_EVERY && !bath.def.gong) { bath.rippleT = 0; for (let i = 0; i < n; i++) { const g = bath.slots[i]; if (g && !g.hop) G.FX.ripple(S, g.x, g.y + 6, bath.yuzuT > 0); } }
+      // steam (not from the pavilion)
+      if (warm && !bath.def.gong) {
         const rate = rushM > 1 ? C.STEAM_RATE_RUSH : occ ? C.STEAM_RATE : 1;
         bath.steamT += dt * rate;
         if (bath.steamT >= 1) { bath.steamT -= 1; const w = bath.def.water; G.FX.steam(S, w.x + (U.hash(S.t, bi) - 0.5) * w.w * 0.8, w.y + (U.hash(bi, S.t) - 0.5) * w.h * 0.6, 8 + U.hash(S.t * 3, bi) * 8, 0.4); }
       }
     }
   };
-  Baths.collect = function (S, list) { /* baths push nothing: decks are static, water is ground */ };
+  // decks are static and water is ground; a pavilion adds its gong stand and Madame Tsuru to the sorted pass
+  Baths.collect = function (S, list) {
+    for (let bi = 0; bi < DATA.BATHS.length; bi++) {
+      const d = DATA.BATHS[bi]; if (!d.gong || !S.built[d.id] || !G.Camera.visibleY(d.deck.y, 160)) continue;
+      if (!GONGS[d.id]) { GONGS[d.id] = { id: d.id, def: d, sortY: d.gongAt.y, draw: drawGong }; TSURUS[d.id] = { id: d.id, def: d, sortY: d.tsuruAt.y, draw: drawTsuru }; }
+      list.push(GONGS[d.id]); list.push(TSURUS[d.id]);
+    }
+  };
+  function drawGong(ctx, o, S) { const b = S.baths[o.id], d = o.def; G.Art.W.gong(ctx, d.gongAt.x, d.gongAt.y, 1 - b.gongT / d.gong, b.session, S.t); }
+  function drawTsuru(ctx, o, S) {
+    const b = S.baths[o.id], d = o.def, Ch = G.Art.Ch, p = Ch.resetPose(Ch.POSE);
+    p.x = d.tsuruAt.x; p.y = d.tsuruAt.y; p.face = 1; p.t = S.t; p.pose = b.session ? 'massage' : null; p.poseT = S.t;
+    Ch.tsuru(ctx, p);
+  }
   Baths.drawGround = function (ctx, S) {
     const cam = G.Camera, H = G.Canvas.H, W = G.Art.W, Ch = G.Art.Ch;
     for (let bi = 0; bi < DATA.BATHS.length; bi++) {
@@ -140,11 +178,12 @@
         const g = bath.slots[i]; if (!g || g.hop) continue;
         const back = n > 4 ? (i & 1) === 1 : false; if ((pass === 0) !== back) continue;
         const p = G.Guests.fillPose(S, g, Ch.resetPose(Ch.POSE));
-        p.inWater = d.water; p.sink = g.sleepy * 4; p.lid = g.sleepy >= 1 ? 3 : g.sleepy >= 0.66 ? 2 : g.sleepy >= 0.33 ? 1 : 0; p.moving = false;
+        p.inWater = d.water; p.sink = d.gong ? 0 : g.sleepy * 4; p.lid = g.sleepy >= 1 ? 3 : g.sleepy >= 0.66 ? 2 : g.sleepy >= 0.33 ? 1 : 0; p.moving = false;
+        if (d.gong && g.inSession) p.lid = 2;                                              // eyes half closed under Tsuru's hands
         Ch.guest(ctx, p, g.kind);
       }
       if (bath.yuzuT > 0) W.floatingYuzu(ctx, d, S.t);
-      for (let i = 0; i < n; i++) { const g = bath.slots[i]; if (!g || g.hop) continue; W.soakRing(ctx, g.x, g.y - 34, 1 - g.soakT / g.soakMax); }
+      for (let i = 0; i < n; i++) { const g = bath.slots[i]; if (!g || g.hop || (d.gong && !g.inSession)) continue; W.soakRing(ctx, g.x, g.y - 34, 1 - g.soakT / g.soakMax); }   // waiting for the gong shows no ring
       // hopping guests are drawn over the water (they are airborne)
       for (let i = 0; i < n; i++) { const g = bath.slots[i]; if (g && g.hop) { const p = G.Guests.fillPose(S, g, Ch.resetPose(Ch.POSE)); Ch.guest(ctx, p, g.kind); } }
     }

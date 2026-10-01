@@ -15,7 +15,8 @@
     { id: 'bridge', label: 'Ridge Bridge', x: 270, y: 1180, costs: [1500, 2000, 2500, 3000, 4000],    requires: ['bamboo', 'trail:2', 'car:2'], effect: 'famous:1.25,1.30,1.35,1.40,1.45' },   // level 1 also opens the Ridge
     // the Ridge (GDD 19)
     { id: 'sauna',  label: 'Sauna Hut',    x: 480, y: 905,  costs: [1500],                            requires: ['bridge'],                     effect: 'build:sauna' },
-    { id: 'plunge', label: 'Cold Plunge',  x: 120, y: 905,  costs: [1200],                            requires: ['sauna'],                      effect: 'build:plunge' }
+    { id: 'plunge', label: 'Cold Plunge',  x: 120, y: 905,  costs: [1200],                            requires: ['sauna'],                      effect: 'build:plunge' },
+    { id: 'pavilion', label: 'Massage Pavilion', x: 300, y: 600, costs: [2500],                       requires: ['plunge'],                     effect: 'build:pavilion' }
     // the Season Pass to the (hidden) Mochi Terrace, kept for reference: { id: 'travel', label: 'Season Pass', x: 420, y: 1200, costs: [5000], requires: ['bridge'], effect: 'travel:2' }
   ];
 })(window.G);

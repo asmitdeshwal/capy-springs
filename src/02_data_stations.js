@@ -18,7 +18,11 @@
       exit: { x: 309, y: 840 }, tray: { x: 328, y: 860 }, lane: 290 },
     { id: 'plunge', name: 'Cold Plunge', heated: false, slots: 3, maxSlots: 6, soak: 4, lantern: 'plunge', payMult: 1.5, look: 'plunge', plungeOnly: true,
       water: { x: 120, y: 800, w: 150, h: 90 }, deck: { x: 120, y: 800, w: 210, h: 150 },
-      exit: { x: 236, y: 840 }, tray: { x: 212, y: 860 }, lane: 250 }
+      exit: { x: 236, y: 840 }, tray: { x: 212, y: 860 }, lane: 250 },
+    // Madame Tsuru's pavilion works to a gong: seated guests wait for it, then all are massaged together; every chair full at the gong = FULL HOUSE
+    { id: 'pavilion', name: 'Massage Pavilion', heated: false, slots: 2, maxSlots: 4, soak: 10, lantern: 'pavilion', payMult: 5, look: 'pavilion', gong: 20, fullHouse: 1.5,
+      water: { x: 420, y: 650, w: 150, h: 70 }, deck: { x: 420, y: 640, w: 210, h: 150 },     // chairs end 20 px above the deck's foot so Kit can stand there
+      exit: { x: 309, y: 680 }, tray: { x: 328, y: 700 }, lane: 290, gongAt: { x: 330, y: 712 }, tsuruAt: { x: 420, y: 614 } }
   ];
   // drop zone = deck rect; Kit collides with the water rect; koban land in the tray (lane-side deck strip); guests reappear at exit when climbing out.
   G.DATA.STATIONS = {
@@ -30,7 +34,7 @@
     platform: { x: 270, y: 2060, w: 320, h: 80 }
   };
   // Sheet-capable stations (a tap opens the upgrade sheet)
-  G.DATA.SHEET_STATIONS = ['rock', 'cedar', 'bamboo', 'boiler', 'grove', 'stall', 'sauna', 'plunge'];
+  G.DATA.SHEET_STATIONS = ['rock', 'cedar', 'bamboo', 'boiler', 'grove', 'stall', 'sauna', 'plunge', 'pavilion'];
   // cost(level) = round5(base * 1.6 ** level), level = current level (0-based). title / blurb = what the upgrade sheet says in plain words (GDD 10.4)
   const BATH_TRACKS = {
     speed: { title: 'Quicker soaks', blurb: 'Guests finish sooner, so more fit in between cars' },
@@ -55,6 +59,9 @@
               pay:   { label: 'Tips',    base: 180, max: 6, title: 'Better tips',   blurb: 'Every sauna guest pays more' } },
     plunge: { speed: { label: 'Chill',  base: 150, max: 4, title: 'Colder water',  blurb: 'The plunge is over quicker' },
               slots: { label: 'Width',   base: 200, max: 3, title: 'Wider pool',    blurb: 'More guests can plunge at once' },
-              pay:   { label: 'Tips',    base: 180, max: 6, title: 'Better tips',   blurb: 'Every plunge pays more' } }
+              pay:   { label: 'Tips',    base: 180, max: 6, title: 'Better tips',   blurb: 'Every plunge pays more' } },
+    pavilion: { speed: { label: 'Hands', base: 250, max: 6, title: 'Quicker hands', blurb: 'Each massage takes less time' },
+                slots: { label: 'Chairs', base: 350, max: 2, title: 'Another chair', blurb: 'More guests per gong, bigger full houses' },
+                pay:   { label: 'Tips',   base: 300, max: 6, title: 'Better tips',   blurb: 'Every massage pays more' } }
   };
 })(window.G);

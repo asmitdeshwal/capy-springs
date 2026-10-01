@@ -170,6 +170,23 @@
   };
 
   // guest kinds are roles; the pack's `art` names the drawer (a season art file may add Ch.<art>)
+  // ---------------- Madame Tsuru the crane masseuse (70 tall) ----------------
+  // pose 'massage': the neck dips and the wings work; idle: a slow sway
+  Ch.tsuru = function (ctx, p) {
+    const S_ = A(), t = p.t, work = p.pose === 'massage', sway = work ? Math.sin(t * 9) * 6 : Math.sin(t * 1.3) * 3;
+    begin(ctx, p, 14, 5);
+    A().line(ctx, -5, 0, -5, -22, P.ink, 2.5); A().line(ctx, 5, 0, 5, -22, P.ink, 2.5);                        // legs
+    ctx.beginPath(); ctx.ellipse(0, -32, 17, 11, 0, 0, TAU); ctx.fillStyle = P.cream; ctx.fill(); strokePath(ctx, P.stoneDark);   // body
+    S_.ellipse(ctx, -13, -34, 8, 5, P.ink);                                                                      // tail feathers
+    if (work) { ctx.save(); ctx.translate(10, -36); ctx.rotate(0.6 + Math.sin(t * 9) * 0.3); S_.ellipse(ctx, 8, 4, 12, 5, P.cream); ctx.restore(); }   // a working wing
+    ctx.lineCap = 'round'; A().line(ctx, 8, -40, 14 + sway * 0.4, -62 - (work ? 6 : 0), P.cream, 5);                // neck
+    S_.circle(ctx, 16 + sway * 0.5, -66 - (work ? 6 : 0), 6.5, P.cream); S_.circle(ctx, 16 + sway * 0.5, -71 - (work ? 6 : 0), 2.4, P.red);   // head + crown
+    S_.tri(ctx, 21 + sway * 0.5, -67 - (work ? 6 : 0), 21 + sway * 0.5, -64 - (work ? 6 : 0), 31 + sway * 0.5, -65 - (work ? 6 : 0), P.ink);   // beak
+    eye(ctx, 18 + sway * 0.5, -67 - (work ? 6 : 0), 1.5);
+    ctx.lineCap = 'butt';
+    end(ctx);
+  };
+
   // ---------------- Kaa the crow (micro-event) ----------------
   // (x, y) = feet; fly 0..1 while leaving (wings beat, fades); ring = remaining tap-window fraction while landed
   Ch.kaa = function (ctx, x, y, fly, t, ring) {

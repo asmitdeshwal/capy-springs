@@ -705,3 +705,15 @@ The phone playtest of Season 2 showed what makes this game fun: **something new 
 **Arrow.** Rule 14 PLUNGE sits between the chain rule and SOAK; rule 1 (chain) and rule 2 (SOAK) only consider stations that accept what the line carries, and rule 2 weighs seats by worth (`payMult`, or 3.5 for the sauna while the plunge exists); LEAD prefers a waiting sauna guest whose window is open; YUZU never targets the plunge. Tutorial word PLUNGE shows twice like the others.
 
 **Harness.** Deck run 45 min: the Ridge is open by 40 min, both stations built and at least one hot-cold by 45 min. Seed 7: bridge 24:57, sauna 27:36, plunge 30:17, 14 plunges / 11 hot-cold, 54,521 coins at 45 min, 12 guests lost of 1,221.
+
+### 19.2 The Massage Pavilion (built 1.7.0): Madame Tsuru and the gong
+
+**Where.** Top right of the Ridge: deck (420,640) 210×150 with a roof band across the top (upturned eaves, snow on the ridge line) and four posts; the chairs are the 'water' rect (420,650) 150×70 — a tatami mat with cushions — so no guest is ever drawn under the roof. Madame Tsuru stands behind the mat at (420,614); the gong stand is at (330,712); exit (309,680), tray (328,700); offering step at (300,600). Lantern `pavilion`, 2,500, requires `plunge`, effect build.
+
+**How it works.** The pavilion runs to a **gong** every 20 s (`def.gong`), shown as a countdown ring on the gong stand. Guests dropped in the chairs wait — relaxed, hearts, no timer ring — until the gong. At the gong every seated guest (not still hopping) starts a **session** together: 10 s (Quicker hands → 7 s), eyes half closed, a sparkle per guest every 0.5 s, Tsuru's neck dips and a wing works. If **every chair is taken at the gong** it is a **FULL HOUSE**: each guest's payout × 1.5 (`def.fullHouse`), a pop, confetti, zoom punch 0.04. A guest seated during a session waits for the next gong (`g.inSession`). A gong with empty chairs does nothing (no fail state). Pay ×5 (6 → 30 koban each; Better tips raises it), 2 chairs → 4 (Another chair). The pavilion takes bath wanters, not plunge wanters; after the massage the guest leaves by the Ridge exit.
+
+**Why it is new.** Two clocks to plan around (the cable car's and the gong's), and a decision the baths never asked — *bring enough guests, together* — with a visible payoff for doing it. It also makes the Ridge a loop of its own: seat four in the chairs, run the sauna → plunge chain while the gong counts down, collect both.
+
+**Arrow.** Rule 2 scores a station by seats × worth × 800 / (800 + distance), so the pavilion (worth 5) is chosen when its chairs are free and it is not absurdly far; `nextFreeIn` adds the time to the next gong for taken chairs. Rule 4 (YUZU) only considers baths on Kit's side of the bridge.
+
+**Harness.** Deck run 50 min: pavilion built with ≥ 2 massages and ≥ 1 full house by 50 min. Seed 7: pavilion 43:51, 37 massages, 8 full houses, 61,019 coins at 50 min; seeds 3 and 11 pass. The bot takes the lane when it carries guests across the bridge; it walks straight at its target otherwise and only plans a route when stuck (deliberate: a route-planning bot lost three times the guests).

@@ -13,7 +13,7 @@
   function guestFactory() {
     return { id: 0, kind: 'capy', x: 0, y: 0, face: 1, state: 'gone', carId: 0, golden: false,
       patience: 0, patienceMax: 0, want: null, bathId: null, slot: -1, soakT: 0, soakMax: 0, batch: null, yuzuHat: false,
-      area: 'platform', millRect: null, plungeT: 0, hotCold: false,     // the Ridge: where this guest waits, the hot-cold window since the sauna
+      area: 'platform', millRect: null, plungeT: 0, hotCold: false, fullHouse: false, inSession: false,     // the Ridge: where this guest waits, the hot-cold window since the sauna, the pavilion's gong
       node: null, sx: 1, sy: 1, squashT: 0, bobPhase: 0, hop: null, route: null, routeI: 0, nextState: null, walk: 110,
       millT: 0, waveT: 0, heartT: 0, sleepy: 0, shiver: false, queueSpot: -1, queueT: 0, paid: 0, sortY: 0, draw: null, alpha: 1, tutorial: false,
       hopObj: { x0: 0, y0: 0, x1: 0, y1: 0, t: 0, dur: 0.25, h: 18 }, routeArr: [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }], routeN: 0, mx: 0, my: 0, moving: false, coldOnce: false };
@@ -22,6 +22,7 @@
   State.bathRuntime = function (def) {
     const slots = new Array(def.maxSlots); for (let i = 0; i < def.maxSlots; i++) slots[i] = null;
     return { id: def.id, def, slots, yuzuT: 0, warm: true, occupied: false, rippleT: 0, steamT: 0, lastPlop: -99, coldOnce: false, refusedOnce: false,
+             gongT: def.gong || 0, session: false, sparkT: 0,          // the pavilion's gong countdown and whether a massage is running
              sortY: def.deck.y + def.deck.h / 2, draw: null };
   };
 
@@ -69,7 +70,7 @@
       lap: { i: 0, t: 0, armed: false, glow: [0, 0, 0], laps: 0 },
       kaa: { state: 'away', t: DATA.KAA ? DATA.KAA.every : 0, x: 0, y: 0, trayId: null, timer: 0, leaveT: 0, won: 0 },
       tutorial: { LEAD: 0, SOAK: 0, COLLECT: 0, LIGHT: 0, STOKE: 0, YUZU: 0, TAP: 0, DRAG: 0, LAP: 0, PLUNGE: 0 },
-      stats: { served: 0, ducks: 0, combos: [0, 0, 0, 0, 0, 0], rushes: 0, chains: 0, fullCars: 0, nights: 0, golden: 0, mochi: 0, lost: 0, vip: 0, laps: 0, kaa: 0, plunges: 0, hotCold: 0 },
+      stats: { served: 0, ducks: 0, combos: [0, 0, 0, 0, 0, 0], rushes: 0, chains: 0, fullCars: 0, nights: 0, golden: 0, mochi: 0, lost: 0, vip: 0, laps: 0, kaa: 0, plunges: 0, hotCold: 0, massages: 0, fullHouses: 0 },
       settings: { sound: true, haptics: null, shakeFlash: true, lowFx: false },
       fx: { steam: U.pool(C.STEAM_CAP, steamItem), ripples: U.pool(C.RIPPLE_CAP, rippleItem), parts: U.pool(C.PARTICLE_CAP, partItem), pops: U.pool(C.POP_CAP, popItem), flash: 0, wash: 0 },
       ui: { sheet: null, card: null, settings: false, banner: null, pill: null, pillT: 0, arrow: null, lastRule: 0, arrowFlash: null,
@@ -89,7 +90,7 @@
     g.patience = d.patienceWait; g.patienceMax = d.patienceWait; g.want = 'bath'; g.bathId = null; g.slot = -1; g.soakT = 0; g.soakMax = 0; g.batch = null; g.yuzuHat = false;
     g.node = null; g.sx = 1; g.sy = 1; g.squashT = 0; g.bobPhase = U.rand() * 6.28; g.hop = null; g.route = null; g.routeI = 0; g.routeN = 0; g.nextState = null; g.walk = d.walk;
     g.millT = 0; g.waveT = 0; g.heartT = 0; g.sleepy = 0; g.shiver = false; g.queueSpot = -1; g.queueT = 0; g.paid = 0; g.sortY = 0; g.alpha = 1; g.tutorial = false; g.moving = false; g.coldOnce = false;
-    g.area = 'platform'; g.millRect = null; g.plungeT = 0; g.hotCold = false;
+    g.area = 'platform'; g.millRect = null; g.plungeT = 0; g.hotCold = false; g.fullHouse = false; g.inSession = false;
     g.draw = G.Guests.draw;
     S.guests.push(g);
     return g;
@@ -109,7 +110,7 @@
     S.trail.length = 0; S.trailMeta.joinT = -99; S.trailMeta.compress = 1;
     S.coinPool.clear();
     for (const id in S.trays) { S.trays[id].value = 0; S.trays[id].bounce = 0; }
-    for (const id in S.baths) { const b = S.baths[id]; for (let i = 0; i < b.slots.length; i++) b.slots[i] = null; b.occupied = false; b.lastPlop = -99; b.refusedOnce = false; }
+    for (const id in S.baths) { const b = S.baths[id]; for (let i = 0; i < b.slots.length; i++) b.slots[i] = null; b.occupied = false; b.lastPlop = -99; b.refusedOnce = false; b.session = false; b.gongT = b.def.gong || 0; }
     S.splash.count = 0; S.splash.t = -99; S.splash.mult = 1; S.splash.bathId = null;
     S.carLog = {};
     for (const k in S.unwrapping) delete S.unwrapping[k];

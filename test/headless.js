@@ -127,7 +127,8 @@ const DECK_CHECKS = [
   [1800, () => { if (S.earned < 22400) fail('1800 s: earned ' + S.earned + ' < 22400'); const r = S.stats.lost / Math.max(1, S.stats.served + S.stats.lost); if (r > 0.15) fail('1800 s: lost ratio ' + r.toFixed(2) + ' > 0.15'); }],
   // the Ridge (GDD 19): opens with the bridge, then the sauna -> plunge chain lands at least one hot-cold
   [2400, () => { if (!S.built.ridge) fail('2400 s: the Ridge did not open (bridge level ' + S.lanterns.bridge.level + ')'); }],
-  [2700, () => { if (!S.built.sauna) fail('2700 s: Sauna Hut not built'); if (!S.built.plunge) fail('2700 s: Cold Plunge not built'); if (S.stats.hotCold < 1) fail('2700 s: no hot-cold plunge (plunges ' + S.stats.plunges + ')'); }]
+  [2700, () => { if (!S.built.sauna) fail('2700 s: Sauna Hut not built'); if (!S.built.plunge) fail('2700 s: Cold Plunge not built'); if (S.stats.hotCold < 1) fail('2700 s: no hot-cold plunge (plunges ' + S.stats.plunges + ')'); }],
+  [3000, () => { if (!S.built.pavilion) fail('3000 s: Massage Pavilion not built'); if (S.stats.massages < 2) fail('3000 s: massages ' + S.stats.massages + ' < 2'); if (S.stats.fullHouses < 1) fail('3000 s: no full house'); }]
 ];
 // Season 2 (the Mochi Terrace): floors = 70 % of the measured curve (seed 7, build 1.3.0): 243 / 1259 / 4635 / 16803 / 32397 / 49909 at 2 / 5 / 10 / 20 / 30 / 40 min
 const TERRACE_CHECKS = [
@@ -197,7 +198,7 @@ if (!fails.length) {
 // ---- report ----
 if (opt.csv) { try { fs.mkdirSync(path.dirname(path.resolve(root, opt.csv)), { recursive: true }); fs.writeFileSync(path.resolve(root, opt.csv), csvRows.join('\n') + '\n'); log('csv written: ' + opt.csv); } catch (e) { warns.push('csv write failed: ' + e.message); } }
 const st = S.stats;
-log('season ' + G.SEASON.id + ' (' + G.SEASON.name + ') | ' + (fuzz ? 'fuzz ' : 'bot ') + total + ' s in ' + wall.toFixed(1) + ' s wall | earned ' + S.earned + ' coins ' + S.coins + ' | served ' + st.served + ' lost ' + st.lost + ' | combos x3/x4/x5 ' + st.combos[3] + '/' + st.combos[4] + '/' + st.combos[5] + ' | rushes ' + st.rushes + ' chains ' + st.chains + ' | fullCars ' + st.fullCars + ' nights ' + st.nights + ' golden ' + st.golden + ' mochi ' + st.mochi + ' | vip ' + st.vip + ' laps ' + st.laps + ' kaa ' + st.kaa + ' | plunges ' + st.plunges + ' hotCold ' + st.hotCold + ' | trailCap ' + S.trailCap + ' car L' + S.car.level + ' | buys ' + bot.buys());
+log('season ' + G.SEASON.id + ' (' + G.SEASON.name + ') | ' + (fuzz ? 'fuzz ' : 'bot ') + total + ' s in ' + wall.toFixed(1) + ' s wall | earned ' + S.earned + ' coins ' + S.coins + ' | served ' + st.served + ' lost ' + st.lost + ' | combos x3/x4/x5 ' + st.combos[3] + '/' + st.combos[4] + '/' + st.combos[5] + ' | rushes ' + st.rushes + ' chains ' + st.chains + ' | fullCars ' + st.fullCars + ' nights ' + st.nights + ' golden ' + st.golden + ' mochi ' + st.mochi + ' | vip ' + st.vip + ' laps ' + st.laps + ' kaa ' + st.kaa + ' | plunges ' + st.plunges + ' hotCold ' + st.hotCold + ' massages ' + st.massages + ' fullHouses ' + st.fullHouses + ' | trailCap ' + S.trailCap + ' car L' + S.car.level + ' | buys ' + bot.buys());
 log('lanterns: ' + DATA.LANTERNS.map(d => d.id + ':' + S.lanterns[d.id].level).join(' '));
 if (opt.beats) {
   log('\nBEATS (first time, seconds):');

@@ -99,5 +99,5 @@
   const LEFT = { align: 'left' };
   const ICONS = { rock: ['bath', 'capy', 'koban'], cedar: ['bath', 'capy', 'koban'], bamboo: ['bath', 'capy', 'koban'], boiler: ['flame', 'kettle', 'pon'], grove: ['yuzu', 'yuzu', 'yuzu'], stall: ['mochi', 'mochi', 'koban'] };
   ICONS.bench = ICONS.table = ICONS.hearth = ICONS.rock;
-  ICONS.sauna = ['flame', 'capy', 'koban']; ICONS.plunge = ['plunge', 'capy', 'koban'];
+  ICONS.sauna = ['flame', 'capy', 'koban']; ICONS.plunge = ['plunge', 'capy', 'koban']; ICONS.pavilion = ['heart', 'capy', 'koban'];
 })(window.G);
