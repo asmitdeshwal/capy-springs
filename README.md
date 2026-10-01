@@ -35,7 +35,7 @@ It starts the server and a free Cloudflare "quick tunnel" and prints an address 
 npm run deploy
 ```
 
-It bumps the version, rebuilds the icons and service worker, commits and pushes; GitHub Pages rebuilds in about a minute and the phone picks up the new version the next time the app is opened online (allow up to ~10 minutes). Developer mode set on the phone stays on across updates.
+It bumps the version, rebuilds the icons and service worker, commits and pushes; GitHub Pages rebuilds in about a minute, and the phone picks up the new version the next time the app is opened online (if it was already open during the rebuild, the time after that). Saves and developer mode on the phone survive updates. The address is `https://asmitdeshwal.github.io/capy-springs/`; the code lives at `github.com/asmitdeshwal/capy-springs`.
 
 Good to know: the home-screen app has its own save, separate from Safari's; a tap on the icon opens it full screen with no browser bars; sound starts on the first touch.
 

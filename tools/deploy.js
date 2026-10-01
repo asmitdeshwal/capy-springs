@@ -29,5 +29,5 @@ const gh = /github\.com[:/]([^/]+)\/([^/.]+)/.exec(remote);
 if (gh) {
   console.log('\nPushed v' + next + '. GitHub Pages rebuilds in about a minute:');
   console.log('  https://' + gh[1].toLowerCase() + '.github.io/' + gh[2] + '/');
-  console.log('Phones that have the app installed get the new version the next time they open it online (allow up to ~10 minutes).');
+  console.log('Phones that have the app installed get the new version the next time they open it online.');
 }

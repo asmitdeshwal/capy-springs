@@ -1,5 +1,12 @@
 # Capy Springs — changelog
 
+## 1.4.1 – 1.4.3 — published on GitHub Pages, self-updating (2026-10-01)
+
+- The game lives at `github.com/asmitdeshwal/capy-springs` and is served from `https://asmitdeshwal.github.io/capy-springs/` (the permanent https address an iPhone needs for Add to Home Screen). `npm run deploy` (`tools/deploy.js`) bumps the patch version, repacks, commits and pushes; Pages rebuilds in about a minute.
+- The service worker revalidates the page itself on every launch (hosts keep `index.html` for 10 minutes otherwise), so an installed copy gets a new version on its next open. Each deploy's version is stamped on the script URLs and names the cache, so old files are dropped cleanly.
+- Developer mode on a phone: seven taps on the version line along the bottom of the Settings box or of the title screen (a thumb-sized target now, with a countdown after four taps).
+- `npm run share` / `tools/serve.js`: if the port is busy the next free one is used; the share link follows it.
+
 ## 1.4.0 — app shell, developer mode, installable package (2026-10-01)
 
 - **Boot screen** in `index.html` (cream, a bobbing capy, a progress bar that fills as the 45 script files load; the file list `window.CAPY_FILES` is now the single load order used by the page, the harness and the packager).
