@@ -20,7 +20,8 @@ console.log('version ' + m[1] + '.' + m[2] + '.' + m[3] + ' -> ' + next);
 // 2. rebuild, 3. commit, 4. push
 run('node tools/pack.js');
 run('git add -A');
-try { run('git commit -q -m "Deploy v' + next + '"'); } catch (e) { console.log('nothing new to commit'); }
+const trailer = process.env.DEPLOY_TRAILER ? '\n\n' + process.env.DEPLOY_TRAILER : '';     // optional extra commit lines (e.g. a co-author)
+try { run('git commit -q -m "Deploy v' + next + trailer.replace(/"/g, '\\"') + '"'); } catch (e) { console.log('nothing new to commit'); }
 run('git push -q');
 
 let remote = ''; try { remote = run('git remote get-url origin', true).toString().trim(); } catch (e) { /* no remote */ }

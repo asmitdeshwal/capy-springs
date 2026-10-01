@@ -61,7 +61,7 @@ window.CAPY_FILES = [
   var files = window.CAPY_FILES, i = 0, fill = document.getElementById('bootfill'), sub = document.getElementById('bootsub');
   function next() {
     if (i >= files.length) { sub.textContent = 'ready'; return; }
-    var s = document.createElement('script'); s.src = files[i] + '?v=1.4.1';
+    var s = document.createElement('script'); s.src = files[i] + '?v=1.4.2';
     s.onload = function () { i++; fill.style.width = Math.round(i / files.length * 100) + '%'; next(); };
     s.onerror = function () { var e = document.createElement('div'); e.className = 'err'; e.textContent = 'Could not load ' + files[i] + '. If you opened the file directly, try node tools/serve.js and open http://localhost:5173.'; document.getElementById('boot').appendChild(e); };
     document.body.appendChild(s);
