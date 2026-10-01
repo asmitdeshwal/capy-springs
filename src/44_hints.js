@@ -6,7 +6,7 @@
   const P = { x: 0, y: 0 };
   // rule order (GDD 10.6, revised after the balance pass): an affordable lantern (LIGHT) outranks LEAD and COLLECT, otherwise
   // a steady stream of guests keeps the arrow on the platform forever and the unlocks never get pointed at.
-  const WORDS = { 1: 'SOAK', 2: 'SOAK', 3: 'STOKE', 4: 'YUZU', 5: 'STOKE', 6: 'LIGHT', 7: 'LEAD', 8: 'COLLECT', 9: 'YUZU', 10: 'TAP', 11: 'YUZU', 12: null, 13: 'LAP', 14: 'PLUNGE' };
+  const WORDS = { 1: 'SOAK', 2: 'SOAK', 3: 'STOKE', 4: 'YUZU', 5: 'STOKE', 6: 'LIGHT', 7: 'LEAD', 8: 'COLLECT', 9: 'YUZU', 10: 'TAP', 11: 'YUZU', 12: null, 13: 'LAP', 14: 'PLUNGE', 15: 'CLEAR' };
   const wantsPlunge = g => g.want === 'plunge', wantsBath = g => g.want !== 'plunge';
   // what a bath is worth per seat when the arrow picks one: pay, or the whole sauna -> plunge chain once the plunge exists
   function worth(S, b) { return b.def.sauna && S.built.plunge ? (b.def.hintValue || 3.5) : (b.def.payMult || 1); }
@@ -74,6 +74,8 @@
     if (tray && tray.value >= C.COIN_BADGE_MIN) return set(out, 8, 'tray', tray.id, tray.x, tray.y);
     // 3 (deferred). STOKE: drop the logs we happen to carry
     if (hasLog) return set(out, 3, 'boiler', 'boiler', ST.boiler.home.x, ST.boiler.home.y);
+    // 15. CLEAR: a snowdrift nearby on the Ridge's paths (a small job between cars, never urgent)
+    if (G.Snow) { const d = G.Snow.nearestDrift(S, kit.x, kit.y, 300); if (d) return set(out, 15, 'drift', null, d.x, d.y, d); }
     // 9. YUZU (stall): a queued guest, nothing cooking, a ripe yuzu
     if (S.built.stall && G.Stall.queued(S) > 0 && S.stall.stock + S.stall.pending === 0 && Grove.ripeCount(S) > 0 && Grove.canPick(S)) {
       const t = Grove.nearestRipe(S, kit.x, kit.y); if (t) return set(out, 9, 'tree', null, t.x, t.y + 30, t);

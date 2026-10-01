@@ -1,5 +1,11 @@
 # Capy Springs — changelog
 
+## 1.8.0 — snowfall (2026-10-02)
+
+- **Snow squalls** once the Ridge is open: the first 200 s after it opens, then every 150 s, lasting 30 s — flakes over the whole mountain, a cool tint, wind and a "SNOW SQUALL" banner. During a squall **snowdrifts** settle on three of the Ridge's path spots (bridge top, the lane, by the plunge and sauna steps), five seconds apart, up to four lying at once.
+- A drift is a crawl: Kit moves at 40 % through it, guests at 50 %. Kit **clears** one by pushing through it for 0.6 s: a burst of white puffs, a scrape, and 3 koban found under the snow. Drifts stay until cleared, so the Ridge needs tending — the first time the map itself pushes back, and never a fail.
+- New arrow word **CLEAR** (a drift within 300 px, between COLLECT and TAP: a small job between cars, never urgent). The harness checks ≥ 1 squall and ≥ 1 cleared drift by 50 min (seed 7: 9 squalls, 15 cleared).
+
 ## 1.7.0 — the Massage Pavilion and the gong (2026-10-02)
 
 - **Massage Pavilion** (2,500, after the Cold Plunge): Madame Tsuru's roofed pavilion at the top right of the Ridge, 2 chairs → 4, pay ×5. It works to a **gong** every 20 s (a countdown ring on the gong stand): guests you seat **wait, relaxed**, until the gong; then every seated guest is massaged together for 10 s (→ 7 s with Quicker hands), eyes half closed, sparkles, Tsuru's neck and wing working. **Every chair full at the gong = FULL HOUSE ×1.5** with a pop, confetti and a zoom punch. Latecomers wait for the next gong. A second clock to plan around, and a "bring enough guests" decision.

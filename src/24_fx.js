@@ -164,6 +164,8 @@
       if (e.full) { FX.pop(S, 'FULL HOUSE x' + e.bath.def.fullHouse + '!', w.x, w.y - w.h / 2 - 70, 32, PAL.amber, 'label'); FX.confetti(S, w.x, w.y - 10, C.CONFETTI_SMALL); Cam.punch(0.04, C.PUNCH_T); Cam.bump(5); }
       else Cam.bump(3);
     });
+    // snowfall: a cleared drift bursts into white puffs (its koban rain to Kit on their own)
+    Bus.on('snow:clear', e => { const S = cur(); for (let i = 0; i < 8; i++) FX.puff(S, e.x + (U.hash(i, e.x) - 0.5) * 50, e.y + (U.hash(i, e.y) - 0.5) * 20, 'puff', 8 + U.hash(i, 5) * 8); FX.sparkle(S, e.x, e.y - 10, 4); FX.pop(S, '+' + e.bonus, e.x, e.y - 30, 20, PAL.coin, 'plus'); });
     Bus.on('ridge:open', () => { const S = cur(), b = DATA.MAP.BRIDGE; FX.confetti(S, b.x, b.y0 + 40, C.CONFETTI_BIG); FX.confetti(S, b.x, b.y1, C.CONFETTI_BIG); FX.flash(S, 0.3); Cam.shake(6, 0.4); });
     Bus.on('guest:mochi', e => { const S = cur(); FX.pop(S, '+' + e.value, e.g.x, e.g.y - 40, 20, PAL.coin, 'plus'); });
     Bus.on('guest:lost', e => { const S = cur(); FX.droplets(S, e.g.x, e.g.y - 30, 3); });

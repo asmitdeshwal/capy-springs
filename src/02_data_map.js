@@ -9,6 +9,9 @@
              chasm: [[0, 1000, 238, 1150], [302, 1000, 540, 1150]],                  // solid drops either side of the bridge
              mill: { x0: 320, x1: 430, y0: 895, y1: 960 }, exit: { x: 270, y: 580 },  // where sauna guests wait for their plunge; where Ridge guests leave
              pines: [[40, 620], [30, 760], [510, 760], [150, 600], [40, 960], [500, 960], [200, 690]], rocks: [[90, 700], [220, 620], [160, 990], [500, 990]] },
+    // snowfall (GDD 19.3): squalls once the Ridge is open; drifts settle on these Ridge path spots and slow anyone until Kit clears them
+    SNOW: { first: 200, every: 150, dur: 30, perSquall: 3, stagger: 5, spots: [[270, 985], [270, 870], [270, 700], [150, 930], [400, 935]],
+            driftR: 38, growT: 2, clearT: 0.6, slowKit: 0.4, slowGuest: 0.5, bonus: 3, maxDrifts: 4 },
     VALLEY: { y0: 2200, y1: 2400 },
     BOUNDS: { x0: 14, x1: 526, y0: 1150, y1: 2100 },
     LANE: { x0: 240, x1: 300, cx: 270, y0: 1150, y1: 2020, snap: 30 },

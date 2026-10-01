@@ -69,6 +69,14 @@
     S_.fillRRect(ctx, wx0 + ww - 34, wy0 - 46, 14, 24, 3, PAL.boiler);                                     // chimney
     S_.fillRRect(ctx, wx0 + ww / 2 - 12, wy0 + wh - 4, 24, 12, 4, PAL.cedarDark);                            // step down to the porch
   };
+  // a snowdrift on a path: a mound that grows with `amount` (0..1), a blue shadow, a glint
+  W.drift = function (ctx, x, y, amount, t) {
+    const S_ = A(), k = Math.max(0, Math.min(1, amount)); if (k <= 0.02) return;
+    S_.ellipse(ctx, x + 4, y + 4, 38 * k, 16 * k, PAL.rgba('#7E96AC', 0.35));
+    S_.ellipse(ctx, x, y, 38 * k, 16 * k, '#E9EEF2'); S_.ellipse(ctx, x - 8 * k, y - 6 * k, 20 * k, 8 * k, '#FFFFFF');
+    S_.ellipse(ctx, x + 14 * k, y + 2, 10 * k, 4 * k, PAL.rgba('#C6D1D8', 0.8));
+    if (k >= 0.5) { ctx.globalAlpha = 0.5 + 0.5 * Math.sin(t * 5 + x); S_.circle(ctx, x - 4, y - 9 * k, 1.8, '#FFFFFF'); ctx.globalAlpha = 1; }
+  };
   // the massage pavilion: a roofed platform with upturned eaves; the chairs (the 'water' rect) sit below the roof band so guests are never under it
   W.pavilionBody = function (ctx, def) {
     const S_ = A(), d = def.deck, x0 = d.x - d.w / 2, y0 = d.y - d.h / 2;

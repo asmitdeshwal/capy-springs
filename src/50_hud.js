@@ -40,6 +40,7 @@
     Bus.on('heat:rush:start', e => { if (e.chain === 0 && !rushBannerShown) { rushBannerShown = true; HUD.banner(HUD.S, T('rush', 'STEAM RUSH')); } });
     Bus.on('season:unlock', e => HUD.banner(HUD.S, 'SEASON ' + e.id + ' OPEN!'));
     Bus.on('ridge:open', () => HUD.banner(HUD.S, 'THE RIDGE OPENS!'));
+    Bus.on('snow:start', () => HUD.banner(HUD.S, 'SNOW SQUALL'));
   };
   HUD.flight = function (x0, y0, value, delay) { const f = HUD.fly.alloc(); if (!f) { HUD.S.ui.coinBounce = 1; return; } f.x0 = x0; f.y0 = y0; f.t = 0; f.value = value; f.delay = delay || 0; inFlight += value; };
   HUD.offlineRain = function (S, value) { const n = Math.min(20, Math.max(1, value)); for (let i = 0; i < n; i++) HUD.flight(270 + (U.hash(i, 1) - 0.5) * 300, G.Canvas.H * 0.5 + (U.hash(i, 2) - 0.5) * 200, i === n - 1 ? value - Math.floor(value / n) * (n - 1) : Math.floor(value / n), i * 0.04); };

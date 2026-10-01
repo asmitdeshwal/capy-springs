@@ -33,7 +33,7 @@
       G.Bus.on('splash', e => { if (e.count >= 3 && G.Game.S) Player.pose(G.Game.S, 'pump', C.KIT_PUMP_T); });
     }
   };
-  Player.speed = S => C.KIT_SPEED * (S.trail.length === 0 ? C.KIT_SPRINT : 1);
+  Player.speed = S => C.KIT_SPEED * (S.trail.length === 0 ? C.KIT_SPRINT : 1) * (G.Snow ? G.Snow.speedMult(S, S.kit.x, S.kit.y, true) : 1);   // a snowdrift is a crawl
   Player.pose = function (S, name, seconds) { const k = S.kit; k.pose = name; k.poseT = 0; k.poseDur = seconds; };
   Player.squash = function (S) { S.kit.squashT = C.SQUASH_T; };
 

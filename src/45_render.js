@@ -55,7 +55,7 @@
     const sy = Math.max(0, (Cam.y - MAP.STATIC_Y0) * s), sh = Math.min(H * s, Render.staticCanvas.height - sy);
     if (sh > 0) ctx.drawImage(Render.staticCanvas, 0, sy, MAP.W * s, sh, 0, Cam.y + (sy / s - (Cam.y - MAP.STATIC_Y0)), MAP.W, sh / s);
     // 2. ground pass
-    G.Lanterns.drawGround(ctx, S); G.Heat.drawGround(ctx, S); G.Baths.drawGround(ctx, S); G.Coins.drawGround(ctx, S); G.FX.drawGround(ctx, S);
+    G.Lanterns.drawGround(ctx, S); G.Heat.drawGround(ctx, S); G.Baths.drawGround(ctx, S); G.Snow.drawGround(ctx, S); G.Coins.drawGround(ctx, S); G.FX.drawGround(ctx, S);
     // 3. sorted pass
     list.length = 0;
     G.Player.collect(S, list); G.Trail.collect(S, list); G.Guests.collect(S, list); G.CableCar.collect(S, list); G.Baths.collect(S, list);
@@ -67,6 +67,7 @@
     G.FX.drawWorld(ctx, S);
     const low = !!S.settings.lowFx;
     if (G.Art.W.ambient) G.Art.W.ambient(ctx, Cam.y, H, S.t, low);                              // drifting petals
+    G.Snow.drawWeather(ctx, Cam.y, H, S.t, low);                                                 // a squall's flakes and cool tint
     // 5. night tint + halos (lit lanterns keep a faint glow by day)
     const fade = S.night.fade;
     if (fade > 0) { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = PAL.rgba(PAL.skyNight, (low ? C.NIGHT_TINT_LOW : C.NIGHT_TINT) * fade); ctx.fillRect(0, Cam.y, MAP.W, H); ctx.globalCompositeOperation = 'source-over'; }

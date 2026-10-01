@@ -69,8 +69,9 @@
       // season mechanics (GDD 17.3): the Pounding Lap around the burner and Kaa the crow; both idle unless the pack defines DATA.LAP / DATA.KAA
       lap: { i: 0, t: 0, armed: false, glow: [0, 0, 0], laps: 0 },
       kaa: { state: 'away', t: DATA.KAA ? DATA.KAA.every : 0, x: 0, y: 0, trayId: null, timer: 0, leaveT: 0, won: 0 },
-      tutorial: { LEAD: 0, SOAK: 0, COLLECT: 0, LIGHT: 0, STOKE: 0, YUZU: 0, TAP: 0, DRAG: 0, LAP: 0, PLUNGE: 0 },
-      stats: { served: 0, ducks: 0, combos: [0, 0, 0, 0, 0, 0], rushes: 0, chains: 0, fullCars: 0, nights: 0, golden: 0, mochi: 0, lost: 0, vip: 0, laps: 0, kaa: 0, plunges: 0, hotCold: 0, massages: 0, fullHouses: 0 },
+      snow: { next: 0, active: false, t: 0, count: 0, dropT: 0, dropped: 0, drifts: [] },     // snowfall (GDD 19.3); drifts are runtime only
+      tutorial: { LEAD: 0, SOAK: 0, COLLECT: 0, LIGHT: 0, STOKE: 0, YUZU: 0, TAP: 0, DRAG: 0, LAP: 0, PLUNGE: 0, CLEAR: 0 },
+      stats: { served: 0, ducks: 0, combos: [0, 0, 0, 0, 0, 0], rushes: 0, chains: 0, fullCars: 0, nights: 0, golden: 0, mochi: 0, lost: 0, vip: 0, laps: 0, kaa: 0, plunges: 0, hotCold: 0, massages: 0, fullHouses: 0, squalls: 0, cleared: 0 },
       settings: { sound: true, haptics: null, shakeFlash: true, lowFx: false },
       fx: { steam: U.pool(C.STEAM_CAP, steamItem), ripples: U.pool(C.RIPPLE_CAP, rippleItem), parts: U.pool(C.PARTICLE_CAP, partItem), pops: U.pool(C.POP_CAP, popItem), flash: 0, wash: 0 },
       ui: { sheet: null, card: null, settings: false, banner: null, pill: null, pillT: 0, arrow: null, lastRule: 0, arrowFlash: null,
@@ -124,6 +125,7 @@
     S.night.active = false; S.night.t = 0; S.night.fade = 0; S.night.lit = {};
     S.heat.rush = false; S.heat.rushT = 0; S.heat.chain = 0;
     S.lap.i = 0; S.lap.t = 0; S.lap.armed = false; S.lap.glow[0] = S.lap.glow[1] = S.lap.glow[2] = 0;
+    S.snow.active = false; S.snow.t = 0; S.snow.next = 0; S.snow.drifts.length = 0; S.snow.dropped = S.snow.count * (DATA.MAP.SNOW ? DATA.MAP.SNOW.perSquall : 0);
     S.kaa.state = 'away'; S.kaa.t = DATA.KAA ? DATA.KAA.every : 0; S.kaa.trayId = null; S.car.vip = false;
     S.ui.sheet = null; S.ui.card = null; S.ui.settings = false; S.ui.banner = null; S.ui.arrow = null; S.ui.lastRule = 0; S.ui.arrowFlash = null; S.ui.chevron = null;
   };

@@ -31,9 +31,11 @@
     if (!g.walking) return true;
     const p = g.routeArr[g.routeI];
     g.moving = true; g.bobPhase += dt * g.walk / 30;
-    if (U.moveToward(g, p.x, p.y, g.walk, dt)) { g.routeI++; if (g.routeI >= g.routeN) { g.walking = false; g.moving = false; return true; } faceTo(g, g.routeArr[g.routeI].x); }
+    const sp = g.walk * (G.Snow ? G.Snow.speedMult(S_, g.x, g.y, false) : 1);                 // snowdrifts slow guests too
+    if (U.moveToward(g, p.x, p.y, sp, dt)) { g.routeI++; if (g.routeI >= g.routeN) { g.walking = false; g.moving = false; return true; } faceTo(g, g.routeArr[g.routeI].x); }
     return false;
   }
+  let S_ = null;                                                                            // the state during Guests.update (for the walk helper)
 
   Guests.spawn = function (S, kind, carId, golden, x0, y0) {
     const g = G.State.newGuest(S, kind, carId); if (!g) return null;
@@ -80,7 +82,7 @@
   Guests.remove = function (S, g) { evG.g = g; G.Bus.emit('guest:gone', evG); G.State.freeGuest(S, g); };
 
   Guests.update = function (S, dt) {
-    const kit = S.kit, Trail = G.Trail;
+    const kit = S.kit, Trail = G.Trail; S_ = S;
     // joining: one guest per TRAIL_JOIN_GAP
     if (S.t - S.trailMeta.joinT >= C.TRAIL_JOIN_GAP && !Trail.full(S)) {
       const g = Guests.nearestWaiting(S, kit.x, kit.y, C.TRAIL_JOIN_R);

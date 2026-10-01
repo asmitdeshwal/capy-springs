@@ -717,3 +717,17 @@ The phone playtest of Season 2 showed what makes this game fun: **something new 
 **Arrow.** Rule 2 scores a station by seats × worth × 800 / (800 + distance), so the pavilion (worth 5) is chosen when its chairs are free and it is not absurdly far; `nextFreeIn` adds the time to the next gong for taken chairs. Rule 4 (YUZU) only considers baths on Kit's side of the bridge.
 
 **Harness.** Deck run 50 min: pavilion built with ≥ 2 massages and ≥ 1 full house by 50 min. Seed 7: pavilion 43:51, 37 massages, 8 full houses, 61,019 coins at 50 min; seeds 3 and 11 pass. The bot takes the lane when it carries guests across the bridge; it walks straight at its target otherwise and only plans a route when stuck (deliberate: a route-planning bot lost three times the guests).
+
+### 19.3 Snowfall (built 1.8.0)
+
+**When.** Once the Ridge is open: the first squall 200 s later, then every 150 s, each 30 s long (`MAP.SNOW`: first, every, dur). Banner "SNOW SQUALL", wind, a soft chime; flakes (48, 24 on low effects; hash-driven, wind-blown) over the whole visible mountain and a cool multiply tint (#A9BCCB at 0.16) that fades in and out over 2 s.
+
+**Drifts.** Five path spots on the Ridge — (270,985) the bridge top, (270,870) and (270,700) on the lane, (150,930) by the plunge step, (400,935) by the sauna step. Each squall drops 3 drifts on free spots (seeded RNG), 5 s apart, never more than 4 lying. A drift grows over 2 s (a mound with a blue shadow and a glint). Inside its 38 px radius Kit moves at 40 % and guests at 50 %. Drifts persist after the squall.
+
+**Clearing.** Kit standing or pushing through a settled drift for 0.6 s clears it: eight white puffs, sparkles, a scrape, and 3 koban rain to Kit ("+3"). Leaving a drift before it is cleared lets its progress drain back. No drift ever blocks; they only slow. Stats `squalls`, `cleared`.
+
+**Arrow.** Rule 15 CLEAR: the nearest settled drift within 300 px, placed after COLLECT and the deferred STOKE and before TAP — a small chore between cars, never over leading, soaking or lighting. Tutorial word CLEAR shows twice.
+
+**Why it is new.** It is the first thing that happens *to* the inn rather than for it: weather you did not ask for, a path that gets heavier, and a two-second fix with a tiny reward. It also makes the Ridge feel like a place with a climate.
+
+**Harness.** ≥ 1 squall and ≥ 1 drift cleared by 50 min (seed 7: 9 squalls, 15 cleared, 62,364 coins at 50 min; seeds 3 and 11 pass).
