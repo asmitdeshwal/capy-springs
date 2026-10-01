@@ -191,6 +191,8 @@
     Bus.on('night:light', () => { const S = cur(); FX.sparkle(S, S.kit.x, S.kit.y - 20, 3); });
     Bus.on('helper:hire', e => { const S = cur(), h = S.helpers[e.id]; if (h) FX.puffs(S, h.x, h.y - 20, 6, 30); });
     Bus.on('car:arrive', e => { const S = cur(); if (e.golden) FX.confetti(S, e.x !== undefined ? e.x : DATA.MAP.PLATFORM.x, (e.y !== undefined ? e.y : DATA.MAP.PLATFORM.y) - 20, C.CONFETTI_SMALL); });
+    Bus.on('goal:done', () => { const S = cur(); FX.confetti(S, S.kit.x, S.kit.y - 30, C.CONFETTI_SMALL); FX.sparkle(S, S.kit.x, S.kit.y - 40, 5); });
+    Bus.on('goal:all', () => { const S = cur(); FX.confetti(S, S.kit.x, S.kit.y - 30, C.CONFETTI_BIG); FX.flash(S, 0.15); });
     Bus.on('vip:arrive', e => { const S = cur(); FX.confetti(S, e.x, e.y - 20, C.CONFETTI_BIG); FX.sparkle(S, e.x, e.y - 30, 8); FX.flash(S, 0.15); });
     Bus.on('ui:cold-refusal', e => { const S = cur(), w = e.bath.def.water; FX.puffs(S, w.x, w.y - w.h / 2, 2, 20); });
   };

@@ -72,8 +72,9 @@
       lap: { i: 0, t: 0, armed: false, glow: [0, 0, 0], laps: 0 },
       kaa: { state: 'away', t: DATA.KAA ? DATA.KAA.every : 0, x: 0, y: 0, trayId: null, timer: 0, leaveT: 0, won: 0 },
       snow: { next: 0, active: false, t: 0, count: 0, dropT: 0, dropped: 0, drifts: [] },     // snowfall (GDD 19.3); drifts are runtime only
+      goals: { day: 0, ids: [], done: [false, false, false], base: {}, stamps: 0, allDone: false },     // the Guestbook (GDD 20), persisted
       tutorial: { LEAD: 0, SOAK: 0, COLLECT: 0, LIGHT: 0, STOKE: 0, YUZU: 0, TAP: 0, DRAG: 0, LAP: 0, PLUNGE: 0, CLEAR: 0 },
-      stats: { served: 0, ducks: 0, combos: [0, 0, 0, 0, 0, 0], rushes: 0, chains: 0, fullCars: 0, nights: 0, golden: 0, mochi: 0, lost: 0, vip: 0, laps: 0, kaa: 0, plunges: 0, hotCold: 0, massages: 0, fullHouses: 0, squalls: 0, cleared: 0, liftCars: 0 },
+      stats: { served: 0, ducks: 0, combos: [0, 0, 0, 0, 0, 0], rushes: 0, chains: 0, fullCars: 0, nights: 0, golden: 0, mochi: 0, lost: 0, vip: 0, laps: 0, kaa: 0, plunges: 0, hotCold: 0, massages: 0, fullHouses: 0, squalls: 0, cleared: 0, liftCars: 0, yuzu: 0 },
       settings: { sound: true, haptics: null, shakeFlash: true, lowFx: false },
       fx: { steam: U.pool(C.STEAM_CAP, steamItem), ripples: U.pool(C.RIPPLE_CAP, rippleItem), parts: U.pool(C.PARTICLE_CAP, partItem), pops: U.pool(C.POP_CAP, popItem), flash: 0, wash: 0 },
       ui: { sheet: null, card: null, settings: false, banner: null, pill: null, pillT: 0, arrow: null, lastRule: 0, arrowFlash: null,

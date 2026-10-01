@@ -71,7 +71,7 @@
   Baths.applyYuzu = function (S, bath) {
     if (bath.yuzuT > 0 && bath.yuzuT >= C.YUZU_REFRESH_BELOW) return false;
     if (!G.Trail.takeFirst(S, 'yuzu')) return false;
-    bath.yuzuT = G.Upgrades.yuzuDur(S);
+    bath.yuzuT = G.Upgrades.yuzuDur(S); S.stats.yuzu++;
     const n = Baths.slotCount(S, bath); for (let i = 0; i < n; i++) if (bath.slots[i]) bath.slots[i].yuzuHat = true;
     evYuzu.bath = bath; G.Bus.emit('yuzu:apply', evYuzu);
     return true;

@@ -1,5 +1,15 @@
 # Capy Springs — changelog
 
+## 1.10.0 — the Guestbook: daily goals, stamps, a stamp card (2026-10-02)
+
+The last item of the "one mountain" plan: a reason to open the inn every day.
+
+- **Three goals a day** (`55_goals.js`, `DATA`-free pool inside the module): one easy goal (Serve 30 guests / Land 6 Splash x3, alternating by day) plus two drawn from a pool of fourteen in a day-seeded order, only ever offering what the inn has built (Start 3 Steam Rushes, Seat 3 whole cars, 4 golden yuzu baths, Sell 6 mochi, Play a Lantern Night, Welcome a Golden Car, 3 hot-cold plunges, 4 massages, A full house for Tsuru, Clear 3 snowdrifts, Serve Momo). Progress counts from the moment the day's goals are set (a baseline snapshot of the stats), so an old inn starts every day at 0.
+- **Rewards**: each goal rains its koban onto Kit (60–250), a stamp, "GOAL DONE +90" banner, small confetti and a stamp thunk. All three in one day: +150 koban, a bonus stamp, "ALL GOALS DONE!" with a fanfare and a flash.
+- **The stamp card**: five circles; every fifth stamp fills the card and calls a **Golden Car** next ("STAMP CARD FULL!").
+- **Where it lives**: the **Guestbook** button on the title screen and in Settings (both show "1/3"), a small "1/3" chip under the gear in play that opens the card, and the Guestbook card itself (goals with progress bars, reward pills, the stamp card). Goals roll on the real calendar day (local time) and survive the save; a new day rolls new goals the next time the game ticks.
+- Harness: by 10 min the Guestbook holds three goals and at least one stamp (all seeds: 4 stamps by 50 min on served / whole cars / x5). The Dev chip moved down one row to make room.
+
 ## 1.9.0 — the Ridge Lift, Momo the VIP, a full-screen Ridge, readable steps, the old shake (2026-10-02)
 
 Phone feedback on 1.8: the bigger splash shake was too much (the 1.4 one was perfect); it was unclear how guests ever reach the Ridge; the Ridge only filled the top of the screen; and the bridge's price did not say what it bought.

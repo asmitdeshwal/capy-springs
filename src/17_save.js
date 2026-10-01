@@ -21,6 +21,7 @@
       baths, grove: { trees }, stall: { stock: S.stall.stock, pending: S.stall.pending },
       night: { next: S.night.next, count: S.night.count },
       tutorial: Object.assign({}, S.tutorial), stats: Object.assign({}, S.stats, { combos: S.stats.combos.slice() }),
+      goals: { day: S.goals.day, ids: S.goals.ids.slice(), done: S.goals.done.slice(), base: Object.assign({}, S.goals.base), stamps: S.goals.stamps, allDone: S.goals.allDone },
       settings: Object.assign({}, S.settings),
       floorCoins: G.Coins.totalInTrays(S)
     };
@@ -45,6 +46,7 @@
     if (obj.tutorial) for (const k in S.tutorial) if (typeof obj.tutorial[k] === 'number') S.tutorial[k] = obj.tutorial[k];
     if (obj.stats) { for (const k in S.stats) { if (k === 'combos') { if (Array.isArray(obj.stats.combos)) for (let i = 0; i < 6; i++) S.stats.combos[i] = obj.stats.combos[i] | 0; } else if (typeof obj.stats[k] === 'number') S.stats[k] = obj.stats[k]; } }
     if (obj.settings) for (const k in S.settings) if (obj.settings[k] !== undefined) S.settings[k] = obj.settings[k];
+    if (obj.goals && typeof obj.goals === 'object') { const g = obj.goals; S.goals.day = g.day | 0; S.goals.ids = Array.isArray(g.ids) ? g.ids.slice(0, 3).map(String) : []; S.goals.done = [!!(g.done && g.done[0]), !!(g.done && g.done[1]), !!(g.done && g.done[2])]; S.goals.base = (g.base && typeof g.base === 'object') ? Object.assign({}, g.base) : {}; S.goals.stamps = Math.max(0, g.stamps | 0); S.goals.allDone = !!g.allDone; }
     // re-derive
     const L = DATA.LANTERNS, SILENT = { silent: true };
     for (let i = 0; i < L.length; i++) { const d = L[i], lv = S.lanterns[d.id]; for (let l = 1; l <= lv.level && l <= d.costs.length; l++) G.Lanterns.applyEffect(S, d, l, SILENT); }

@@ -745,3 +745,24 @@ The phone playtest of Season 2 showed what makes this game fun: **something new 
 **Shake (6.3 addendum).** The Splash Chain's shake and effects are exactly 1.4's (bump 4 / 6 / 8 px, hit-stop on x3 and x5, small confetti and a flash on x5); the camera zoom punch exists but is switched off everywhere (`SPLASH_PUNCH`, `PLUNGE_PUNCH`). The phone verdict was that the stronger version was too much.
 
 **Harness.** ≥ 10 lift cars and Momo served at least once by 50 min (seed 7: 65 lift cars, Momo 11×, 306 plunges, 50 massages, 92,177 coins at 50 min; seeds 3 and 11 pass).
+
+### 19.5 The Guestbook (built 1.10.0)
+
+**Why.** The mountain gives new stages; the Guestbook gives a reason to come back tomorrow. It is the "daily goals with stamps" from 14.3, built on the stats the inn already counts, so it costs no new simulation.
+
+**Three goals a day.** Every real calendar day (local time) the Guestbook sets three goals: one *easy* goal (Serve 30 guests on even days, Land 6 Splash x3 chains on odd days) and two more drawn in a day-seeded order from a pool of fourteen, only ever offering what the inn has built (Steam Rushes need the boiler, yuzu the grove, mochi the stall, a Lantern Night the cedar bath, hot-cold plunges the plunge, massages and the full house the pavilion, snowdrifts the Ridge, Momo the sauna). A brand-new inn always gets Serve guests / Seat whole cars / Splash x5. Progress is counted from the moment the goals are set (a snapshot of the stats), so an old inn starts every day at 0 / 30.
+
+| goal | target | koban |
+|---|---|---|
+| Serve guests / Land Splash x3 chains | 30 / 6 | 60 / 80 |
+| Land Splash x5 chains | 3 | 120 |
+| Start Steam Rushes · Seat whole cars · Make golden yuzu baths · Sell mochi | 3 · 3 · 4 · 6 | 90 |
+| Play a Lantern Night · Welcome a Golden Car | 1 · 1 | 100 · 80 |
+| Land hot-cold plunges · Massages by the gong · Clear snowdrifts | 3 · 4 · 3 | 150 · 150 · 100 |
+| A full house for Tsuru · Serve Momo the VIP | 1 · 1 | 200 · 250 |
+
+**Rewards and feel.** A finished goal rains its koban onto Kit, adds a **stamp**, shows "GOAL DONE +90", a small confetti burst and a stamp thunk (6.3 feel budget: a bump-free celebration, since it can land mid-chain). All three in one day: +150 koban, a bonus stamp, "ALL GOALS DONE!" with the fanfare and a flash. The **stamp card** has five circles; every fifth stamp fills it and calls a **Golden Car** next ("STAMP CARD FULL!"). Stamps are lifetime; the card fills again and again.
+
+**Where it lives.** GUESTBOOK on the title screen (with today's "1/3"), a Guestbook button in Settings, a small "1/3" chip under the gear in play (tap to open), and the Guestbook card: three rows (icon, label, progress bar, "n / target", a reward pill that turns into a STAMP once done), the all-three line and the stamp card. Opening the card pauses the sim like any card.
+
+**Harness.** By 10 min the Guestbook holds three goals and at least one stamp; all seeds reach 4 stamps (the three goals plus the all-done bonus) well before 50 min.

@@ -53,6 +53,7 @@
     lap: (ac, d, t, o) => { const n = [110, 147, 196]; for (let i = 0; i < 3; i++) { tone(ac, d, 'sine', n[i], n[i] * 0.6, 0.16, 0.22 * o.gain, t + i * 0.1); } },
     sizzle: (ac, d, t, o) => noise(ac, d, 0.35, 'highpass', 2600, 0.22 * o.gain, t, 5000),
     wind: (ac, d, t, o) => noise(ac, d, 2.2, 'lowpass', 500, 0.18 * o.gain, t, 900),
+    stamp: (ac, d, t, o) => { noise(ac, d, 0.08, 'lowpass', 700, 0.3 * o.gain, t); tone(ac, d, 'sine', 140, 70, 0.14, 0.25 * o.gain, t); tone(ac, d, 'sine', 1568, 0, 0.25, 0.1 * o.gain, t + 0.08); },
     scrape: (ac, d, t, o) => { noise(ac, d, 0.18, 'bandpass', 2200, 0.2 * o.gain, t, 900); tone(ac, d, 'triangle', 1400, 1800, 0.08, 0.08 * o.gain, t + 0.1); },
     gong: (ac, d, t, o) => { tone(ac, d, 'sine', 196, 0, 1.8, 0.25 * o.gain, t); tone(ac, d, 'sine', 294, 0, 1.4, 0.12 * o.gain, t); tone(ac, d, 'triangle', 392, 0, 0.9, 0.08 * o.gain, t); noise(ac, d, 0.08, 'bandpass', 1800, 0.12 * o.gain, t); },
     boom: (ac, d, t, o) => { tone(ac, d, 'sine', 90, 36, 0.45, 0.4 * o.gain, t); noise(ac, d, 0.3, 'lowpass', 320, 0.3 * o.gain, t); tone(ac, d, 'triangle', 1046, 0, 0.3, 0.1 * o.gain, t + 0.05); },
@@ -85,7 +86,8 @@
     Bus.on('ridge:open', () => { Audio.play('fanfare'); Audio.play('chime'); });
     Bus.on('gong', e => { Audio.play('gong'); if (e.full) { Audio.play('fanfare', 1, 0.7); Audio.haptic(cur(), 25); } });
     Bus.on('snow:start', () => { Audio.play('wind'); Audio.play('chime', 0.7, 0.5); }); Bus.on('snow:clear', () => Audio.play('scrape'));
-    Bus.on('lift:warn', () => Audio.play('chime', 1.2, 0.6)); Bus.on('vip:arrive', () => { Audio.play('fanfare'); Audio.play('chime'); Audio.haptic(cur(), 30); });
+    Bus.on('lift:warn', () => Audio.play('chime', 1.2, 0.6));
+    Bus.on('goal:done', () => { Audio.play('stamp'); Audio.play('pip'); }); Bus.on('goal:all', () => Audio.play('fanfare')); Bus.on('goal:card', () => Audio.play('fanfare')); Bus.on('vip:arrive', () => { Audio.play('fanfare'); Audio.play('chime'); Audio.haptic(cur(), 30); });
     Bus.on('kaa:land', () => Audio.play('caw')); Bus.on('kaa:steal', () => Audio.play('caw', 0.8)); Bus.on('kaa:tap', () => { Audio.play('chime'); Audio.play('fanfare', 1, 0.6); });
     Bus.on('heat:cold', () => Audio.play('shiver')); Bus.on('ui:cold-refusal', () => Audio.play('shiver'));
     Bus.on('yuzu:apply', () => Audio.play('yuzu')); Bus.on('yuzu:pick', () => Audio.play('yuzu')); Bus.on('night:light', () => Audio.play('yuzu'));

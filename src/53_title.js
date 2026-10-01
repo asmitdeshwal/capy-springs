@@ -12,8 +12,10 @@
     BTN.length = 0;
     const many = G.Seasons.list.length > 1;
     BTN.push({ id: 'play', x: 120, y: 0.58 * H, w: 300, h: 70 });
-    if (many) BTN.push({ id: 'seasons', x: 120, y: 0.58 * H + 90, w: 300, h: 56 });
-    BTN.push({ id: 'settings', x: 120, y: 0.58 * H + (many ? 162 : 90), w: 300, h: 56 });
+    let y = 0.58 * H + 90;
+    if (many) { BTN.push({ id: 'seasons', x: 120, y, w: 300, h: 56 }); y += 72; }
+    BTN.push({ id: 'goals', x: 120, y, w: 300, h: 56 }); y += 72;
+    BTN.push({ id: 'settings', x: 120, y, w: 300, h: 56 });
     if (G.Dev.on) BTN.push({ id: 'dev', x: 390, y: H - (G.Canvas.sb || 0) - 56, w: 130, h: 40 });
   }
   Title.hasProgress = S => S.earned > 0 || S.t > 5;
@@ -37,6 +39,7 @@
       const b = BTN[i]; if (x < b.x || x > b.x + b.w || y < b.y || y > b.y + b.h) continue;
       if (b.id === 'play') Title.play(S);
       else if (b.id === 'seasons') G.Cards.showSeasons(S);
+      else if (b.id === 'goals') G.Cards.showGoals(S);
       else if (b.id === 'settings') G.Cards.toggleSettings(S);
       else if (b.id === 'dev') G.Cards.showDev(S);
       return true;
@@ -65,7 +68,7 @@
       ctx.save(); ctx.translate(b.x + b.w / 2, b.y + b.h / 2); ctx.scale(pulse, pulse);
       A.fillRRect(ctx, -b.w / 2, -b.h / 2 + 4, b.w, b.h, b.h / 2, PAL.rgba(PAL.ink, 0.3));
       A.fillRRect(ctx, -b.w / 2, -b.h / 2, b.w, b.h, b.h / 2, main ? PAL.cta : dev ? PAL.ink : PAL.cream);
-      const label = main ? (Title.hasProgress(S) ? 'CONTINUE' : 'PLAY') : dev ? 'DEV MENU' : b.id === 'seasons' ? 'SEASONS' : 'SETTINGS';
+      const label = main ? (Title.hasProgress(S) ? 'CONTINUE' : 'PLAY') : dev ? 'DEV MENU' : b.id === 'seasons' ? 'SEASONS' : b.id === 'goals' ? 'GUESTBOOK  ' + G.Goals.doneCount(S) + '/3' : 'SETTINGS';
       A.text(ctx, label, 0, 1, main ? 30 : dev ? 16 : 22, main || dev ? PAL.cream : PAL.ink);
       ctx.restore();
     }

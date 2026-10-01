@@ -54,14 +54,14 @@ window.CAPY_FILES = [
   'src/20_art_shapes.js', 'src/21_art_chars.js', 'src/22_art_world.js', 'src/23_art_fx.js', 'src/24_fx.js', 'src/25_art_s2.js',
   'src/30_state.js', 'src/31_player.js', 'src/32_trail.js', 'src/33_guests.js', 'src/34_cablecar.js', 'src/35_baths.js', 'src/36_heat.js',
   'src/37_grove.js', 'src/38_stall.js', 'src/39_coins.js', 'src/40_lanterns.js', 'src/41_upgrades.js', 'src/42_helpers.js', 'src/43_events.js',
-  'src/44_hints.js', 'src/45_render.js', 'src/46_kaa.js', 'src/47_ridge.js', 'src/48_snow.js', 'src/49_lift.js', 'src/50_hud.js', 'src/51_sheet.js', 'src/52_cards.js', 'src/53_title.js', 'src/54_dev.js',
+  'src/44_hints.js', 'src/45_render.js', 'src/46_kaa.js', 'src/47_ridge.js', 'src/48_snow.js', 'src/49_lift.js', 'src/50_hud.js', 'src/51_sheet.js', 'src/52_cards.js', 'src/53_title.js', 'src/54_dev.js', 'src/55_goals.js',
   'src/90_main.js'
 ];
 (function () {
   var files = window.CAPY_FILES, i = 0, fill = document.getElementById('bootfill'), sub = document.getElementById('bootsub');
   function next() {
     if (i >= files.length) { sub.textContent = 'ready'; return; }
-    var s = document.createElement('script'); s.src = files[i] + '?v=1.9.0';
+    var s = document.createElement('script'); s.src = files[i] + '?v=1.10.0';
     s.onload = function () { i++; fill.style.width = Math.round(i / files.length * 100) + '%'; next(); };
     s.onerror = function () { var e = document.createElement('div'); e.className = 'err'; e.textContent = 'Could not load ' + files[i] + '. If you opened the file directly, try node tools/serve.js and open http://localhost:5173.'; document.getElementById('boot').appendChild(e); };
     document.body.appendChild(s);

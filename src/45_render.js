@@ -97,7 +97,7 @@
     Cam.unapply(ctx);
     // 7. screen space
     if (title) { G.Title.draw(ctx, S); G.Cards.draw(ctx, S); }
-    else { G.HUD.draw(ctx, S); G.Dev.drawChip(ctx, S); G.Sheet.draw(ctx, S); G.Cards.draw(ctx, S); G.HUD.drawJoystick(ctx, S); }
+    else { G.HUD.draw(ctx, S); G.Goals.drawChip(ctx, S); G.Dev.drawChip(ctx, S); G.Sheet.draw(ctx, S); G.Cards.draw(ctx, S); G.HUD.drawJoystick(ctx, S); }
     if (S.fx.flash > 0) { ctx.globalAlpha = S.fx.flash; ctx.fillStyle = PAL.cream; ctx.fillRect(0, 0, MAP.W, H); ctx.globalAlpha = 1; }
     if (S.ui.debug) G.HUD.drawDebug(ctx, S);
     Cv.end(ctx);

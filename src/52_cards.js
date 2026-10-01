@@ -9,7 +9,7 @@
   const ROW_H = 74, ROWS_MAX = 3, MISSING = [];
   let pendingTravel = 0, pendingT = 0, versionTaps = 0, versionTapT = 0;
   // the popover's buttons under the toggles (Developer only in dev mode); height follows
-  function settingsButtons() { const b = SET.buttons; b.length = 0; if (G.Seasons.list.length > 1) b.push('Seasons'); b.push('Main menu'); if (G.Dev.on) b.push('Developer'); b.push('Reset save'); SET.h = 8 + 4 * 56 + 12 + b.length * 48 + 16; return b; }
+  function settingsButtons() { const b = SET.buttons; b.length = 0; b.push('Guestbook'); if (G.Seasons.list.length > 1) b.push('Seasons'); b.push('Main menu'); if (G.Dev.on) b.push('Developer'); b.push('Reset save'); SET.h = 8 + 4 * 56 + 12 + b.length * 48 + 16; return b; }
 
   Cards.init = function (S) {
     pendingTravel = 0; pendingT = 0;
@@ -24,6 +24,7 @@
   Cards.showTravel = function (S, id) { const d = G.Seasons.byId[id]; if (!d) return; CARD.kind = 'travel'; CARD.info = d; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
   Cards.showSeasons = function (S) { CARD.kind = 'seasons'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
   Cards.showDev = function (S) { if (!G.Dev.on) return; S.ui.settings = false; CARD.kind = 'dev'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
+  Cards.showGoals = function (S) { S.ui.settings = false; CARD.kind = 'goals'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
   Cards.close = function (S) { if (S.ui.card && !(CARD.closing > 0)) CARD.closing = 0.001; };
   // shared by the settings popover and the title screen: 7 taps on a version label within 3 s toggle developer mode; the pips count up
   Cards.versionTap = function (S) {
@@ -64,6 +65,7 @@
         return true;
       }
       if (CARD.kind === 'dev') return G.Dev.tap(S, x, y);
+      if (CARD.kind === 'goals') return G.Goals.tap(S, x, y);
       if (CARD.kind === 'seasons') {
         if (x < CR.x0 || x > CR.x1 || y < CR.y0 || y > CR.y1) { CARD.closing = 0.001; return true; }
         const L = G.Seasons.list, i0 = seasonRows();
@@ -87,7 +89,8 @@
       else if (row === 3) { S.settings.lowFx = !S.settings.lowFx; G.Render.markStaticDirty(); }
       else if (y >= r.y + 244) {
         const b = SET.buttons[Math.floor((y - (r.y + 244)) / 48)];
-        if (b === 'Seasons') { S.ui.settings = false; Cards.showSeasons(S); }
+        if (b === 'Guestbook') { Cards.showGoals(S); }
+        else if (b === 'Seasons') { S.ui.settings = false; Cards.showSeasons(S); }
         else if (b === 'Main menu') { S.ui.settings = false; G.Game.syncMode(S); G.Title.show(S); }
         else if (b === 'Developer') { Cards.showDev(S); }
         else if (b === 'Reset save') { S.ui.settings = false; Cards.showReset(S); }
@@ -114,7 +117,7 @@
       for (let i = 0; i < SET.buttons.length; i++) {
         const b = SET.buttons[i], by = r.y + 244 + i * 48, red = b === 'Reset save', dev = b === 'Developer';
         A.fillRRect(ctx, r.x + 18, by, r.w - 36, 40, 12, red ? PAL.rgba(PAL.red, 0.12) : dev ? PAL.rgba(PAL.amber, 0.35) : PAL.rgba(PAL.cta, 0.12));
-        A.text(ctx, b === 'Seasons' ? 'Seasons  ' + Math.round(G.Seasons.progress(S) * 100) + '%' : b, r.x + r.w / 2, by + 21, 18, red ? PAL.red : dev ? PAL.ink : PAL.cta);
+        A.text(ctx, b === 'Seasons' ? 'Seasons  ' + Math.round(G.Seasons.progress(S) * 100) + '%' : b === 'Guestbook' ? 'Guestbook  ' + G.Goals.doneCount(S) + '/3' : b, r.x + r.w / 2, by + 21, 18, red ? PAL.red : dev ? PAL.ink : PAL.cta);
       }
       A.text(ctx, 'v' + G.VERSION + (G.Dev.on ? ' · developer mode' : ''), r.x + r.w - 14, r.y + r.h - 12, 11, PAL.stoneDark, RIGHT);
     }
@@ -123,6 +126,7 @@
       ctx.fillStyle = PAL.rgba(PAL.ink, 0.45 * (1 - k)); ctx.fillRect(0, 0, 540, H);
       ctx.save(); ctx.translate(0, k * H);
       if (CARD.kind === 'dev') { G.Dev.draw(ctx, S, k); ctx.restore(); return; }
+      if (CARD.kind === 'goals') { G.Goals.draw(ctx, S, k); ctx.restore(); return; }
       A.fillRRect(ctx, CR.x0, CR.y0 + 6, 440, 320, 24, PAL.rgba(PAL.ink, 0.3)); A.fillRRect(ctx, CR.x0, CR.y0, 440, 320, 24, PAL.cream);
       if (CARD.kind === 'offline') {
         const info = CARD.info, Ch = G.Art.Ch, p = Ch.resetPose(Ch.POSE), veh = T('vehicle', 'cable car');

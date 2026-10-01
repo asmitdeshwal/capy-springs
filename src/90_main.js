@@ -9,7 +9,7 @@
     Game.S = S; G.S = S;
     G.Player.init(S); G.Trail.init(S); G.CableCar.init(S); G.Guests.init(S); G.Baths.init(S); G.Heat.init(S); G.Grove.init(S); G.Stall.init(S);
     G.Coins.init(S); G.Lanterns.init(S); G.Helpers.init(S); G.Events.init(S); G.Kaa.init(S); G.Snow.init(S); G.Lift.init(S); G.FX.init(S); G.Camera.init(S);
-    G.HUD.init(S); G.Sheet.init(S); G.Cards.init(S); G.Render.init(S);
+    G.HUD.init(S); G.Sheet.init(S); G.Cards.init(S); G.Goals.init(S); G.Render.init(S);
     G.Render.rebuildStatic(S);
     if (G.Audio.setEnabled) G.Audio.setEnabled(S, S.settings.sound);
   }
@@ -90,6 +90,7 @@
     if (S.mode === 'title') { G.Title.tap(S, x, y); return; }
     if (G.Sheet.tap(S, x, y)) return;
     if (G.HUD.tapGear(S, x, y)) return;
+    if (G.Goals.tapChip(S, x, y)) return;
     if (G.Dev.tapChip(S, x, y)) return;
     G.Camera.toWorld(x, y, W);
     if (G.Kaa.tap(S, W.x, W.y)) return;
@@ -125,6 +126,7 @@
     S.t += dt;
     G.Player.update(S, dt); G.Trail.update(S, dt); G.CableCar.update(S, dt); G.Lift.update(S, dt); G.Guests.update(S, dt); G.Baths.update(S, dt); G.Heat.update(S, dt);
     G.Grove.update(S, dt); G.Stall.update(S, dt); G.Coins.update(S, dt); G.Lanterns.update(S, dt); G.Helpers.update(S, dt); G.Events.update(S, dt); G.Kaa.update(S, dt); G.Snow.update(S, dt);
+    G.Goals.update(S, dt);
     G.Hints.update(S, dt); G.FX.update(S, dt); G.Camera.update(S, dt); G.HUD.update(S, dt); G.Sheet.update(S, dt); G.Cards.update(S, dt);
     G.Save.tick(S, dt);
   };

@@ -74,7 +74,7 @@
     A.text(ctx, noteT > 0 ? note : 'tap outside to close', 270, RECT.y1 - 16, 12, noteT > 0 ? PAL.cta : PAL.stoneDark);
   };
   // the DEV chip under the gear while developer mode is on (tap it to open the panel)
-  Dev.chipRect = function () { const st = G.Canvas.st || 0; CHIP.x0 = 466; CHIP.y0 = st + 168; CHIP.x1 = 530; CHIP.y1 = st + 196; return CHIP; };
+  Dev.chipRect = function () { const st = G.Canvas.st || 0; CHIP.x0 = 466; CHIP.y0 = st + 202; CHIP.x1 = 530; CHIP.y1 = st + 230; return CHIP; };   // under the Guestbook chip
   Dev.tapChip = function (S, x, y) { if (!Dev.on) return false; const r = Dev.chipRect(); if (x < r.x0 || x > r.x1 || y < r.y0 || y > r.y1) return false; G.Cards.showDev(S); return true; };
   Dev.drawChip = function (ctx, S) { if (!Dev.on) return; const r = Dev.chipRect(); G.Art.S.pill(ctx, (r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2, r.x1 - r.x0, r.y1 - r.y0, 'DEV' + (Dev.speed > 1 ? ' x' + Dev.speed : ''), 13, PAL.ink, PAL.amber, null); };
 })(window.G);

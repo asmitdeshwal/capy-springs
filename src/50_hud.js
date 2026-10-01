@@ -34,6 +34,7 @@
     const T = G.Seasons.text;
     Bus.on('car:arrive', e => { if (e.golden && !e.empty) HUD.banner(HUD.S, e.lift ? 'GOLDEN LIFT!' : T('golden', 'GOLDEN CAR!')); });
     Bus.on('vip:arrive', () => HUD.banner(HUD.S, 'MOMO THE VIP!'));
+    Bus.on('goal:done', e => HUD.banner(HUD.S, 'GOAL DONE  +' + e.reward)); Bus.on('goal:all', () => HUD.banner(HUD.S, 'ALL GOALS DONE!')); Bus.on('goal:card', () => HUD.banner(HUD.S, 'STAMP CARD FULL!'));
     Bus.on('fullcar', () => HUD.banner(HUD.S, T('fullcar', 'FULL CAR!')));
     Bus.on('famous', () => HUD.banner(HUD.S, T('famous', 'FAMOUS INN!')));
     Bus.on('fame', () => HUD.banner(HUD.S, T('fame', 'SEASON FAME')));
