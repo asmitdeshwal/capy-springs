@@ -51,6 +51,8 @@
   FX.sparkle = function (S, x, y, n) {
     for (let i = 0; i < n; i++) { const p = S.fx.parts.alloc(); if (!p) return; p.kind = 'sparkle'; p.x = x + (U.hash(i, x) - 0.5) * 30; p.y = y - U.hash(i, y) * 30; p.z = 0; p.t = 0; p.life = 0.6; p.size = 6 + U.hash(i, 2) * 4; p.vx = p.vy = 0; p.vz = 30; }
   };
+  // shockwave: an expanding ellipse ring (presentation only)
+  FX.ring = function (S, x, y, r1) { const p = S.fx.parts.alloc(); if (!p) return; p.kind = 'ring'; p.x = x; p.y = y; p.z = 0; p.t = 0; p.life = 0.45; p.size = r1; p.vx = p.vy = p.vz = 0; p.color = null; };
   FX.toss = function (S, x0, y0, x1, y1) { const p = S.fx.parts.alloc(); if (!p) return; p.kind = 'koban'; p.x = x0; p.y = y0; p.x1 = x1; p.y1 = y1; p.z = 0; p.t = 0; p.life = 0.28; p.vx = p.vy = p.vz = 0; };
   // pops: kind 'plus' rises and fades; 'chain' / 'yuzu' / 'label' scale in with overshoot; the chain pop is one live object per chain
   FX.pop = function (S, text, x, y, size, color, kind, batch) {
@@ -133,16 +135,19 @@
     FX.subscribed = true;
     const Bus = G.Bus, Cam = G.Camera;
     const cur = () => FX.S;
+    // the Splash Chain is the game's big joy: every step up escalates (bump -> shake + zoom punch -> shake, punch, shockwave, confetti, flash)
     Bus.on('splash', e => {
-      const S = cur(), b = e.bath, g = e.g, n = Math.min(e.count, 5);
+      const S = cur(), b = e.bath, g = e.g, n = Math.min(e.count, 5), w = b.def.water;
       FX.ripple(S, g.x, g.y, b.yuzuT > 0);
-      FX.droplets(S, g.x, g.y - 4, 6);
+      FX.droplets(S, g.x, g.y - 4, 6 + n);
       if (e.count >= 3) {
         const text = e.count === 3 ? G.Seasons.text('splash3', 'SPLASH x3!') : e.count === 4 ? 'x4!' : 'x' + e.count + '!!';
-        FX.pop(S, text, b.def.water.x, b.def.water.y - b.def.water.h / 2 - 34, C.SPLASH_TEXT[n], PAL.coin, 'chain', g.batch);
-        if (e.count === 3) FX.hitStop(S, C.HITSTOP_X3);
-        if (e.count === 5) { FX.hitStop(S, C.HITSTOP_X5); FX.confetti(S, b.def.water.x, b.def.water.y - 20, C.CONFETTI_SMALL); FX.flash(S, 0.2); }
-        if (e.count >= 5) Cam.shake(C.SPLASH_BUMP[5], 0.3); else Cam.bump(C.SPLASH_BUMP[n]);
+        FX.pop(S, text, w.x, w.y - w.h / 2 - 34, C.SPLASH_TEXT[n], PAL.coin, 'chain', g.batch);
+        Cam.punch(C.SPLASH_PUNCH[n], C.PUNCH_T);
+        if (e.count === 3) { FX.hitStop(S, C.HITSTOP_X3); FX.sparkle(S, w.x, w.y - 10, 4); }
+        if (e.count === 4) { FX.sparkle(S, w.x, w.y - 10, 6); FX.ring(S, w.x, w.y, 60); }
+        if (e.count >= 5) { FX.hitStop(S, C.HITSTOP_X5); FX.confetti(S, w.x, w.y - 20, C.CONFETTI_SMALL * 2); FX.flash(S, 0.25); FX.ring(S, w.x, w.y, 120); FX.ring(S, w.x, w.y, 70); }
+        if (e.count >= 5) Cam.shake(C.SPLASH_BUMP[5], 0.35); else Cam.bump(C.SPLASH_BUMP[n]);
       } else Cam.bump(2);
     });
     Bus.on('guest:paid', e => { const S = cur(); FX.pop(S, '+' + e.value, e.g.x, e.g.y - 40, 20, PAL.coin, 'plus'); });

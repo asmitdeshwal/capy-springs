@@ -9,7 +9,7 @@
   const ROW_H = 74, ROWS_MAX = 3, MISSING = [];
   let pendingTravel = 0, pendingT = 0, versionTaps = 0, versionTapT = 0;
   // the popover's buttons under the toggles (Developer only in dev mode); height follows
-  function settingsButtons() { const b = SET.buttons; b.length = 0; b.push('Seasons', 'Main menu'); if (G.Dev.on) b.push('Developer'); b.push('Reset save'); SET.h = 8 + 4 * 56 + 12 + b.length * 48 + 16; return b; }
+  function settingsButtons() { const b = SET.buttons; b.length = 0; if (G.Seasons.list.length > 1) b.push('Seasons'); b.push('Main menu'); if (G.Dev.on) b.push('Developer'); b.push('Reset save'); SET.h = 8 + 4 * 56 + 12 + b.length * 48 + 16; return b; }
 
   Cards.init = function (S) {
     pendingTravel = 0; pendingT = 0;

@@ -20,6 +20,25 @@
       const x = U.hash(i, 5) * 540, y = y0 + U.hash(i, 6) * (y1 - y0), rx = 18 + U.hash(i, 7) * 40, ry = 6 + U.hash(i, 8) * 12;
       S_.ellipse(ctx, x, y, rx, ry, PAL.moss);
     }
+    for (let i = 0; i < 34; i++) {                                  // grass tufts
+      const x = U.hash(i, 41) * 540, y = y0 + U.hash(i, 42) * (y1 - y0), c = (i & 1) ? PAL.pineDark : PAL.mix(PAL.moss, PAL.cream, 0.25);
+      for (let k = -1; k <= 1; k++) A().line(ctx, x + k * 4, y, x + k * 7, y - 7 - (k === 0 ? 3 : 0), c, 2);
+    }
+    for (let i = 0; i < 14; i++) {                                  // flower patches: three blooms and a leaf
+      const x = U.hash(i, 43) * 540, y = y0 + U.hash(i, 44) * (y1 - y0), col = (i % 3 === 0) ? '#F2A7B6' : (i % 3 === 1) ? PAL.cream : '#F6D27A';
+      S_.ellipse(ctx, x + 6, y + 3, 7, 3, PAL.pineDark);
+      for (let k = 0; k < 3; k++) { const fx = x + (k - 1) * 9, fy = y - (k & 1) * 5; S_.circle(ctx, fx, fy, 4, col); S_.circle(ctx, fx, fy, 1.5, PAL.amberDeep); }
+    }
+  };
+  // drifting petals over the whole scene (presentation; hash-driven so it never touches the seeded RNG)
+  W.ambient = function (ctx, camY, H, t, low) {
+    if (low) return;
+    const S_ = A(), n = 9;
+    for (let i = 0; i < n; i++) {
+      const sp = 10 + U.hash(i, 51) * 10, x = ((U.hash(i, 52) * 540) + Math.sin(t * 0.6 + i * 1.3) * 26 + 540) % 540, y = camY + (((U.hash(i, 53) * H) + t * sp) % (H + 40)) - 20;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(t * 1.5 + i); ctx.globalAlpha = 0.75; S_.ellipse(ctx, 0, 0, 5, 2.6, (i & 1) ? '#F2A7B6' : PAL.cream); ctx.restore();
+    }
+    ctx.globalAlpha = 1;
   };
   W.valley = function (ctx) {
     const S_ = A(), v = MAP.VALLEY;
@@ -81,10 +100,15 @@
   // ---------- decks and water ----------
   W.deckPlate = function (ctx, def) {
     const S_ = A(), d = def.deck, x0 = d.x - d.w / 2, y0 = d.y - d.h / 2;
+    S_.shadow(ctx, d.x, y0 + d.h + 8, d.w / 2 + 4, 12, 0.16);                                   // the deck sits on the ground
     S_.plate(ctx, x0, y0, d.w, d.h, 14, PAL.cedar, PAL.cedarDark, 10);
     ctx.strokeStyle = PAL.plank; ctx.lineWidth = 1; ctx.beginPath();
     for (let y = y0 + 18; y < y0 + d.h - 4; y += 18) { ctx.moveTo(x0 + 8, y); ctx.lineTo(x0 + d.w - 8, y); }
     ctx.stroke();
+    ctx.strokeStyle = PAL.rgba(PAL.cream, 0.22); ctx.beginPath();                                 // plank highlights
+    for (let y = y0 + 6; y < y0 + d.h - 4; y += 18) { ctx.moveTo(x0 + 10, y); ctx.lineTo(x0 + d.w - 10, y); }
+    ctx.stroke();
+    for (let i = 0; i < 6; i++) { const nx = x0 + 14 + i * (d.w - 28) / 5; S_.circle(ctx, nx, y0 + 12, 1.6, PAL.cedarDark); S_.circle(ctx, nx, y0 + d.h - 12, 1.6, PAL.cedarDark); }   // nail heads
     if (def.stripes) { for (let i = 0; i < 6; i++) S_.fillRRect(ctx, x0 + 6 + i * 6, y0 - 6, 4, d.h + 4, 2, PAL.moss); }
   };
   // state: { cold, yuzu, lowFx }
@@ -98,6 +122,12 @@
     else if (!state.lowFx) {
       ctx.globalAlpha = 0.18; ctx.fillStyle = PAL.ripple;
       for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.ellipse(w.x + Math.sin(t * 0.7 + i * 2.1) * (w.w * 0.22), w.y - 10 + i * 12 + Math.cos(t * 0.5 + i) * 4, 26, 6, 0, 0, TAU); ctx.fill(); }
+      // a soft light band sweeping across and a foam line along the near edge
+      ctx.globalAlpha = 0.12; ctx.fillStyle = PAL.cream;
+      ctx.save(); ctx.beginPath(); S_.rrect(ctx, x0 + 4, y0 + 4, w.w - 8, w.h - 8, 14); ctx.clip();
+      const bx = x0 + ((t * 18) % (w.w + 60)) - 30; ctx.beginPath(); ctx.moveTo(bx, y0); ctx.lineTo(bx + 34, y0); ctx.lineTo(bx + 10, y0 + w.h); ctx.lineTo(bx - 24, y0 + w.h); ctx.closePath(); ctx.fill();
+      ctx.restore();
+      ctx.globalAlpha = 0.35; ctx.strokeStyle = PAL.cream; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x0 + 16, y0 + w.h - 8); ctx.quadraticCurveTo(w.x, y0 + w.h - 12 + Math.sin(t * 2) * 2, x0 + w.w - 16, y0 + w.h - 8); ctx.stroke();
       ctx.globalAlpha = 1;
     }
   };

@@ -69,9 +69,11 @@
     pon:  { speed: 70, rest: 3, cap: 70, home: { x: 135, y: 1700 }, take: 0.4, stoke: 0.3, yawn: 3 },
     kero: { hopT: 0.5, hopLen: 60, hopH: 26, home: { x: 200, y: 1490 }, pick: 0.3, deliver: 0.3 }
   };
+  // hidden: kept as a backup, off the player's path (no Seasons menu, no Season Pass). Reach it with index.html?season=2 or the harness's --season 2;
+  // set hidden to false and restore the Deck's 'travel' lantern (02_data_lanterns.js) to put it back in the game.
   G.PACKS[2] = {
     key: 's2', name: 'The Mochi Terrace', subtitle: 'An autumn teahouse on the ridge', teaser: 'Pound rice into mochi, seat the guests, catch the Maple Express.',
-    finale: 'summit',
+    finale: 'summit', hidden: true,
     data: {
       MAP, BATHS, STATIONS, UPGRADES, LANTERNS, GUESTS, CAR, HELPERS,
       SHEET_STATIONS: ['bench', 'table', 'hearth', 'boiler', 'grove', 'stall'],

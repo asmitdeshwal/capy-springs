@@ -75,18 +75,23 @@
   Upgrades.famousMult = S => { const L = S.lanterns[G.SEASON.finale]; return C.FAMOUS_PAY[Math.min(L ? L.level : 0, C.FAMOUS_PAY.length - 1)]; };
   Upgrades.starMult = S => 1 + C.STAR_PAY * G.Seasons.stars();        // fame from OTHER finished seasons (GDD 17.4)
 
-  // 'Soak 8.0 s -> 7.5 s' style text for the sheet title row (allocates a string; UI only)
+  // 'Soak 8.0 s -> 7.5 s' style text (allocates a string; UI only)
   Upgrades.effectText = function (S, id, key) {
     const t = DATA.UPGRADES[id][key], l = Upgrades.level(S, id, key), n = Math.min(l + 1, t.max);
-    const cur = valueAt(S, id, key, l), nxt = valueAt(S, id, key, n);
+    const cur = Upgrades.valueAt(S, id, key, l), nxt = Upgrades.valueAt(S, id, key, n);
     return t.label + ' ' + cur + (l >= t.max ? '' : ' → ' + nxt);
   };
-  function valueAt(S, id, key, l) {
+  // the concrete number a track gives at level l, in the words a player uses ("7 koban", "5 seats", "7.5 s")
+  Upgrades.valueAt = function (S, id, key, l) {
     const b = S.baths[id];
-    if (b) { if (key === 'speed') return U.fmt1(b.def.soak - C.SOAK_STEP * l) + ' s'; if (key === 'slots') return (b.def.slots + l) + ' seats'; return '+' + Math.round(C.PAY_STEP * l * 100) + '%'; }
-    if (id === 'boiler') { if (key === 'speed') return '+' + (C.LOG_HEAT + C.STOKE_STEP * l) + ' ' + G.Seasons.text('gaugeUnit', 'heat'); if (key === 'slots') return (C.HEAT_MAX + C.TANK_STEP * l) + ' max'; return '+' + Math.round(C.PON_SPEED_STEP * l * 100) + '%'; }
+    if (b) {
+      if (key === 'speed') return U.fmt1(b.def.soak - C.SOAK_STEP * l) + ' s';
+      if (key === 'slots') return (b.def.slots + l) + ' seats';
+      return Math.round(DATA.GUESTS.capy.pay * (b.def.payMult || 1) * (1 + C.PAY_STEP * l)) + ' koban each';
+    }
+    if (id === 'boiler') { if (key === 'speed') return '+' + (C.LOG_HEAT + C.STOKE_STEP * l) + ' ' + G.Seasons.text('gaugeUnit', 'heat'); if (key === 'slots') return (C.HEAT_MAX + C.TANK_STEP * l) + ' max'; return '+' + Math.round(C.PON_SPEED_STEP * l * 100) + '% speed'; }
     if (id === 'grove') { if (key === 'speed') return U.fmt1(C.REGROW - C.REGROW_STEP * l) + ' s'; if (key === 'slots') return (C.TREES_BASE + l) + ' trees'; return U.fmt1(C.YUZU_DUR + C.YUZU_DUR_STEP * l) + ' s'; }
-    if (id === 'stall') { if (key === 'speed') return U.fmt1(C.PREP - C.PREP_STEP * l) + ' s'; if (key === 'slots') return (C.COUNTER_BASE + l) + ' mochi'; return '+' + Math.round(C.PAY_STEP * l * 100) + '%'; }
+    if (id === 'stall') { if (key === 'speed') return U.fmt1(C.PREP - C.PREP_STEP * l) + ' s'; if (key === 'slots') return (C.COUNTER_BASE + l) + ' ready'; return Math.round(C.MOCHI_PAY * (1 + C.PAY_STEP * l)) + ' koban'; }
     return '';
-  }
+  };
 })(window.G);

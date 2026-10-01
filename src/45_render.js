@@ -64,17 +64,19 @@
     for (let i = 0; i < list.length; i++) { const d = list[i]; d.draw(ctx, d, S); }
     // 4. FX pass
     G.FX.drawWorld(ctx, S);
-    // 5. night tint + halos
-    const fade = S.night.fade, low = !!S.settings.lowFx;
+    const low = !!S.settings.lowFx;
+    if (G.Art.W.ambient) G.Art.W.ambient(ctx, Cam.y, H, S.t, low);                              // drifting petals
+    // 5. night tint + halos (lit lanterns keep a faint glow by day)
+    const fade = S.night.fade;
     if (fade > 0) { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = PAL.rgba(PAL.skyNight, (low ? C.NIGHT_TINT_LOW : C.NIGHT_TINT) * fade); ctx.fillRect(0, Cam.y, MAP.W, H); ctx.globalCompositeOperation = 'source-over'; }
     if (fade > 0 && G.Art.W.nightExtra) G.Art.W.nightExtra(ctx, Cam.y, H, fade, S.t, low);     // a season's moon / drifting leaves
-    if (fade > 0 || S.heat.rush || anyGolden(S)) {
+    {
       ctx.globalCompositeOperation = 'lighter';
-      let n = 0; const max = low ? C.HALO_MAX_LOW : C.HALO_MAX, sprite = Render.haloSprite, L = DATA.LANTERNS;
+      let n = 0; const max = low ? C.HALO_MAX_LOW : C.HALO_MAX, sprite = Render.haloSprite, L = DATA.LANTERNS, lit = fade > 0 || S.heat.rush || anyGolden(S);
       for (let i = 0; i < L.length && n < max; i++) {
         const d = L[i]; if (S.lanterns[d.id].level < 1) continue;
         const py = d.y - C.POST_BACK - 58; if (py < Cam.y - 100 || py > Cam.y + H + 100) continue;
-        G.Art.FX.halo(ctx, sprite, d.x, py, fade > 0 ? 70 + 30 * fade : 50, 0.25 + 0.3 * fade); n++;
+        G.Art.FX.halo(ctx, sprite, d.x, py, fade > 0 ? 70 + 30 * fade : lit ? 50 : 34, lit ? 0.25 + 0.3 * fade : 0.12); n++;
       }
       if (S.built.boiler && (S.heat.rush || fade > 0) && n < max) { const b = DATA.STATIONS.boiler; G.Art.FX.halo(ctx, sprite, b.x, b.y - 40, S.heat.rush ? 90 : 60, S.heat.rush ? 0.5 : 0.25); n++; }
       for (let i = 0; i < DATA.BATHS.length && n < max; i++) { const b = S.baths[DATA.BATHS[i].id]; if (S.built[b.id] && b.yuzuT > 0) { G.Art.FX.halo(ctx, sprite, b.def.water.x, b.def.water.y, 90, 0.3); n++; } }

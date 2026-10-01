@@ -41,6 +41,10 @@
         const x = p.x + (p.x1 - p.x) * k, y = p.y + (p.y1 - p.y) * k - 4 * 26 * k * (1 - k);
         FX.kobanAt(ctx, x, y, 0.8); break;
       }
+      case 'ring': {    // shockwave: ellipse ring growing to p.size, thick to thin, fading
+        const r = p.size * (0.25 + 0.75 * U.easeOutQuad(k)); ctx.globalAlpha = 0.8 * (1 - k); ctx.strokeStyle = PAL.cream; ctx.lineWidth = 8 * (1 - k) + 1;
+        ctx.beginPath(); ctx.ellipse(p.x, p.y, r, r * 0.55, 0, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1; break;
+      }
       case 'strip': {   // unwrap paper strip: translate +12 y, rotate +-8 deg alternately, fade
         ctx.globalAlpha = 1 - k; ctx.fillStyle = PAL.cream;
         ctx.save(); ctx.translate(p.x + p.size / 2, p.y + 12 * k); ctx.rotate(p.rot * k); ctx.fillRect(-p.size / 2, 0, p.size, p.z); ctx.restore();

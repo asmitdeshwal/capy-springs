@@ -1,5 +1,7 @@
 # CAPY SPRINGS — Seasons (GDD §17 / ARCH §20, build 1.3.0)
 
+> **Status (2026-10-02, build 1.5.0): shelved.** The phone playtest found the Terrace reused every verb of the Deck under new names and reset progress, so it felt like a skip. The game now grows as **one mountain**: new areas open above the Deck with new mechanics and nothing resets (see `docs/GAME_DESIGN.md` §19). The Terrace stays in the code as a backup: `G.PACKS[2].hidden = true`, the Deck's Season Pass lantern is commented out in `02_data_lanterns.js`, and the Seasons menu hides when only one place exists. It still runs with `index.html?season=2` and `node test/headless.js --season 2`. To bring it back: set `hidden` to false and restore the lantern.
+
 A **season** is a new place on the mountain with its own map, stations, cast, ladder of offering steps, look and one or two mechanics of its own, played with the same controls and the same engine. Seasons are the game's "next levels": finish one, pay for the pass, ride to the next. Each is fresh (new verbs, new palette, new jackpot) without copying any other game's structure; the lessons we took from the genre are only these: a new shop must feel new in the first minute, the player must always know what is left to buy, and going back must be a place on the map, never a lost save.
 
 ## 17.1 The framework

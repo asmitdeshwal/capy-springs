@@ -1,5 +1,14 @@
 # Capy Springs — changelog
 
+## 1.5.0 — one mountain: Terrace shelved, upgrades explained, bigger splashes, graphics pass (2026-10-02)
+
+Playtest verdict on the phone: chapter 1 was fun because it kept teaching something new; chapter 2 reused every verb under new names and reset progress, so it felt like a skip. Direction from here: **one mountain that keeps growing** (new areas open above the Deck with new mechanics, nothing resets), not separate chapters.
+
+- **The Mochi Terrace is shelved, not deleted**: `G.PACKS[2].hidden = true`, the Deck's Season Pass lantern is commented out, and the Seasons menu / title button / dev buttons hide when only one place exists. Everything still runs with `?season=2` and `--season 2`, and the harness keeps testing it. A save pointing at the hidden place comes home to the Deck.
+- **Upgrade sheet redesigned** (the confusing part): one full-width row per track with a plain title ("Quicker soaks", "More seats", "Better tips"), the number before → after in the player's words ("6 koban each → 7 koban each", "4 seats → 5 seats", "8.0 s → 7.5 s"), a one-line reason, level pips and the price; affordable rows get a coloured outline and the whole row is the button. Sheet is taller (40 % / 380 px).
+- **Splash Chain escalation** (the moment that works): x3 bump + sparkle + a bass thump, x4 bigger bump + camera zoom punch + shockwave ring, x5 shake, stronger punch, two rings, double confetti, flash, hit-stop and a boom. New `Camera.punch` (zoom about the screen centre; shake/flash toggle respected) and FX particle kind `ring`.
+- **Graphics pass**: grass tufts and flower patches in the terrain, deck plates with ground shadows, plank highlights and nail heads, water with a sweeping light band and a foam line, drifting petals across the scene, lit lanterns glow faintly by day, every character has catch-lights in the eyes and cheek blush.
+
 ## 1.4.1 – 1.4.3 — published on GitHub Pages, self-updating (2026-10-01)
 
 - The game lives at `github.com/asmitdeshwal/capy-springs` and is served from `https://asmitdeshwal.github.io/capy-springs/` (the permanent https address an iPhone needs for Add to Home Screen). `npm run deploy` (`tools/deploy.js`) bumps the patch version, repacks, commits and pushes; Pages rebuilds in about a minute.

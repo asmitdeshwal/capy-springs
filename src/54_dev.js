@@ -40,8 +40,8 @@
   ];
   // "Go to season n" buttons come from the registry
   const SEASON_BTNS = [];
-  for (let i = 0; i < G.Seasons.list.length; i++) { const d = G.Seasons.list[i]; SEASON_BTNS.push({ label: 'Go to season ' + d.id, run: S => { if (d.id === G.SEASON.id) { say(S, 'already here'); return; } G.Seasons.unlock(d.id, { silent: true }); G.Seasons.travel(S, d.id); } }); }
-  const ALL = ACTIONS.slice(0, 8).concat(SEASON_BTNS, ACTIONS.slice(8));
+  if (G.Seasons.list.length > 1) for (let i = 0; i < G.Seasons.list.length; i++) { const d = G.Seasons.list[i]; SEASON_BTNS.push({ label: 'Go to season ' + d.id, run: S => { if (d.id === G.SEASON.id) { say(S, 'already here'); return; } G.Seasons.unlock(d.id, { silent: true }); G.Seasons.travel(S, d.id); } }); }
+  const ALL = ACTIONS.slice(0, 7).concat(G.Seasons.list.length > 1 ? [ACTIONS[7]] : [], SEASON_BTNS, ACTIONS.slice(8));
 
   Dev.update = function (S, dt) {
     if (noteT > 0) noteT -= dt;

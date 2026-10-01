@@ -11,7 +11,8 @@
                finale: 'bridge', saveKey: 'capysprings.save', data: null, pal: null, config: null, text: {}, words: {} };
   Seasons.list.push(S1); Seasons.byId[1] = S1;
   const ids = Object.keys(G.PACKS).map(Number).sort((a, b) => a - b);
-  for (let i = 0; i < ids.length; i++) { const p = G.PACKS[ids[i]]; p.id = ids[i]; p.saveKey = p.saveKey || ('capysprings.save.s' + p.id); Seasons.list.push(p); Seasons.byId[p.id] = p; }
+  // a hidden pack stays loadable (dev shortcut, harness) but is not in the list the menus and the travel card show
+  for (let i = 0; i < ids.length; i++) { const p = G.PACKS[ids[i]]; p.id = ids[i]; p.saveKey = p.saveKey || ('capysprings.save.s' + p.id); Seasons.byId[p.id] = p; if (!p.hidden) Seasons.list.push(p); }
 
   // ---- meta record (localStorage, separate from the per-season saves): which season is current, which are unlocked / finished, completion % ----
   function defaultMeta() { return { v: Seasons.META_VERSION, season: 1, unlocked: { 1: true }, done: {}, progress: {}, visited: { 1: true } }; }
@@ -32,7 +33,8 @@
   Seasons.meta = Seasons.readMeta();
   let want = typeof G.SEASON_ID === 'number' ? G.SEASON_ID : (G.HEADLESS ? 1 : Seasons.meta.season), forced = false;
   try { const m = /[?&]season=(\d+)/.exec(location.search); if (m) { want = parseInt(m[1], 10); forced = true; } } catch (e) { /* no location (headless) */ }   // dev shortcut: ?season=2
-  if (!Seasons.byId[want] || (!G.HEADLESS && !forced && !Seasons.meta.unlocked[want])) want = 1;
+  if (!Seasons.byId[want] || (!G.HEADLESS && !forced && (!Seasons.meta.unlocked[want] || Seasons.byId[want].hidden))) want = 1;
+  if (!G.HEADLESS && Seasons.meta.season !== want && !forced) { Seasons.meta.season = want; Seasons.writeMeta(); }   // a save pointing at a hidden place comes home
   const cur = Seasons.current = G.SEASON = Seasons.byId[want];
   if (cur.data) for (const k in cur.data) G.DATA[k] = cur.data[k];
   if (cur.pal) for (const k in cur.pal) G.PAL[k] = cur.pal[k];

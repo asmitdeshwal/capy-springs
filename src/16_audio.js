@@ -51,6 +51,7 @@
     chirp: (ac, d, t, o) => { tone(ac, d, 'sine', 1800, 2400, 0.05, 0.12 * o.gain, t); tone(ac, d, 'sine', 2000, 2600, 0.05, 0.1 * o.gain, t + 0.07); },
     thump: (ac, d, t, o) => { tone(ac, d, 'sine', 90, 45, 0.18, 0.3 * o.gain, t); noise(ac, d, 0.08, 'lowpass', 400, 0.2 * o.gain, t); },
     lap: (ac, d, t, o) => { const n = [110, 147, 196]; for (let i = 0; i < 3; i++) { tone(ac, d, 'sine', n[i], n[i] * 0.6, 0.16, 0.22 * o.gain, t + i * 0.1); } },
+    boom: (ac, d, t, o) => { tone(ac, d, 'sine', 90, 36, 0.45, 0.4 * o.gain, t); noise(ac, d, 0.3, 'lowpass', 320, 0.3 * o.gain, t); tone(ac, d, 'triangle', 1046, 0, 0.3, 0.1 * o.gain, t + 0.05); },
     caw: (ac, d, t, o) => { const q = ac.createBiquadFilter(); q.type = 'bandpass'; q.frequency.value = 1200; q.connect(d); tone(ac, q, 'sawtooth', 520, 380, 0.18, 0.2 * o.gain, t); tone(ac, q, 'sawtooth', 560, 400, 0.14, 0.16 * o.gain, t + 0.2); }
   };
   const OPTS = { pitch: 1, gain: 1, semis: 0 };
@@ -62,7 +63,7 @@
     const Bus = G.Bus, cur = () => G.Game.S;
     const voice = kind => { const d = G.DATA.GUESTS[kind]; if (d && d.voice) Audio.play(d.voice); };
     Bus.on('trail:join', e => { Audio.play('blip', 1, 1, e.index); if (e.node.kind === 'guest') voice(e.node.ref.kind); });
-    Bus.on('splash', e => { Audio.play('splash', e.g.kind === 'duck' ? 1.5 : 1); Audio.play('plink', 1, 1, Math.min(5, e.count)); voice(e.g.kind); if (e.count === 3) Audio.haptic(cur(), 15); if (e.count === 5) Audio.haptic(cur(), 30); });
+    Bus.on('splash', e => { Audio.play('splash', e.g.kind === 'duck' ? 1.5 : 1); Audio.play('plink', 1, 1, Math.min(5, e.count)); voice(e.g.kind); if (e.count === 3) { Audio.haptic(cur(), 15); Audio.play('thump', 1.2, 0.5); } if (e.count === 4) Audio.play('thump', 1, 0.7); if (e.count >= 5) { Audio.haptic(cur(), 40); Audio.play('boom'); } });
     Bus.on('hud:coin-land', () => { const t = now(); if (t - clinkT > C.CLINK_RESET) clinkN = 0; clinkT = t; Audio.play('clink', 1, 1, Math.min(C.CLINK_MAX, clinkN++)); });
     Bus.on('coins:land', () => { const t = now(); if (t - softT >= 0.06) { softT = t; Audio.play('clinkSoft'); } });
     Bus.on('lantern:tick', e => Audio.play('tick', 1 + e.fill));

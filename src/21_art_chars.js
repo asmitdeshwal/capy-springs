@@ -40,6 +40,10 @@
     A().line(ctx, ex - 4, ey + d, ex + 4, ey + d, color, 2);
   }
   function tintOver(ctx, p, x, y, w, h) { if (p.tint) { ctx.globalAlpha = p.tint.alpha; ctx.fillStyle = p.tint.color; ctx.fillRect(x, y, w, h); ctx.globalAlpha = p.alpha; } }
+  // an eye with a catch-light, and a cheek blush (both vanish in silhouette mode where every colour is ink)
+  function eye(ctx, x, y, r) { A().circle(ctx, x, y, r, P.ink); if (P.cream !== P.ink) A().circle(ctx, x + r * 0.35, y - r * 0.35, r * 0.38, P.cream); }
+  function blush(ctx, x, y, r) { if (P.cream === P.ink) return; ctx.globalAlpha *= 0.38; A().circle(ctx, x, y, r, P.red); ctx.globalAlpha /= 0.38; }
+  Ch.eye = eye; Ch.blush = blush;
 
   // ---------------- Kit (52 tall) ----------------
   Ch.kit = function (ctx, p, S) {
@@ -74,8 +78,8 @@
     if (!up) {
       const mx = down ? 0 : 5;
       S_.ellipse(ctx, mx, -36, 5, 4, P.cream); S_.circle(ctx, mx + (down ? 0 : 2), -37, 2, P.foxDark);
-      if (down) { S_.circle(ctx, -5, -41, 3, P.ink); S_.circle(ctx, 5, -41, 3, P.ink); }
-      else { S_.circle(ctx, 1, -41, 3, P.ink); S_.circle(ctx, 7, -41, 3, P.ink); }
+      if (down) { eye(ctx, -5, -41, 3); eye(ctx, 5, -41, 3); blush(ctx, -9, -36, 2.5); blush(ctx, 9, -36, 2.5); }
+      else { eye(ctx, 1, -41, 3); eye(ctx, 7, -41, 3); blush(ctx, 9, -35, 2.5); }
     }
     end(ctx);
   };
@@ -97,7 +101,8 @@
       S_.fillRRect(ctx, down ? -7 : 10, down ? -20 : -24, 14, 12, 5, P.capySnout);
       S_.circle(ctx, -8, -31, 4, P.capyDark); S_.circle(ctx, 2, -31, 4, P.capyDark);
       const e1x = down ? -8 : 4, e2x = down ? 8 : 10, e1y = -22, e2y = down ? -22 : -20;
-      S_.circle(ctx, e1x, e1y, 3.2, P.ink); S_.circle(ctx, e2x, e2y, 3.2, P.ink);
+      eye(ctx, e1x, e1y, 3.2); eye(ctx, e2x, e2y, 3.2);
+      if (down) { blush(ctx, -14, -16, 3); blush(ctx, 14, -16, 3); } else blush(ctx, 2, -15, 3);
       lids(ctx, e1x, e1y, p.lid, P.capyDark); lids(ctx, e2x, e2y, p.lid, P.capyDark);
     } else { S_.circle(ctx, -8, -31, 4, P.capyDark); S_.circle(ctx, 2, -31, 4, P.capyDark); }
     if (p.scarf) { S_.fillRRect(ctx, 1, -29, 7, 22, 3, p.scarf); S_.fillRRect(ctx, 2, -22, 5, 2, 1, P.cream); S_.fillRRect(ctx, 2, -15, 5, 2, 1, P.cream); S_.fillRRect(ctx, 4, -8, 5, 9, 2, p.scarf); }
@@ -125,8 +130,8 @@
     const up = p.dir === 'up', down = p.dir === 'down', hx = down ? 0 : 7;
     ctx.beginPath(); ctx.arc(hx, -29, 8, 0, TAU); ctx.fillStyle = P.duck; ctx.fill(); strokePath(ctx, P.duckLine);
     if (!up) {
-      if (down) { S_.tri(ctx, -4, -27, 4, -27, 0, -21, P.duckBeak); S_.circle(ctx, -3.5, -31, 2.6, P.ink); S_.circle(ctx, 3.5, -31, 2.6, P.ink); }
-      else { S_.tri(ctx, 13, -31.5, 13, -26.5, 22, -29, P.duckBeak); S_.circle(ctx, 8, -31, 2.6, P.ink); }
+      if (down) { S_.tri(ctx, -4, -27, 4, -27, 0, -21, P.duckBeak); eye(ctx, -3.5, -31, 2.6); eye(ctx, 3.5, -31, 2.6); blush(ctx, -6, -26, 2); blush(ctx, 6, -26, 2); }
+      else { S_.tri(ctx, 13, -31.5, 13, -26.5, 22, -29, P.duckBeak); eye(ctx, 8, -31, 2.6); blush(ctx, 10, -26, 2); }
     }
     tintOver(ctx, p, -14, -38, 30, 38);
     if (p.hat) (Ch.hats[p.hat] || hatYuzu)(ctx, hx - 1, -40);
@@ -143,8 +148,8 @@
     S_.fillRRect(ctx, -15, -24, 30, 16, 6, P.happi);
     S_.circle(ctx, 0, -14, 9, P.cream);
     S_.fillRRect(ctx, -12, -26, 24, 7, 3, P.tanukiMask);
-    S_.circle(ctx, -6, -23, 3.2, P.cream); S_.circle(ctx, 6, -23, 3.2, P.cream); S_.circle(ctx, -6, -23, 2, P.ink); S_.circle(ctx, 6, -23, 2, P.ink);
-    S_.circle(ctx, 4, -19, 2, P.tanukiMask);
+    S_.circle(ctx, -6, -23, 3.2, P.cream); S_.circle(ctx, 6, -23, 3.2, P.cream); eye(ctx, -6, -23, 2); eye(ctx, 6, -23, 2);
+    S_.circle(ctx, 4, -19, 2, P.tanukiMask); blush(ctx, -9, -16, 2.2); blush(ctx, 9, -16, 2.2);
     if (p.pose === 'yawn') { const ry = 1 + 3 * Math.sin(Math.min(1, p.poseT) * Math.PI); S_.ellipse(ctx, 2, -13, 3, ry, P.tanukiMask); }
     S_.ellipse(ctx, 0, -33, 22, 6, P.straw); S_.fillRRect(ctx, -10, -41, 20, 9, 4, P.straw); S_.fillRRect(ctx, -10, -35, 20, 3, 1, P.red);
     if (p.carry === 'log') { ctx.save(); ctx.translate(12, -30); ctx.rotate(0.35); S_.fillRRect(ctx, -13, -5, 26, 10, 4, P.cedarDark); S_.circle(ctx, 13, 0, 4, P.cedar); ctx.restore(); }
@@ -157,7 +162,7 @@
     begin(ctx, p, 12, 5);
     ctx.beginPath(); ctx.arc(0, -14, 13, 0, TAU); ctx.fillStyle = P.frog; ctx.fill(); strokePath(ctx, P.frogDark);
     S_.ellipse(ctx, 0, -11, 8, 6, P.cream);
-    S_.circle(ctx, -6, -25, 5, P.cream); S_.circle(ctx, 6, -25, 5, P.cream); S_.circle(ctx, -6, -25, 2.5, P.ink); S_.circle(ctx, 6, -25, 2.5, P.ink);
+    S_.circle(ctx, -6, -25, 5, P.cream); S_.circle(ctx, 6, -25, 5, P.cream); eye(ctx, -6, -25, 2.5); eye(ctx, 6, -25, 2.5); blush(ctx, -9, -14, 2.2); blush(ctx, 9, -14, 2.2);
     ctx.strokeStyle = P.frogDark; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-7, -12); ctx.quadraticCurveTo(0, -7, 7, -12); ctx.stroke();
     S_.fillRRect(ctx, -12, -8, 24, 6, 3, P.red);
     if (p.carry === 'yuzu') { S_.circle(ctx, 0, -36, 8, P.yuzu); S_.ellipse(ctx, 4, -43, 6, 3, P.yuzuLeaf); }

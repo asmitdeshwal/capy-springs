@@ -12,7 +12,8 @@ const cfg = path.join(root, 'src/00_config.js');
 let s = fs.readFileSync(cfg, 'utf8');
 const m = /G\.VERSION = '(\d+)\.(\d+)\.(\d+)'/.exec(s);
 if (!m) { console.error('could not find G.VERSION in src/00_config.js'); process.exit(1); }
-const next = m[1] + '.' + m[2] + '.' + (Number(m[3]) + 1);
+const minor = process.argv.includes('--minor');                                  // npm run deploy -- --minor  for a bigger release (1.4.9 -> 1.5.0)
+const next = minor ? m[1] + '.' + (Number(m[2]) + 1) + '.0' : m[1] + '.' + m[2] + '.' + (Number(m[3]) + 1);
 fs.writeFileSync(cfg, s.replace(m[0], "G.VERSION = '" + next + "'"));
 const pj = path.join(root, 'package.json'), p = JSON.parse(fs.readFileSync(pj, 'utf8')); p.version = next; fs.writeFileSync(pj, JSON.stringify(p, null, 2) + '\n');
 console.log('version ' + m[1] + '.' + m[2] + '.' + m[3] + ' -> ' + next);

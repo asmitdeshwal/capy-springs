@@ -24,12 +24,24 @@
   };
   // Sheet-capable stations (a tap opens the upgrade sheet)
   G.DATA.SHEET_STATIONS = ['rock', 'cedar', 'bamboo', 'boiler', 'grove', 'stall'];
-  G.DATA.UPGRADES = {   // cost(level) = round5(base * 1.6 ** level), level = current level (0-based)
-    rock:   { speed: { label: 'Soak',   base: 30,  max: 6 }, slots: { label: 'Seats',   base: 45,  max: 3 }, pay: { label: 'Tips',  base: 40,  max: 6 } },
-    cedar:  { speed: { label: 'Soak',   base: 40,  max: 6 }, slots: { label: 'Seats',   base: 60,  max: 3 }, pay: { label: 'Tips',  base: 50,  max: 6 } },
-    bamboo: { speed: { label: 'Soak',   base: 90,  max: 6 }, slots: { label: 'Seats',   base: 120, max: 3 }, pay: { label: 'Tips',  base: 100, max: 6 } },
-    boiler: { speed: { label: 'Stoke',  base: 60,  max: 6 }, slots: { label: 'Tank',    base: 120, max: 5 }, pay: { label: 'Pon',   base: 90,  max: 5, requires: 'pon' } },
-    grove:  { speed: { label: 'Regrow', base: 50,  max: 6 }, slots: { label: 'Trees',   base: 80,  max: 3 }, pay: { label: 'Ripe',  base: 70,  max: 6 } },
-    stall:  { speed: { label: 'Prep',   base: 80,  max: 6 }, slots: { label: 'Counter', base: 100, max: 3 }, pay: { label: 'Price', base: 90,  max: 6 } }
+  // cost(level) = round5(base * 1.6 ** level), level = current level (0-based). title / blurb = what the upgrade sheet says in plain words (GDD 10.4)
+  const BATH_TRACKS = {
+    speed: { title: 'Quicker soaks', blurb: 'Guests finish sooner, so more fit in between cars' },
+    slots: { title: 'More seats',    blurb: 'Seat bigger groups for bigger Splash chains' },
+    pay:   { title: 'Better tips',   blurb: 'Every guest who soaks here pays more' }
+  };
+  G.DATA.UPGRADES = {
+    rock:   { speed: { label: 'Soak',   base: 30,  max: 6, ...BATH_TRACKS.speed }, slots: { label: 'Seats',   base: 45,  max: 3, ...BATH_TRACKS.slots }, pay: { label: 'Tips',  base: 40,  max: 6, ...BATH_TRACKS.pay } },
+    cedar:  { speed: { label: 'Soak',   base: 40,  max: 6, ...BATH_TRACKS.speed }, slots: { label: 'Seats',   base: 60,  max: 3, ...BATH_TRACKS.slots }, pay: { label: 'Tips',  base: 50,  max: 6, ...BATH_TRACKS.pay } },
+    bamboo: { speed: { label: 'Soak',   base: 90,  max: 6, ...BATH_TRACKS.speed }, slots: { label: 'Seats',   base: 120, max: 3, ...BATH_TRACKS.slots }, pay: { label: 'Tips',  base: 100, max: 6, ...BATH_TRACKS.pay } },
+    boiler: { speed: { label: 'Stoke',  base: 60,  max: 6, title: 'Hotter logs',   blurb: 'Each log you throw in adds more heat' },
+              slots: { label: 'Tank',    base: 120, max: 5, title: 'Bigger tank',   blurb: 'Heat can climb higher: longer Steam Rushes' },
+              pay:   { label: 'Pon',     base: 90,  max: 5, title: 'Quicker Pon',   blurb: 'Pon walks and stokes faster', requires: 'pon' } },
+    grove:  { speed: { label: 'Regrow', base: 50,  max: 6, title: 'Faster regrow', blurb: 'Yuzu ripen sooner after you pick them' },
+              slots: { label: 'Trees',   base: 80,  max: 3, title: 'Another tree',  blurb: 'One more yuzu tree in the grove' },
+              pay:   { label: 'Ripe',    base: 70,  max: 6, title: 'Longer gold',   blurb: 'A yuzu bath stays golden (x2 pay) for longer' } },
+    stall:  { speed: { label: 'Prep',   base: 80,  max: 6, title: 'Faster prep',   blurb: 'Mochi are ready for the queue sooner' },
+              slots: { label: 'Counter', base: 100, max: 3, title: 'Bigger counter', blurb: 'More mochi kept ready at once' },
+              pay:   { label: 'Price',   base: 90,  max: 6, title: 'Pricier mochi', blurb: 'Each mochi sells for more' } }
   };
 })(window.G);

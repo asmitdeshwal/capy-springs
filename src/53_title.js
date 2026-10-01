@@ -10,9 +10,10 @@
     const H = G.Canvas.H, st = G.Canvas.st || 0;
     R.logoY = st + 0.20 * H; R.heroY = 0.46 * H;
     BTN.length = 0;
+    const many = G.Seasons.list.length > 1;
     BTN.push({ id: 'play', x: 120, y: 0.58 * H, w: 300, h: 70 });
-    BTN.push({ id: 'seasons', x: 120, y: 0.58 * H + 90, w: 300, h: 56 });
-    BTN.push({ id: 'settings', x: 120, y: 0.58 * H + 162, w: 300, h: 56 });
+    if (many) BTN.push({ id: 'seasons', x: 120, y: 0.58 * H + 90, w: 300, h: 56 });
+    BTN.push({ id: 'settings', x: 120, y: 0.58 * H + (many ? 162 : 90), w: 300, h: 56 });
     if (G.Dev.on) BTN.push({ id: 'dev', x: 390, y: H - (G.Canvas.sb || 0) - 56, w: 130, h: 40 });
   }
   Title.hasProgress = S => S.earned > 0 || S.t > 5;
@@ -52,7 +53,7 @@
     for (let i = 0; i < 3; i++) { const k = (t * 0.5 + i / 3) % 1; ctx.globalAlpha = 0.5 * (1 - k); A.circle(ctx, 200 + i * 70 + Math.sin(t + i) * 8, R.logoY - 70 - k * 50, 12 + k * 14, PAL.cream); }
     ctx.globalAlpha = 1;
     A.text(ctx, 'CAPY', 270, R.logoY - 20, 78, PAL.cta, LOGO); A.text(ctx, 'SPRINGS', 270, R.logoY + 50, 64, PAL.amber, LOGO);
-    A.pill(ctx, 270, R.logoY + 104, 300, 30, 'Season ' + season.id + '  ·  ' + season.name, 16, PAL.rgba(PAL.cream, 0.92), PAL.ink, null);
+    if (G.Seasons.list.length > 1 || season.id !== 1) A.pill(ctx, 270, R.logoY + 104, 300, 30, 'Season ' + season.id + '  ·  ' + season.name, 16, PAL.rgba(PAL.cream, 0.92), PAL.ink, null);
     // Kit waving and a capy in a yuzu hat, bobbing
     const p = Ch.resetPose(Ch.POSE);
     p.x = 215; p.y = R.heroY + Math.sin(t * 2) * 3; p.face = 1; p.t = t; p.pose = 'wave'; p.poseT = t % 1; Ch.kit(ctx, p, S);
