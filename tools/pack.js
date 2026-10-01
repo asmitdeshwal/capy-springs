@@ -85,7 +85,10 @@ self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(keys => 
 const fromCache = req => caches.match(req, { ignoreSearch: true }).then(r => r || (req.mode === 'navigate' ? caches.match('index.html') : undefined));
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || !e.request.url.startsWith(self.location.origin)) return;
-  e.respondWith(fetch(e.request).then(res => {
+  // the page itself is always revalidated with the host (hosts like GitHub Pages otherwise keep it for 10 minutes); its script URLs carry
+  // the version, so a new page pulls new scripts and the rest can use the normal HTTP cache
+  const init = e.request.mode === 'navigate' ? { cache: 'no-cache' } : undefined;
+  e.respondWith(fetch(e.request, init).then(res => {
     if (res && res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); return res; }
     return fromCache(e.request).then(r => r || res);
   }).catch(() => fromCache(e.request).then(r => r || Response.error())));

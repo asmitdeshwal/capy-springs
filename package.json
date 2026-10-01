@@ -1,6 +1,6 @@
 {
   "name": "capy-springs",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "private": true,
   "description": "Capy Springs - a one-thumb offline arcade-idle onsen builder (vanilla Canvas JS, no dependencies)",
   "scripts": {
