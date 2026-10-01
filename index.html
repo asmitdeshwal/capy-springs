@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Capy Springs">
+<meta name="theme-color" content="#1F2430">
+<meta name="description" content="A one-thumb offline onsen builder: lead capybaras into steaming baths.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-180.png">
+<title>Capy Springs</title>
+<style>
+  html, body { margin:0; padding:0; height:100%; background:#1F2430; overflow:hidden; overscroll-behavior:none; }
+  canvas { display:block; touch-action:none; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; }
+  #safe { position:fixed; left:0; top:0; width:0; height:0; visibility:hidden;
+          padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); }
+  /* boot screen: shown while the 45 script files load, removed by the game on its first frame */
+  #boot { position:fixed; inset:0; background:#F6F1E7; display:flex; flex-direction:column; align-items:center; justify-content:center;
+          font-family:"Arial Rounded MT Bold","Trebuchet MS","Segoe UI",Roboto,sans-serif; color:#1F2430; transition:opacity .35s ease; z-index:10; }
+  #boot.gone { opacity:0; pointer-events:none; }
+  #boot .logo { font-size:40px; font-weight:700; letter-spacing:1px; color:#E4572E; text-shadow:0 3px 0 #F6E7C8; margin-bottom:6px; }
+  #boot .sub { font-size:14px; color:#7F796D; margin-bottom:28px; }
+  #boot .bar { width:220px; height:14px; border-radius:7px; background:rgba(31,36,48,.12); overflow:hidden; }
+  #boot .fill { height:100%; width:0; border-radius:7px; background:#FFC857; transition:width .12s linear; }
+  #boot .capy { width:64px; height:44px; margin-bottom:22px; position:relative; }
+  #boot .capy .body { position:absolute; left:6px; top:8px; width:52px; height:30px; border-radius:14px; background:#9C6B43; border:2px solid #7A5233; animation:bob 1.2s ease-in-out infinite; }
+  #boot .capy .snout { position:absolute; right:4px; top:12px; width:16px; height:13px; border-radius:6px; background:#6E4A2E; }
+  #boot .capy .eye { position:absolute; right:22px; top:12px; width:5px; height:5px; border-radius:50%; background:#2A1E17; }
+  #boot .capy .steam { position:absolute; left:14px; top:-6px; width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,.8); animation:rise 1.6s linear infinite; }
+  #boot .err { margin-top:16px; font-size:13px; color:#D93A3A; max-width:300px; text-align:center; }
+  @keyframes bob { 0%,100% { transform:translateY(0) } 50% { transform:translateY(-4px) } }
+  @keyframes rise { 0% { transform:translateY(0); opacity:.8 } 100% { transform:translateY(-22px) scale(1.6); opacity:0 } }
+</style>
+</head>
+<body>
+<div id="safe"></div>
+<div id="boot">
+  <div class="capy"><div class="body"><div class="snout"></div><div class="eye"></div></div><div class="steam"></div></div>
+  <div class="logo">CAPY SPRINGS</div>
+  <div class="sub" id="bootsub">warming the water…</div>
+  <div class="bar"><div class="fill" id="bootfill"></div></div>
+</div>
+<canvas id="game"></canvas>
+<script>
+// The game's files, in load order (the harness and tools/pack.js read this list too). Classic scripts on window.G, loaded one after another.
+window.CAPY_FILES = [
+  'src/00_config.js', 'src/01_palette.js', 'src/02_data_map.js', 'src/02_data_stations.js', 'src/02_data_lanterns.js', 'src/02_data_guests.js',
+  'src/03_pack_s2.js', 'src/04_seasons.js',
+  'src/10_util.js', 'src/11_bus.js', 'src/12_loop.js', 'src/13_canvas.js', 'src/14_camera.js', 'src/15_input.js', 'src/16_audio.js', 'src/17_save.js',
+  'src/20_art_shapes.js', 'src/21_art_chars.js', 'src/22_art_world.js', 'src/23_art_fx.js', 'src/24_fx.js', 'src/25_art_s2.js',
+  'src/30_state.js', 'src/31_player.js', 'src/32_trail.js', 'src/33_guests.js', 'src/34_cablecar.js', 'src/35_baths.js', 'src/36_heat.js',
+  'src/37_grove.js', 'src/38_stall.js', 'src/39_coins.js', 'src/40_lanterns.js', 'src/41_upgrades.js', 'src/42_helpers.js', 'src/43_events.js',
+  'src/44_hints.js', 'src/45_render.js', 'src/46_kaa.js', 'src/50_hud.js', 'src/51_sheet.js', 'src/52_cards.js', 'src/53_title.js', 'src/54_dev.js',
+  'src/90_main.js'
+];
+(function () {
+  var files = window.CAPY_FILES, i = 0, fill = document.getElementById('bootfill'), sub = document.getElementById('bootsub');
+  function next() {
+    if (i >= files.length) { sub.textContent = 'ready'; return; }
+    var s = document.createElement('script'); s.src = files[i] + '?v=1.4.1';
+    s.onload = function () { i++; fill.style.width = Math.round(i / files.length * 100) + '%'; next(); };
+    s.onerror = function () { var e = document.createElement('div'); e.className = 'err'; e.textContent = 'Could not load ' + files[i] + '. If you opened the file directly, try node tools/serve.js and open http://localhost:5173.'; document.getElementById('boot').appendChild(e); };
+    document.body.appendChild(s);
+  }
+  next();
+  // installable, offline-capable app (PWA): the service worker caches every file on first visit; never from file://. Registered right away
+  // and retried twice, because a slow first load (a share link, a phone network) can make the first attempt fail.
+  if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) {
+    var tries = 0;
+    var reg = function () { tries++; navigator.serviceWorker.register('sw.js').catch(function () { if (tries < 3) setTimeout(reg, 8000); }); };
+    reg();
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Capy Springs capture rig</title>
+<style>
+  html, body { margin:0; padding:0; height:100%; background:#1F2430; overflow:hidden; overscroll-behavior:none; }
+  canvas { display:block; touch-action:none; -webkit-user-select:none; user-select:none; }
+  #safe { position:fixed; left:0; top:0; width:0; height:0; visibility:hidden;
+          padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); }
+</style>
+</head>
+<body>
+<div id="safe"></div>
+<canvas id="game"></canvas>
+<script>try { localStorage.clear(); } catch (e) {}</script>
+<script src="/src/00_config.js"></script>
+<script src="/src/01_palette.js"></script>
+<script src="/src/02_data_map.js"></script>
+<script src="/src/02_data_stations.js"></script>
+<script src="/src/02_data_lanterns.js"></script>
+<script src="/src/02_data_guests.js"></script>
+<script src="/src/10_util.js"></script>
+<script src="/src/11_bus.js"></script>
+<script src="/src/12_loop.js"></script>
+<script src="/src/13_canvas.js"></script>
+<script src="/src/14_camera.js"></script>
+<script src="/src/15_input.js"></script>
+<script src="/src/16_audio.js"></script>
+<script src="/src/17_save.js"></script>
+<script src="/src/20_art_shapes.js"></script>
+<script src="/src/21_art_chars.js"></script>
+<script src="/src/22_art_world.js"></script>
+<script src="/src/23_art_fx.js"></script>
+<script src="/src/24_fx.js"></script>
+<script src="/src/30_state.js"></script>
+<script src="/src/31_player.js"></script>
+<script src="/src/32_trail.js"></script>
+<script src="/src/33_guests.js"></script>
+<script src="/src/34_cablecar.js"></script>
+<script src="/src/35_baths.js"></script>
+<script src="/src/36_heat.js"></script>
+<script src="/src/37_grove.js"></script>
+<script src="/src/38_stall.js"></script>
+<script src="/src/39_coins.js"></script>
+<script src="/src/40_lanterns.js"></script>
+<script src="/src/41_upgrades.js"></script>
+<script src="/src/42_helpers.js"></script>
+<script src="/src/43_events.js"></script>
+<script src="/src/44_hints.js"></script>
+<script src="/src/45_render.js"></script>
+<script src="/src/50_hud.js"></script>
+<script src="/src/51_sheet.js"></script>
+<script src="/src/52_cards.js"></script>
+<script src="/src/90_main.js"></script>
+<script>
+// Capture rig: stops the real-time loop, fast-forwards a bot-played session at a fixed 1/60 s,
+// then renders exactly one frame so a screenshot lands on a chosen game moment.
+// Query params:
+//   t=SECONDS        fast-forward this many simulated seconds first
+//   day=1            end Lantern Night and hold it off (daylight shots)
+//   night=1          force Lantern Night on
+//   stop=NAME        then keep stepping until a moment happens:
+//                    splash3 | splash5 | rush | trail | car | soak
+//   trailn=N         with stop=trail: trail length to wait for (default 4)
+//   soakn=N          with stop=soak: guests in water to wait for (default 5)
+//   max=SECONDS      give up looking for the moment after this long (default 240)
+//   hold=SECONDS     keep playing this long after the moment
+//   sheet=ID         open a station's upgrade sheet (rock|cedar|bamboo|boiler|grove|stall)
+//   card=offline     show the "Welcome back" offline-earnings card
+//   stick=1          draw the floating joystick as if a thumb were on it
+(function () {
+  'use strict';
+  const P = new URLSearchParams(location.search);
+  const num = (k, d) => P.has(k) ? Number(P.get(k)) : d;
+  window.addEventListener('load', async function () {
+    const G = window.G;
+    G.Loop.stop();
+    const S = G.Game.S;
+    S.mode = 'play'; S.introT = G.C.INTRO_T; G.Game.syncMode(S);
+    S.settings.sound = false;
+    G.Input.headless = true;   // the bot owns Input.vec; keyboard/stick must not overwrite it
+    const code = await (await fetch('/test/bot.js')).text();
+    const mod = { exports: null };
+    (new Function('module', 'G', code))(mod, G);
+    const bot = mod.exports(G);
+    const DT = 1 / 60;
+    const step = () => { bot.step(S, DT); G.Game.step(DT); };
+    const stop = P.get('stop');
+
+    for (let i = 0, n = Math.round(num('t', 0) * 60); i < n; i++) step();
+
+    if (P.get('day') === '1') {
+      if (S.night.active) { G.Events.endNight(S); for (let i = 0; i < 120; i++) step(); }
+      S.night.next = S.t + 9999;
+    }
+    if (P.get('night') === '1' && !S.night.active) { G.Events.startNight(S); for (let i = 0; i < 60 * 5; i++) step(); }
+
+    function hit() {
+      if (!stop) return true;
+      if (stop === 'splash3') return S.splash.count >= 3 && (S.t - S.splash.t) < 0.35;
+      if (stop === 'splash5') return S.splash.count >= 5 && (S.t - S.splash.t) < 0.5;
+      if (stop === 'rush') return S.heat.rush && S.heat.rushT > 0.3 && S.heat.rushT < 2.5;
+      if (stop === 'trail') return S.trail.length >= num('trailn', 4) && G.Input.mag > 0.5;
+      if (stop === 'car') return S.car.phase === 'dock' && S.car.phaseT < 1.5;
+      if (stop === 'soak') { let n = 0; for (const id in S.baths) { const b = S.baths[id]; if (b) for (const g of b.slots) if (g) n++; } return n >= num('soakn', 5); }
+      return true;
+    }
+    for (let i = 0, lim = Math.round(num('max', 240) * 60); i < lim && !hit(); i++) step();
+    for (let i = 0, n = Math.round(num('hold', 0) * 60); i < n; i++) step();
+
+    if (P.get('sheet')) { G.Sheet.open(S, P.get('sheet')); for (let i = 0; i < 24; i++) G.Game.step(DT); }
+    if (P.get('card') === 'offline') {
+      G.Cards.showOffline(S, { away: 7200, cars: 121, coins: 4820, floorCoins: 0, show: true });
+      for (let i = 0; i < 40; i++) G.Game.step(DT);
+    }
+    if (P.get('stick') === '1') {
+      const st = G.Input.stick, H = G.Canvas.H;
+      st.active = true; st.alpha = 1; st.moved = true;
+      st.ox = 148; st.oy = H - 200; st.kx = 148 + 50; st.ky = H - 200 - 44;
+    }
+    G.Render.frame(S, G.Canvas.ctx);
+    const d = document.createElement('div');
+    d.id = 'ready'; d.style.cssText = 'position:fixed;left:-9999px';
+    d.textContent = 'coins=' + Math.round(S.coins) + ' earned=' + Math.round(S.earned) + ' trail=' + S.trail.length + ' t=' + S.t.toFixed(1);
+    document.body.appendChild(d);
+    document.title = 'READY ' + d.textContent;   // the screenshot driver waits for this
+  });
+})();
+</script>
+</body>
+</html>

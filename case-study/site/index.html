@@ -1,0 +1,636 @@
+<title>Capy Springs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  :root {
+    /* Palette taken from the game's own tokens, and governed by the game's own rules:
+       vermilion only for actions, amber only for figures, teal only for data. */
+    --ground:   #EDF0E8;
+    --surface:  #F7F8F3;
+    --sunken:   #E2E7DC;
+    --ink:      #16211C;
+    --body:     #2D3A32;
+    --muted:    #61705F;
+    --hair:     #CBD3C6;
+    --cta:      #D4491F;
+    --amber:    #B5811A;
+    --amber-fill:#FFC857;
+    --teal:     #1E7F7A;
+    --pine:     #16211C;
+    --pine-sur: #1F2E26;
+    --pine-txt: #E6ECE2;
+    --pine-mut: #93A795;
+    --pine-cta: #F2714A;
+
+    --display: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
+    --text: "Newsreader", Georgia, "Times New Roman", serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --measure: 34rem;
+    --rail: 8.5rem;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:  #10170F;
+      --surface: #18211A;
+      --sunken:  #0B110B;
+      --ink:     #EAF0E6;
+      --body:    #CBD6C7;
+      --muted:   #8C9E8D;
+      --hair:    #2C3A2F;
+      --cta:     #F2714A;
+      --amber:   #FFC857;
+      --teal:    #4FC7C0;
+      --pine:    #0B110B;
+      --pine-sur:#151E16;
+      --pine-txt:#EAF0E6;
+      --pine-mut:#8C9E8D;
+      --pine-cta:#F2714A;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:  #10170F;
+    --surface: #18211A;
+    --sunken:  #0B110B;
+    --ink:     #EAF0E6;
+    --body:    #CBD6C7;
+    --muted:   #8C9E8D;
+    --hair:    #2C3A2F;
+    --cta:     #F2714A;
+    --amber:   #FFC857;
+    --teal:    #4FC7C0;
+    --pine:    #0B110B;
+    --pine-sur:#151E16;
+    --pine-txt:#EAF0E6;
+    --pine-mut:#8C9E8D;
+    --pine-cta:#F2714A;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--body);
+    font-family: var(--text);
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 66rem; margin: 0 auto; padding-inline: 20px; }
+
+  /* ---------- type ---------- */
+  h1, h2, h3, .num, .eyebrow, .stat b, .pill, th { font-family: var(--display); }
+  h1 { font-weight: 900; font-size: clamp(2.6rem, 7vw, 4.6rem); line-height: 0.98; letter-spacing: -0.025em;
+       margin: 0; color: var(--ink); text-wrap: balance; }
+  h2 { font-weight: 900; font-size: clamp(1.5rem, 3.4vw, 2.1rem); line-height: 1.12; letter-spacing: -0.015em;
+       margin: 0 0 .85rem; color: var(--ink); text-wrap: balance; }
+  h3 { font-weight: 700; font-size: 1.06rem; line-height: 1.3; margin: 0 0 .4rem; color: var(--ink); }
+  p { margin: 0 0 1.05rem; max-width: var(--measure); }
+  a { color: var(--cta); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  strong { font-weight: 500; color: var(--ink); }
+  em { font-style: italic; }
+  code, .mono { font-family: var(--mono); font-size: .86em; }
+  .eyebrow { font-family: var(--mono); font-weight: 500; font-size: .7rem; letter-spacing: .16em;
+             text-transform: uppercase; color: var(--muted); }
+  .lede { font-size: clamp(1.12rem, 2.3vw, 1.34rem); line-height: 1.48; color: var(--ink); max-width: 38rem; }
+
+  /* ---------- hero ---------- */
+  header.hero { padding-block: clamp(3rem, 8vw, 5.5rem) clamp(2rem, 5vw, 3.5rem); }
+  .hero-grid { display: grid; grid-template-columns: minmax(0,1fr) 15rem; gap: clamp(2rem, 5vw, 4rem); align-items: end; }
+  .kicker { display: flex; flex-wrap: wrap; gap: .5rem .9rem; align-items: center; margin-bottom: 1.4rem; }
+  .pill { font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+          padding: .3rem .6rem; border: 1px solid var(--hair); border-radius: 2px; color: var(--muted); }
+  .pill.hot { color: var(--cta); border-color: var(--cta); }
+  .hero p.lede { margin-top: 1.5rem; }
+  .meta { margin-top: 2.2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+          gap: 1.1rem 1.6rem; border-top: 1px solid var(--hair); padding-top: 1.2rem; max-width: 46rem; }
+  .meta div { display: grid; gap: .15rem; }
+  .meta dt, .meta .k { font-family: var(--mono); font-size: .66rem; letter-spacing: .14em;
+                       text-transform: uppercase; color: var(--muted); }
+  .meta .v { font-family: var(--display); font-weight: 500; font-size: .94rem; color: var(--ink); line-height: 1.35; }
+
+  /* ---------- phone frames ---------- */
+  .phone { background: var(--ink); border-radius: 18px; padding: 5px; display: block;
+           box-shadow: 0 14px 34px -18px rgba(11,17,11,.6); max-width: 100%; }
+  .phone img { display: block; width: 100%; aspect-ratio: 430/932; border-radius: 13px; }
+  figure { margin: 0; }
+  figcaption { font-family: var(--text); font-style: italic; font-size: .87rem; line-height: 1.45;
+               color: var(--muted); margin-top: .7rem; max-width: 26rem; }
+
+  /* ---------- stats ---------- */
+  .stats { border-block: 1px solid var(--hair); padding-block: 1.6rem; display: grid;
+           grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: 1.6rem 2rem; }
+  .stat b { display: block; font-weight: 900; font-size: clamp(1.9rem, 4vw, 2.5rem); line-height: 1;
+            color: var(--amber); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .stat b span { font-size: .42em; font-weight: 700; color: var(--muted); letter-spacing: .04em; margin-left: .3em; }
+  .stat p { margin: .5rem 0 0; font-size: .87rem; line-height: 1.4; color: var(--muted); max-width: 15rem; }
+
+  /* ---------- section layout: numbered rail ---------- */
+  section.sec { display: grid; grid-template-columns: var(--rail) minmax(0, 1fr); gap: 0 2.5rem;
+                padding-block: clamp(2.6rem, 6vw, 4rem); border-top: 1px solid var(--hair); }
+  section.sec > .rail { display: flex; flex-direction: column; gap: .35rem; }
+  .num { font-weight: 900; font-size: 1.05rem; color: var(--cta); font-variant-numeric: tabular-nums; }
+  .body > *:last-child { margin-bottom: 0; }
+
+  /* ---------- spec list (constraints) ---------- */
+  .spec { display: grid; gap: 0; margin: 0 0 .5rem; max-width: 48rem; }
+  .spec > div { display: grid; grid-template-columns: 15rem minmax(0,1fr); gap: .3rem 1.8rem;
+                padding-block: .95rem; border-top: 1px dashed var(--hair); }
+  .spec > div:first-child { border-top: 0; padding-top: 0; }
+  .spec dt, .spec .k { font-family: var(--display); font-weight: 700; color: var(--ink); font-size: .98rem; line-height: 1.35; }
+  .spec .v { font-size: .95rem; color: var(--muted); line-height: 1.5; }
+
+  /* ---------- tables ---------- */
+  .tablewrap { overflow-x: auto; margin: 0 0 1.2rem; }
+  table { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: .9rem; }
+  th { font-weight: 700; font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
+       color: var(--muted); text-align: left; padding: 0 1.2rem .6rem 0; border-bottom: 1px solid var(--hair); }
+  td { padding: .85rem 1.2rem .85rem 0; border-bottom: 1px solid var(--hair); vertical-align: top; line-height: 1.45; }
+  td:first-child { color: var(--ink); }
+  .tnum { font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: .84rem; }
+
+  /* ---------- rules block ---------- */
+  .rules { font-family: var(--mono); font-size: .82rem; line-height: 1.95; background: var(--surface);
+           border: 1px solid var(--hair); border-left: 3px solid var(--cta); padding: 1.2rem 1.3rem;
+           overflow-x: auto; margin: 0 0 1rem; max-width: 44rem; }
+  .rules ol { margin: 0; padding: 0; list-style: none; counter-reset: r; }
+  .rules li { counter-increment: r; white-space: nowrap; }
+  .rules li::before { content: counter(r, decimal-leading-zero); color: var(--muted); margin-right: 1em; }
+  .rules li b { font-weight: 700; color: var(--ink); }
+  .rules li.changed { color: var(--cta); }
+  .rules li.changed b { color: var(--cta); }
+  .rules li.changed::after { content: " ← moved after simulation"; color: var(--cta); font-size: .92em; }
+  .rules li.dim { color: var(--muted); }
+
+  /* ---------- timeline ---------- */
+  .tl { display: grid; gap: 0; max-width: 44rem; margin: 0 0 1rem; }
+  .tl > div { display: grid; grid-template-columns: 4.5rem minmax(0,1fr); gap: 1.5rem;
+              padding-block: .8rem; border-top: 1px solid var(--hair); }
+  .tl > div:first-child { border-top: 0; }
+  .tl .t { font-family: var(--mono); font-size: .8rem; color: var(--cta); font-variant-numeric: tabular-nums; padding-top: .15rem; }
+  .tl .d { font-size: .95rem; line-height: 1.5; }
+
+  /* ---------- swatches ---------- */
+  .swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr)); gap: .8rem;
+              max-width: 44rem; margin: 0 0 1.3rem; }
+  .sw { display: grid; gap: .45rem; }
+  .sw i { display: block; height: 3.2rem; border-radius: 2px; border: 1px solid rgba(0,0,0,.08); }
+  .sw .n { font-family: var(--display); font-weight: 700; font-size: .82rem; color: var(--ink); }
+  .sw .h { font-family: var(--mono); font-size: .7rem; color: var(--muted); }
+  .sw .u { font-size: .78rem; color: var(--muted); line-height: 1.35; }
+
+  /* ---------- dark band ---------- */
+  .band { background: var(--pine); color: var(--pine-txt); margin-block: 0; }
+  .band .wrap { padding-block: clamp(3rem, 7vw, 5rem); }
+  .band h2, .band h3, .band strong, .band td:first-child { color: var(--pine-txt); }
+  .band .num { color: var(--pine-cta); }
+  .band .eyebrow, .band figcaption, .band .muted, .band td { color: var(--pine-mut); }
+  .band section.sec { border-top-color: var(--pine-sur); }
+  .band section.sec:first-of-type { border-top: 0; }
+  .band th, .band td { border-bottom-color: var(--pine-sur); }
+  .band th { color: var(--pine-mut); }
+  .finding { background: var(--pine-sur); border-left: 3px solid var(--pine-cta); padding: 1.4rem 1.5rem;
+             margin: 0 0 1.2rem; max-width: 44rem; }
+  .finding h3 { margin-bottom: .6rem; }
+  .finding p:last-child { margin-bottom: 0; }
+  .finding .hit { font-family: var(--display); font-weight: 900; color: var(--amber); }
+
+  /* ---------- chart ---------- */
+  .chart { background: var(--pine-sur); border: 1px solid var(--pine-sur); padding: 1.2rem 1.2rem .9rem;
+           margin: 1.4rem 0 1rem; max-width: 46rem; }
+  .chart svg { display: block; width: 100%; height: auto; }
+  .chart .legend { display: flex; flex-wrap: wrap; gap: 1.2rem; margin-top: .8rem;
+                   font-family: var(--mono); font-size: .68rem; letter-spacing: .08em;
+                   text-transform: uppercase; color: var(--pine-mut); }
+  .chart .legend span { display: inline-flex; align-items: center; gap: .45rem; }
+  .chart .legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+  /* ---------- figures & gallery ---------- */
+  .split { display: grid; grid-template-columns: minmax(0,1fr) 14rem; gap: 2.5rem; align-items: start; }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: 1.4rem; margin-top: 1.5rem; }
+  .gallery figcaption { font-size: .8rem; }
+
+  /* ---------- lessons ---------- */
+  .lessons { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.6rem 2.2rem; max-width: 48rem; }
+  .lesson { border-top: 2px solid var(--cta); padding-top: .9rem; }
+  .lesson h3 { margin-bottom: .35rem; }
+  .lesson p { font-size: .93rem; color: var(--muted); margin: 0; }
+
+  footer { border-top: 1px solid var(--hair); padding-block: 2.6rem 4rem; }
+  footer p { font-size: .88rem; color: var(--muted); max-width: 40rem; }
+  .limits { font-family: var(--mono); font-size: .78rem; line-height: 1.8; color: var(--muted);
+            list-style: none; padding: 0; margin: 0 0 1.6rem; max-width: 42rem; }
+  .limits li { padding-left: 1.4rem; position: relative; }
+  .limits li::before { content: "—"; position: absolute; left: 0; color: var(--cta); }
+
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: minmax(0,1fr); }
+    .hero-grid figure { max-width: 15rem; }
+    .split { grid-template-columns: minmax(0,1fr); }
+    .split figure { max-width: 14rem; }
+  }
+  @media (max-width: 700px) {
+    section.sec { grid-template-columns: minmax(0,1fr); gap: .8rem; }
+    section.sec > .rail { flex-direction: row; align-items: baseline; gap: .8rem; }
+    .spec > div { grid-template-columns: minmax(0,1fr); }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .rise { animation: rise .7s cubic-bezier(.2,.7,.3,1) both; }
+    .rise:nth-child(2) { animation-delay: .06s; }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  }
+  a:focus-visible, summary:focus-visible { outline: 2px solid var(--cta); outline-offset: 3px; }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div class="rise">
+        <div class="kicker">
+          <span class="pill hot">Side project</span>
+          <span class="pill">2026</span>
+          <span class="pill">Product &amp; systems design</span>
+        </div>
+        <h1>Capy&nbsp;Springs</h1>
+        <p class="lede">A cozy, offline, one-thumb mobile game — and the story of designing it precisely enough to be built, then proving the design worked before anyone played it.</p>
+      </div>
+      <figure class="rise">
+        <span class="phone"><img src="screens/02-core-loop.png" alt="Mobile game screenshot: a fox leads a line of ducks past hot spring baths while a gold x5 combo number pops above the water"></span>
+      </figure>
+    </div>
+
+    <div class="meta">
+      <div><span class="k">Role</span><span class="v">Concept, systems design, UX specification, art direction, balance</span></div>
+      <div><span class="k">Build</span><span class="v">Vanilla JS + Canvas 2D. 39 modules, 5,676 lines, zero dependencies, zero asset files</span></div>
+      <div><span class="k">Method</span><span class="v">Specified in 2,018 lines of documentation; verified by simulation</span></div>
+      <div><span class="k">Status</span><span class="v">Build 1.2.0 — playable end to end, not published</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="stats">
+    <div class="stat"><b>2,018</b><p>lines of specification written before the first line of code</p></div>
+    <div class="stat"><b>12</b><p>priority rules drive one guidance arrow — and zero tutorial screens</p></div>
+    <div class="stat"><b>108,000</b><p>frames of play simulated and checked in about three seconds</p></div>
+    <div class="stat"><b>2</b><p>design failures the simulator caught that playtesting would have blamed on “feel”</p></div>
+    <div class="stat"><b>0</b><p>dependencies, and zero asset files — art and audio are generated at runtime</p></div>
+  </div>
+
+  <section class="sec">
+    <div class="rail"><span class="num">01</span><span class="eyebrow">The problem</span></div>
+    <div class="body">
+      <h2>Interfaces that have to create the motivation</h2>
+      <p>Most of my work is interfaces where the user already knows what they want — they came to book something, buy something, file something. I wanted a project where <strong>the interface has to create the motivation</strong>, not just serve it.</p>
+      <p>Casual mobile games are the hardest version of that problem. The player gives you <strong>six seconds</strong> before deciding whether to keep going. They play one-handed, on a bus, with the sound off. There is no onboarding budget, because nobody reads a tutorial. And every competitor in the genre has spent millions optimising the same loop.</p>
+      <p>I also wanted to test a second thing: whether I could take a project all the way to a working artefact by designing it <em>precisely enough to be built</em>, rather than handing over a Figma file and hoping.</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="rail"><span class="num">02</span><span class="eyebrow">The brief I set myself</span></div>
+    <div class="body">
+      <h2>Six constraints, fixed before anything was designed</h2>
+      <p>I wrote these down first and never moved them. They did more design work than any moodboard.</p>
+      <div class="spec">
+        <div><span class="k">One thumb, no buttons</span><span class="v">The entire play loop is walking. Every station reacts to proximity. Taps exist only for UI, never for the loop. If the game needs a button, the design is wrong.</span></div>
+        <div><span class="k">No failure state, ever</span><span class="v">Cozy and stressful cannot coexist. Nothing is ever taken away. A guest who runs out of patience simply walks off — no red, no penalty screen.</span></div>
+        <div><span class="k">Fully offline</span><span class="v">No account, no server, no ads, no timers ticking while you are away to guilt you back. It runs from a file.</span></div>
+        <div><span class="k">Readable at arm’s length</span><span class="v">Minimum 4&nbsp;px drawn features, minimum 56&nbsp;px tap targets, one call-to-action colour, and no state communicated by colour alone.</span></div>
+        <div><span class="k">60&nbsp;fps on a mid-range phone</span><span class="v">Performance as a design constraint, not an engineering afterthought. A 12&nbsp;ms frame budget shaped the art direction more than any style reference.</span></div>
+        <div><span class="k">Not the genre template</span><span class="v">If a mechanic is standard in the genre, replace it with one that carries the theme.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="rail"><span class="num">03</span><span class="eyebrow">Positioning</span></div>
+    <div class="body">
+      <h2>Four pitches, judged on one question</h2>
+      <p>I wrote four complete one-page concepts and judged them on: <strong>what is the thing you do with your thumb, and is it interesting on its own?</strong> Capy Springs won because its answer was not “collect and deposit” — it was <strong>lead</strong>. That last constraint did the rest of the work.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Genre convention</th><th>What I did instead</th><th>What it buys</th></tr></thead>
+          <tbody>
+            <tr><td>Stack items on your head</td><td><strong>The Trail</strong> — guests, logs and fruit all join one wobbly line behind you, sharing one capacity number</td><td>The customers <em>are</em> the cargo. The line visibly grows as you upgrade, so progress is legible without a number on screen</td></tr>
+            <tr><td>Per-machine timers</td><td><strong>Heat</strong> — one shared boiler gauge that every heated bath depends on</td><td>One resource creates a decision instead of a chore list</td></tr>
+            <tr><td>Glowing pads you stand on to pay</td><td><strong>Offering steps</strong> — coins tossed into a shrine box one by one, the flame grows, the building unwraps from paper</td><td>The payment moment becomes the reward moment, and it fits the world</td></tr>
+            <tr><td>Cash on the floor</td><td><strong>Coin trays</strong> on each deck, placed on the path you already walk</td><td>Collecting is never a detour — it is a consequence of moving well</td></tr>
+            <tr><td>Pop-ups announcing unlocks</td><td>Structures <strong>unwrap</strong> from paper wrapping, in place</td><td>The world grows in front of you; nothing rises out of the ground</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="rail"><span class="num">04</span><span class="eyebrow">Tempo</span></div>
+    <div class="body">
+      <div class="split">
+        <div>
+          <h2>The loop is not the design. The tempo is.</h2>
+          <p>The loop reads <code>LEAD → SOAK → COLLECT → LIGHT</code>, with two optional detours that multiply income. What makes it work is the clock: a cable car docks every 18 seconds at the start, stretching to 25 as the cars grow. That bell is the heartbeat, and everything is tuned around it.</p>
+          <p>Soaks last 8 seconds dropping to 5, with seats freeing in the order guests entered, so someone is always climbing in or out. The combo window is 2 seconds and is shared across every bath — three guests landing inside it is a chain, and splitting a full line across two decks to make five is the skill nobody is taught and everybody discovers.</p>
+          <p><strong>Nothing on screen waits more than a second to react.</strong> Guests join 0.12&nbsp;s apart. Coins reach the counter in 0.35&nbsp;s. The upgrade sheet slides in over 0.2&nbsp;s.</p>
+          <p>The decision the player actually makes, every twenty seconds, is <strong>which detour fits before the next car</strong>. That question is the whole game.</p>
+        </div>
+        <figure>
+          <span class="phone"><img src="screens/03-splash-chain.png" alt="Mobile game screenshot: capybaras splashing into a hot spring with a gold combo number above them"></span>
+          <figcaption>A chain landing. The combo number, the screen bump, the ripple rings and a 40&nbsp;ms freeze all fire on the same frame — four channels saying one thing.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="rail"><span class="num">05</span><span class="eyebrow">First run</span></div>
+    <div class="body">
+      <div class="split">
+        <div>
+          <h2>The first 30 seconds are a script, not a tutorial</h2>
+          <p>I refused to ship a tutorial. Instead I wrote the opening as a second-by-second script — what is on screen, what the player does, what they hear — and built the systems to satisfy it.</p>
+          <div class="tl">
+            <div><span class="t">0.0 s</span><span class="d">Cream fades to the deck. The first cable car is <strong>already docked</strong>. Nothing has to be waited for.</span></div>
+            <div><span class="t">0.6 s</span><span class="d">Three capybaras hop out with a speech bubble holding one icon: a bath. The arrow above Kit points at the nearest and says <strong>LEAD</strong>.</span></div>
+            <div><span class="t">2.0 s</span><span class="d">First touch. The bell rings — that gesture is also what unlocks audio, so the player’s first input is confirmed by the world rather than by a sound effect. The joystick blooms under the thumb.</span></div>
+            <div><span class="t">6.0 s</span><span class="d">First <strong>SPLASH&nbsp;x3</strong>: gold number, screen bump, arpeggio, one 40&nbsp;ms freeze. Under six seconds to the first reward.</span></div>
+            <div><span class="t">11.0 s</span><span class="d">Guests climb out and flick coins into a tray that sits <strong>on the path back to the platform</strong>. The player learns collecting by walking where they were already going.</span></div>
+            <div><span class="t">19.0 s</span><span class="d">They stand on an offering step. Coins toss into the box with rising pitch, the flame flares, paper tears off the second bath. First unlock, nineteen seconds in.</span></div>
+            <div><span class="t">31.0 s</span><span class="d">The loop is running. No text has appeared except four single words.</span></div>
+          </div>
+          <p>Three concessions live in here and nowhere else: the first car’s guests have infinite patience, their soak is shortened to 5 seconds, and if nothing has been touched by 3.1 seconds a ghost thumb loops a drag gesture until it is. That is the entire tutorial system.</p>
+        </div>
+        <figure>
+          <span class="phone"><img src="screens/01-first-run.png" alt="Mobile game screenshot: a fox stands by a hot spring where three capybaras soak, with a coin price of 20 shown beside a shrine lantern"></span>
+          <figcaption>Twenty seconds in. The first unlock is already visible, already priced, and already affordable.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="rail"><span class="num">06</span><span class="eyebrow">The hard part</span></div>
+    <div class="body">
+      <h2>One arrow, twelve rules</h2>
+      <p>The hardest UX problem in a game like this is not teaching the mechanics. It is answering, <strong>at every single moment, “what now?”</strong> — without a quest log, a checklist, or a wall of badges.</p>
+      <p>My answer is one arrow above the player’s head, driven by a strict priority list evaluated every frame. First match wins.</p>
+      <div class="rules">
+        <ol>
+          <li><b>SOAK</b> (chain live) → nearest warm bath with a free seat</li>
+          <li><b>SOAK</b> → the bath that seats the most of your line</li>
+          <li class="changed"><b>STOKE</b> (urgent) → the boiler, only if heat is under 40</li>
+          <li><b>YUZU</b> → nearest bath that is not already golden</li>
+          <li><b>STOKE</b> → the woodpile</li>
+          <li class="changed"><b>LIGHT</b> → the cheapest unlock you can afford</li>
+          <li><b>LEAD</b> → the nearest waiting guest</li>
+          <li><b>COLLECT</b> → the fullest coin tray within 400 px</li>
+          <li><b>YUZU</b> → a ripe tree, if a guest is waiting on food</li>
+          <li><b>TAP</b> → the station holding the cheapest upgrade</li>
+          <li><b>YUZU</b> → a ripe tree</li>
+          <li class="dim"><b>dim</b> → the cheapest thing you are saving toward</li>
+        </ol>
+      </div>
+      <p>Three rules make this an interface rather than a nag. <strong>It is subtle while you move and grows only when you stop</strong> — 70% opacity in motion, full size and bouncing after two seconds idle. <strong>It never points at nothing</strong>: rule&nbsp;12 is a dim arrow at whatever you are saving for, and the arrow only disappears once everything is maxed, which is also how the game says “you have seen it all”. And <strong>words appear twice, then never again</strong> — seven one-word prompts, each shown the first two times its rule fires, never more than one on screen. After about two minutes the game goes quiet and the player is fluent.</p>
+      <p>This list is also the reason the game could be tested automatically — which turned out to matter more than I expected.</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="rail"><span class="num">07</span><span class="eyebrow">UI system</span></div>
+    <div class="body">
+      <div class="split">
+        <div>
+          <h2>Every control specified like a token</h2>
+          <p>Everything is drawn on one canvas — no DOM, no component library. So each control had to be written down as precisely as a design system token.</p>
+          <p><strong>The thumb zone is sacred.</strong> The camera is clamped so the arrival platform never sits below 65% of screen height. The bottom third belongs to the hand.</p>
+          <p><strong>The joystick floats and trails.</strong> It appears wherever the thumb lands, has an 8&nbsp;px dead zone, and reaches full speed at 70% of its radius so short travel is enough. Once the thumb passes 90&nbsp;px from the base, <strong>the base follows the thumb</strong> — so reversing direction never needs a long swipe back. That one change is what made the game feel right on a phone rather than on a desktop with a mouse.</p>
+          <div class="tablewrap">
+            <table>
+              <thead><tr><th>HUD element</th><th>Behaviour</th></tr></thead>
+              <tbody>
+                <tr><td>Coin pill</td><td>Scales 1.25 → 1 and rolls the number up each time a coin lands, so income has a physical arrival</td></tr>
+                <tr><td>Line capacity</td><td>One dot per slot; all full and the row pulses. The only capacity readout, because the line itself is on screen</td></tr>
+                <tr><td>Heat gauge</td><td>Hidden until the boiler exists. Under 30 a frost hatch fills the empty part; over 80 steam wisps grow from the bar — <strong>shape plus colour, never colour alone</strong></td></tr>
+                <tr><td>Cable car timer</td><td>Not in the HUD at all. It is a countdown ring on the bell post, in the world, readable from anywhere on the map</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <figure>
+          <span class="phone"><img src="screens/06-upgrade-sheet.png" alt="Mobile game screenshot: a bottom sheet titled Cedar Bath with three upgrade cards labelled Soak, Seats and Tips"></span>
+          <figcaption>Three choices maximum, level pips instead of numbers, and a lock glyph so affordability is never signalled by colour alone. Buying is instant — there is no confirmation, because nothing here can hurt you.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="rail"><span class="num">08</span><span class="eyebrow">Craft</span></div>
+    <div class="body">
+      <div class="split">
+        <div>
+          <h2>Art direction written as rules a machine could follow</h2>
+          <p>There are no asset files. Every shape is generated at runtime from the same primitives, which forced the art direction to become the most rigorous style guide I have ever had to produce.</p>
+          <p>Every object is two or three flat fills: a top colour, an 8–12&nbsp;px darker “thickness” band along its bottom edge, and a soft ellipse shadow. That is the entire illusion of depth — no projection, no isometric maths. Personality lives in motion, not faces: squash-and-stretch on every landing, a tail that lags opposite to velocity, soaking guests who sink 4&nbsp;px and puff a heart every three seconds.</p>
+          <p>The gate for any new character is the <strong>silhouette test</strong>: rendered as a flat ink shape at half scale, it must still be identifiable. Kit is ears and a tail. A capybara is a loaf with a snout. A duck is a ball with a beak.</p>
+          <p>Colour has grammar, not just tokens — three rules I never broke:</p>
+          <div class="swatches">
+            <div class="sw"><i style="background:#E4572E"></i><span class="n">CTA vermilion</span><span class="h">#E4572E</span><span class="u">Calls to action, and nothing else</span></div>
+            <div class="sw"><i style="background:#FFC857"></i><span class="n">Amber</span><span class="h">#FFC857</span><span class="u">Money, fruit and glow. No character wears it</span></div>
+            <div class="sw"><i style="background:#F08A3E"></i><span class="n">Fox</span><span class="h">#F08A3E</span><span class="u">The only saturated red-orange on screen, so you find yourself instantly</span></div>
+            <div class="sw"><i style="background:#2FA6A0"></i><span class="n">Bath</span><span class="h">#2FA6A0</span><span class="u">Hot water. Cold water also gets a frost hatch, never just a colour change</span></div>
+          </div>
+          <p><strong>Sound is UI.</strong> All 26 effects are synthesised — no files ship — and several carry information the screen does not. Guests joining play a blip <em>rising in pitch with their position in the line</em>, so you hear the line fill without looking. Coins climb a semitone each within a burst, so a big payout sounds big. An offering step ticks upward as it drains, so you know how close the unlock is without reading the arc. Nothing plays before the first touch — and that touch rings the cable car’s bell, so the browser’s audio unlock is disguised as an event in the world.</p>
+        </div>
+        <figure>
+          <span class="phone"><img src="screens/07-lantern-night.png" alt="Mobile game screenshot: the same hot spring scene at night, lit by glowing paper lanterns"></span>
+          <figcaption>Lantern Night: one multiply tint plus a pass of pre-rendered halo sprites. A whole mood, inside the frame budget.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="band">
+  <div class="wrap">
+    <section class="sec">
+      <div class="rail"><span class="num">09</span><span class="eyebrow">Method</span></div>
+      <div class="body">
+        <h2>I simulated the game instead of guessing</h2>
+        <p>Here is the problem with designing something like this: <strong>the mechanics interact.</strong> Heat drains faster while baths are occupied. Occupancy depends on how long your line is. Line length depends on what you unlocked. Unlocks depend on income. Income depends on chains. Chains depend on whether the arrow sent you to the right bath.</p>
+        <p>You cannot hold that in your head, and you will not find its failure modes by playing for ten minutes.</p>
+        <p>So I specified a <strong>headless simulator</strong> as a first-class deliverable, alongside the design document. It runs the real game — every system, every number — with no screen, driven by a bot that plays using <strong>the exact same priority list that draws the on-screen arrow</strong>. Thirty minutes of play, 108,000 frames, in about three seconds.</p>
+        <p>It checks invariants once per simulated second: no guest in two seats, nothing stuck in the line, the camera never inverting on a tall phone, the save round-tripping byte for byte, and the drawing layer never touching the seeded random number generator. It checks progression checkpoints. It records the economy minute by minute. A fuzz mode plays with random input for five minutes and simulates the phone being locked and unlocked with the clock shifted by random hours.</p>
+        <p><strong>Why this is a design tool and not a QA tool:</strong> the bot plays with my arrow logic. So when the bot plays badly, <strong>my guidance design is what is broken</strong> — and I can see it in seconds instead of after twenty minutes of confused play.</p>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="rail"><span class="num">10</span><span class="eyebrow">Findings</span></div>
+      <div class="body">
+        <h2>Two design failures it caught</h2>
+        <div class="finding">
+          <h3>The unlocks nobody was ever pointed at</h3>
+          <p>In my original list, <code>LIGHT</code> — spend coins on the next unlock — sat <em>below</em> <code>LEAD</code> and <code>COLLECT</code>. Obviously correct on paper: guests are time-sensitive, money is not.</p>
+          <p>In simulation it was catastrophic. Once cars arrived every 21 seconds with five guests each, <strong>there was always someone waiting</strong>, so <code>LEAD</code> matched forever and the arrow never pointed at an unlock again after the first one. A player following it faithfully would grind indefinitely and never see the game open up.</p>
+          <p>The fix was to move <code>LIGHT</code> above both — justified by a number I only had because I had measured it. Lighting takes 1–2.5&nbsp;seconds; platform patience is 40. The detour is free. <strong>It looked like a priority problem and was actually a timing problem.</strong></p>
+        </div>
+        <div class="finding">
+          <h3>The infinite firewood shuttle</h3>
+          <p>Rule 3 said: if you are carrying logs and the boiler is not full, go to the boiler. Also obviously correct.</p>
+          <p>The simulator produced a player who walked between the woodpile and the boiler <em>forever</em> — passing the woodpile picked up logs, carrying logs triggered rule 3, delivering them routed back past the woodpile. The run ended with <span class="hit">158 chained Steam Rushes and 78% of guests lost</span>: the most profitable per-guest state in the game, reached by abandoning every guest.</p>
+          <p>The fix was to gate the rule on actual need — logs are urgent only when heat is under 40 or the water has gone cold. Otherwise they ride along and get dropped off after the next collection.</p>
+        </div>
+        <p>Both would have presented to a human playtester as <strong>bad feel, not broken logic</strong>. The first feels like “progression is too slow, raise the payouts.” The second feels like “the boiler is annoying, slow the drain.” Both diagnoses are wrong, and both would have cost days of tuning numbers that were already correct. <strong>The simulator turned a feel problem into a logic problem I could read in a diff.</strong></p>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="rail"><span class="num">11</span><span class="eyebrow">Evidence</span></div>
+      <div class="body">
+        <h2>Then it told me not to touch the economy</h2>
+        <p>I had derived the income curve by hand. When I ran the simulator against it, the shape was right and the magnitude was wrong — my table had not accounted for how much the player <em>spends</em> on upgrades along the way. So I replaced my table with the measured one.</p>
+        <div class="chart">
+          <svg viewBox="0 0 720 300" role="img" aria-label="Line chart of cumulative coins earned over a 30-minute simulated session, rising smoothly from 72 coins at minute 1 to 32,078 at minute 30, with 14 unlocks marked at roughly even intervals along the curve.">
+            <g stroke="#2C3A2F" stroke-width="1">
+              <line x1="64" y1="264" x2="700" y2="264"></line>
+              <line x1="64" y1="204" x2="700" y2="204" opacity=".5"></line>
+              <line x1="64" y1="144" x2="700" y2="144" opacity=".5"></line>
+              <line x1="64" y1="84" x2="700" y2="84" opacity=".5"></line>
+              <line x1="64" y1="24" x2="700" y2="24" opacity=".5"></line>
+            </g>
+            <g fill="#93A795" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="end">
+              <text x="54" y="268">0</text>
+              <text x="54" y="208">8k</text>
+              <text x="54" y="148">16k</text>
+              <text x="54" y="88">24k</text>
+              <text x="54" y="28">32k</text>
+            </g>
+            <g fill="#93A795" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle">
+              <text x="151.7" y="284">5 min</text>
+              <text x="261.4" y="284">10</text>
+              <text x="371.0" y="284">15</text>
+              <text x="480.7" y="284">20</text>
+              <text x="590.3" y="284">25</text>
+              <text x="700.0" y="284">30</text>
+            </g>
+            <polygon fill="#1E7F7A" opacity=".22" points="64.0,264 64.0,263.5 85.9,261.9 107.9,260.3 129.8,256.6 151.7,251.4 173.7,246.5 195.6,243.8 217.5,239.1 239.4,232.3 261.4,226.9 283.3,219.6 305.2,216.4 327.2,206.7 349.1,197.6 371.0,193.9 393.0,185.9 414.9,176.7 436.8,166.0 458.8,157.1 480.7,150.2 502.6,138.1 524.6,129.4 546.5,118.2 568.4,111.2 590.3,94.1 612.3,78.7 634.2,67.7 656.1,53.8 678.1,38.3 700.0,24.0 700.0,264"></polygon>
+            <polyline fill="none" stroke="#4FC7C0" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="64.0,263.5 85.9,261.9 107.9,260.3 129.8,256.6 151.7,251.4 173.7,246.5 195.6,243.8 217.5,239.1 239.4,232.3 261.4,226.9 283.3,219.6 305.2,216.4 327.2,206.7 349.1,197.6 371.0,193.9 393.0,185.9 414.9,176.7 436.8,166.0 458.8,157.1 480.7,150.2 502.6,138.1 524.6,129.4 546.5,118.2 568.4,111.2 590.3,94.1 612.3,78.7 634.2,67.7 656.1,53.8 678.1,38.3 700.0,24.0"></polyline>
+            <g fill="#FFC857">
+              <circle cx="64.0" cy="263.5" r="3.5"></circle>
+              <circle cx="85.9" cy="261.9" r="3.5"></circle>
+              <circle cx="107.9" cy="260.3" r="3.5"></circle>
+              <circle cx="129.8" cy="256.6" r="3.5"></circle>
+              <circle cx="151.7" cy="251.4" r="3.5"></circle>
+              <circle cx="173.7" cy="246.5" r="3.5"></circle>
+              <circle cx="217.5" cy="239.1" r="3.5"></circle>
+              <circle cx="239.4" cy="232.3" r="3.5"></circle>
+              <circle cx="393.0" cy="185.9" r="3.5"></circle>
+              <circle cx="458.8" cy="157.1" r="3.5"></circle>
+              <circle cx="590.3" cy="94.1" r="3.5"></circle>
+              <circle cx="678.1" cy="38.3" r="3.5"></circle>
+            </g>
+            <text x="700" y="14" fill="#EAF0E6" font-family="Zen Kaku Gothic New, sans-serif" font-weight="700" font-size="13" text-anchor="end">32,078 coins</text>
+          </svg>
+          <div class="legend">
+            <span><i style="background:#4FC7C0"></i>Cumulative coins earned</span>
+            <span><i style="background:#FFC857"></i>An unlock lit (14 over the session)</span>
+          </div>
+        </div>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Play time</th><th>2 min</th><th>5 min</th><th>10 min</th><th>20 min</th><th>30 min</th></tr></thead>
+            <tbody>
+              <tr><td>Coins earned</td><td class="tnum">287</td><td class="tnum">1,678</td><td class="tnum">4,963</td><td class="tnum">15,206</td><td class="tnum">32,078</td></tr>
+              <tr><td>Guests served</td><td class="tnum">24</td><td class="tnum">88</td><td class="tnum">202</td><td class="tnum">464</td><td class="tnum">776</td></tr>
+              <tr><td>Five-guest chains</td><td class="tnum">1</td><td class="tnum">9</td><td class="tnum">22</td><td class="tnum">50</td><td class="tnum">80</td></tr>
+              <tr><td>Steam Rushes</td><td class="tnum">0</td><td class="tnum">5</td><td class="tnum">14</td><td class="tnum">28</td><td class="tnum">35</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The decision that came out of it was a restraint decision: <strong>I changed nothing about the payouts.</strong> The pacing the curve produced — first unlock at 12 seconds, a helper hired at 2:35, the third bath at 5:06, the finale around 25 minutes — matched what I had designed on paper. The number that was wrong was my arithmetic, not the game.</p>
+        <p>To keep that honest, the simulator now prints a balance warning if income ever overshoots the measured curve by 40%, and names the four tuning knobs to turn, in order. <span class="muted">(The bot is a perfect player, so a human curve runs below this one.)</span></p>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="wrap">
+  <section class="sec" style="border-top:0">
+    <div class="rail"><span class="num">12</span><span class="eyebrow">Details that are not details</span></div>
+    <div class="body">
+      <div class="split">
+        <div>
+          <h2>Accessibility, performance, and the player’s time</h2>
+          <h3>When they are not playing</h3>
+          <p>Offline earnings are <strong>capped on purpose</strong>: at most two hours of away time, at a quarter rate, based on a median of recent income rather than your best minute. The welcome-back card is a greeting and a reason to open the app — not a mechanism that makes playing feel pointless.</p>
+          <p>And it cannot be lost. During review I found that if the phone locked while the card was still open, the earnings were silently recomputed over and thrown away. Now the save timestamp is held until the player actually taps collect, and a resumed tab keeps the card. Someone who puts the phone down mid-greeting loses nothing.</p>
+          <h3>Accessibility, specified alongside the mechanics</h3>
+          <p>No state is communicated by colour alone — cold water gets frost hatching and a white dash on the rim, hot water grows steam wisps, affordable steps get a solid outline and unaffordable ones a dashed one, the upgrade sheet uses lock and check glyphs. <strong>“Shake &amp; flash” can be turned off</strong> in one switch. Shake is bounded anyway at 8&nbsp;px decaying within 0.3&nbsp;s, and the frame freezes are capped at 150&nbsp;ms per second and never freeze the joystick, so the game never stops answering your thumb even while the world holds still. Text is rationed to three words on screen, and speech bubbles carry one icon and no text at all, so nothing needs translating.</p>
+          <h3>Performance as an art brief</h3>
+          <p>A 12&nbsp;ms frame budget and a 2&nbsp;ms simulation budget shaped the visual language directly. No blurs, no filters, no gradients built per frame — every glow is one pre-rendered sprite blitted with varying alpha, capped at eight, which is why the night scenes look like paper lanterns rather than bloom. The static world is one cached image. Depth is a single sort of at most 150 objects by their feet position, which is exactly why the projection is flat with painted thickness bands instead of a real camera.</p>
+        </div>
+        <figure>
+          <span class="phone"><img src="screens/09-offline-card.png" alt="Mobile game screenshot: a welcome back card showing coins earned while away, with a collect button"></span>
+          <figcaption>Deliberately modest — generosity here would undercut the reason to play.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="rail"><span class="num">13</span><span class="eyebrow">Scope</span></div>
+    <div class="body">
+      <h2>What shipped</h2>
+      <p>Scope was tiered on day one — Core, Plus, Stretch — and the tiers held. Build 1.2.0 contains all of Core and all of Plus: three baths with independent upgrade tracks, the Trail with four capacity tiers, the shared combo window, Heat with chaining Steam Rushes, the yuzu grove and golden baths, a snack stall with a food-order chain, two hireable helpers, cable cars with four size tiers plus duck flocks and Golden Cars, fourteen unlocks, Lantern Night, the bridge finale, save with offline earnings, and the full simulation harness.</p>
+      <p>Deliberately left for later: a crow micro-event, a dash move, and a second zone up the mountain. All specified, none built — the finale already lands at 25 minutes, and adding to the middle would have thinned it.</p>
+      <div class="gallery">
+        <figure><span class="phone"><img src="screens/12-cable-car.png" alt="Mobile game screenshot: a red cable car docked at a stone platform as capybaras step off"></span><figcaption>The cable car — the heartbeat, every 18 to 25 seconds.</figcaption></figure>
+        <figure><span class="phone"><img src="screens/05-steam-rush.png" alt="Mobile game screenshot: a hot spring scene with a steam rush banner and a full heat gauge"></span><figcaption>A Steam Rush, the reward for feeding the boiler between cars.</figcaption></figure>
+        <figure><span class="phone"><img src="screens/10-splash-x5.png" alt="Mobile game screenshot: a five-chain combo number above a hot spring full of capybaras"></span><figcaption>Five guests inside a two-second window, across two baths.</figcaption></figure>
+        <figure><span class="phone"><img src="screens/11-full-inn.png" alt="Mobile game screenshot: a complete hot spring resort in daylight with golden yuzu baths and a full platform of capybara guests"></span><figcaption>Thirty minutes in: the whole inn, both helpers working.</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="rail"><span class="num">14</span><span class="eyebrow">Takeaways</span></div>
+    <div class="body">
+      <h2>What I learned</h2>
+      <div class="lessons">
+        <div class="lesson">
+          <h3>Specify the feel, not just the layout</h3>
+          <p>The spec that made this buildable states that guests join 0.12&nbsp;s apart, that the screen bumps 4&nbsp;px on a three-chain and 8&nbsp;px on a five, that the arrow sits 46&nbsp;px above the player and bobs at 3&nbsp;Hz. Those numbers <em>are</em> the design. Leaving them to “implementation detail” leaves the product to chance.</p>
+        </div>
+        <div class="lesson">
+          <h3>Testability is a design property</h3>
+          <p>Making the guidance system a pure function of game state — rules with no hidden state — was originally a clarity decision. It is what made the game automatically playable, which is what found both failures. Designs that can be explained as rules can be verified as rules.</p>
+        </div>
+        <div class="lesson">
+          <h3>Constraints are faster than references</h3>
+          <p>“No asset files” sounds like a limitation and behaved like a brief. It produced the silhouette test, the thickness-band depth language and a palette with actual grammar — none of which I would have reached by collecting screenshots of games I liked.</p>
+        </div>
+        <div class="lesson">
+          <h3>Measure before you tune</h3>
+          <p>My hand-built economy was wrong in magnitude and right in shape. Adjusting payouts to match my own arithmetic would have broken pacing that was already correct. The instinct to fix is much stronger than the instinct to measure, and it is usually wrong.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p class="eyebrow" style="display:block;margin-bottom:.9rem">What this project does not have</p>
+    <ul class="limits">
+      <li>No session on a physical phone yet — verified by the simulator and in a mobile-sized browser. That 20-minute session on real glass is the next step, because feel on glass is the one thing neither the spec nor the simulator can report.</li>
+      <li>No human playtesters, so no retention, session-length or completion data. Every figure on this page is about the design process.</li>
+      <li>Not published. No store build, no downloads, no users. It runs from a file.</li>
+    </ul>
+    <p>Capy Springs runs from a single HTML file with no network, no accounts and no analytics. Nothing about the player leaves their device. Every screenshot on this page is a capture from the running build at a chosen moment, not a mockup.</p>
+  </div>
+</footer>

@@ -1,0 +1,39 @@
+# Capy Springs — changelog
+
+## 1.4.0 — app shell, developer mode, installable package (2026-10-01)
+
+- **Boot screen** in `index.html` (cream, a bobbing capy, a progress bar that fills as the 45 script files load; the file list `window.CAPY_FILES` is now the single load order used by the page, the harness and the packager).
+- **Title screen** (`src/53_title.js`, mode `title`): logo with steam, Kit waving beside a capy in a yuzu hat, the season's name, **PLAY / CONTINUE**, **SEASONS**, **SETTINGS**, version. The Welcome-back card waits behind PLAY. Enter / Space starts. The settings popover gains **Main menu** (saves and returns to the title) and now **pauses the game** while open, like cards do (the upgrade sheet still does not).
+- **Developer mode** (`src/54_dev.js`): on with `index.html?dev=1` (persisted; `?dev=0` off) or by tapping the version label in settings seven times. A **DEV** chip under the gear, a DEV MENU button on the title, a **Developer** row in settings and **F2** open the panel: +1,000 / +100,000 koban, infinite koban, speed ×1/×2/×4, light all lanterns, max all upgrades, finish this season, unlock all seasons, go to any season, night/moon now, golden car next, Kaa now, fill / empty the gauge, debug overlay, reset this season, wipe everything.
+- **Installable package**: `manifest.webmanifest`, generated `sw.js` (network first, cache fallback — an installed copy keeps working with the server off or a share link gone), app icons drawn by `tools/pack.js` (a pure-JS PNG encoder, no dependencies), `dist/` as a clean hostable copy, and `tools/share.js` (`npm run share`): the local server plus a Cloudflare quick tunnel, giving the https address an iPhone needs for Safari's Add to Home Screen. `package.json` scripts: `npm start`, `npm run share`, `npm run pack`, `npm test`. No runtime or build dependencies.
+
+## 1.3.0 — seasons and The Mochi Terrace (2026-10-01)
+
+The game continues past the Deck. Spec: `docs/SEASONS.md` (GDD §17, ARCH §20).
+
+- **Season framework**: season packs (`src/03_pack_s2.js`, applied by `src/04_seasons.js`), one save per season plus a meta record, the **Season Pass** step at the Deck's bridge (5,000, after the Ridge Bridge) that unlocks Season 2 with a banner and a GO / LATER card, a **Seasons** card in the gear menu (completion %, what is left to buy, GO back and forth), **stars** (+10 % pay per other finished season, gold headband everywhere), `?season=2` dev shortcut, `--season 2` in the harness.
+- **Season 2 — The Mochi Terrace**: an autumn teahouse on the ridge. Tea Bench / Mochi Table / Zenzai Hearth, the Rice Mortar and sack pile (Mochi Stock replaces heat, FRESH BATCH replaces Steam Rush), the Persimmon Tree (toppings), Tsuru's Tea Counter, the Ridge Rail with the Chestnut Run (squirrels) and the Maple Express, Harvest Moon with a moon and drifting leaves, Momo the snow monkey VIP, and two new mechanics: the **Pounding Lap** (touch three stones in order while carrying sacks for a +25 pound) and **Kaa's Visit** (tap the crow on a tray for a coin fountain). New art for every drawer and three new characters; new sounds (chirp, thump, lap beat, caw).
+- **Engine generalisations** so packs can recast everything without touching logic: per-station `payMult`, guest `art` / `voice` / `scarf`, text and word tables, the gauge icon and unit, `STOKE_STOP`, `W.nightExtra`, derived `built` and grove footprint.
+- **Balance** (harness, seed 7): the Terrace earns 243 / 1,259 / 4,635 / 16,803 / 32,397 / 49,909 coins at 2 / 5 / 10 / 20 / 30 / 40 min; the Summit lights at ~38 min; seeds 3 / 7 / 11 all pass `TERRACE_CHECKS`. The Deck's curve is unchanged (32,201 at 30 min).
+- Two arrow fixes found by the harness: the "get fuel" prompt no longer fires while fuel is already in the trail (the bot stood at the pile until the bowl went cold), and with a lap on the map the urgent-stoke rule only fires when the bowl is cold.
+
+## 1.2.0 — first playable build (2026-09-11)
+
+Everything in `docs/GAME_DESIGN.md` §14.1 (MVP Core) and §14.2 (MVP Plus) is implemented: cable-car waves, the Trail, Splash Chains, Heat and Steam Rush chains, yuzu hats, coin trays and magnet, offering steps with the accelerating drain and the paper unwrap, the upgrade sheet, Pon and Kero, FULL CAR, Golden Car, Lantern Night with lantern light, the Snack Stall, the Ridge Bridge finale and Season Fame, procedural art and WebAudio SFX, the save with offline earnings, and the headless harness.
+
+Deviations from the v1.2 documents, all found by the harness and applied to both docs:
+
+- **Arrow rule order** (GDD 10.6, ARCH 9.12): LIGHT now outranks LEAD and COLLECT. With the documented order a steady stream of guests kept the arrow on the platform forever and no lantern after the Cable Car was ever pointed at.
+- **Logs in the trail** (rule 3) are urgent only while heat is under 40 or cold; otherwise the rule is re-checked after COLLECT. With the documented order, passing the woodpile auto-picked logs and the arrow bounced between woodpile and boiler indefinitely (158 chained rushes, 78 % of guests lost).
+- **Balance table** (GDD 8.11, ARCH 17.5): replaced the hand-derived income curve with the harness measurement (287 / 1,678 / 4,963 / 15,206 / 32,078 coins at 2 / 5 / 10 / 20 / 30 min, seed 7). Pay knobs were left untouched because the unlock pacing (Bridge at ~25 min) matches the design; the difference was upgrade spending that the hand table did not account for.
+- **Cable car phases** carry their overshoot across transitions so the dock-to-dock period is exact at any frame rate.
+- **Harness bot** routes via the guests' lane rule when a straight line to its target crosses a solid (it used to pin itself against the Cedar Bath water).
+- Settings popover is 300 px tall (the Reset row was drawn outside it); the debug overlay moved to the bottom-left.
+
+Fixes from the fresh-eyes code review (all re-verified with the harness and a browser pass):
+
+- Offline earnings are no longer lost if the phone locks or the tab is killed while the "Welcome back" card is still open: the save timestamp is held until COLLECT, and a resumed tab keeps the card instead of recomputing over it.
+- Audio unlock is idempotent and runs on every gesture and on visibility return, so an iOS context that was suspended in the background is resumed instead of staying silent forever.
+- Lantern requirement strings are parsed once at load; the palette memo no longer builds a key string per call; a no-op transparent fill in the boiler glow was removed.
+
+Known gaps / next steps: no real-phone session yet (only the in-app browser at 375×812 and the harness), the sprite cache for low-effects mode is a stub, the Ridge zone, Kaa the crow and the Scamper dash remain stretch items.

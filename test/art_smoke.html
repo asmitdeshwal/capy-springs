@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Capy Springs - art smoke page</title>
+<style>
+  html, body { margin:0; background:#3F7D5A; font: 14px "Segoe UI", sans-serif; color:#F6F1E7; }
+  h1 { margin: 10px 16px; font-size: 18px; }
+  canvas { display:block; margin: 0 auto 20px; background:#3F7D5A; }
+</style>
+</head>
+<body>
+<h1>Capy Springs art smoke: characters (1x, 2x, animated), silhouettes at 50%, structures</h1>
+<canvas id="smoke" width="1100" height="1500"></canvas>
+<script src="../src/00_config.js"></script>
+<script src="../src/01_palette.js"></script>
+<script src="../src/02_data_map.js"></script>
+<script src="../src/02_data_stations.js"></script>
+<script src="../src/02_data_lanterns.js"></script>
+<script src="../src/02_data_guests.js"></script>
+<script src="../src/10_util.js"></script>
+<script src="../src/11_bus.js"></script>
+<script src="../src/12_loop.js"></script>
+<script src="../src/13_canvas.js"></script>
+<script src="../src/14_camera.js"></script>
+<script src="../src/20_art_shapes.js"></script>
+<script src="../src/21_art_chars.js"></script>
+<script src="../src/22_art_world.js"></script>
+<script src="../src/23_art_fx.js"></script>
+<script>
+(function () {
+  const G = window.G, Ch = G.Art.Ch, W = G.Art.W, S_ = G.Art.S, PAL = G.PAL, FX = G.Art.FX;
+  const cv = document.getElementById('smoke'), ctx = cv.getContext('2d');
+  const fakeS = { lanterns: { bridge: { level: 0 } } };
+  const fakeGold = { lanterns: { bridge: { level: 1 } } };
+  const kinds = ['kit', 'capy', 'duck', 'pon', 'kero'];
+  function draw(ch, x, y, scale, opts, t) {
+    const p = Ch.resetPose(Ch.POSE); p.x = x; p.y = y; p.sx = p.sy = scale; p.t = t; p.face = 1;
+    Object.assign(p, opts || {});
+    if (ch === 'kit') Ch.kit(ctx, p, opts && opts.gold ? fakeGold : fakeS); else if (ch === 'capy') Ch.capy(ctx, p); else if (ch === 'duck') Ch.duck(ctx, p); else if (ch === 'pon') Ch.pon(ctx, p); else Ch.kero(ctx, p);
+  }
+  function label(s, x, y) { S_.text(ctx, s, x, y, 12, PAL.cream, { align: 'left' }); }
+  function frame(t) {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    // row 1: idle side, 1x and 2x
+    let x = 60;
+    for (const k of kinds) { draw(k, x, 110, 1, null, t); draw(k, x + 70, 240, 2, null, t); label(k, x - 20, 260); x += 200; }
+    // row 2: poses / states at 1x
+    const poses = [
+      ['kit walk', 'kit', { moving: true, walk: t * 8, lag: 6 }], ['kit down', 'kit', { dir: 'down' }], ['kit up', 'kit', { dir: 'up' }], ['kit pump', 'kit', { pose: 'pump', poseT: (t % 0.4) / 0.4 }], ['kit gold', 'kit', { gold: true }],
+      ['capy walk', 'capy', { moving: true, walk: t * 4 }], ['capy hat', 'capy', { hat: 'yuzu' }], ['capy sleepy', 'capy', { lid: 2 }], ['capy shiver', 'capy', { shiver: true, tint: { color: PAL.waterCold, alpha: 0.3 } }], ['capy down', 'capy', { dir: 'down' }],
+      ['duck walk', 'duck', { moving: true, walk: t * 4 }], ['duck hat', 'duck', { hat: 'yuzu' }], ['pon log', 'pon', { carry: 'log', moving: true, walk: t * 6 }], ['pon yawn', 'pon', { pose: 'yawn', poseT: (t % 1) }], ['kero yuzu', 'kero', { carry: 'yuzu', z: Math.abs(Math.sin(t * 4)) * 26 }]
+    ];
+    x = 60; let y = 380;
+    for (let i = 0; i < poses.length; i++) { const p = poses[i]; draw(p[1], x, y, 1, p[2], t); label(p[0], x - 30, y + 18); x += 100; if (x > 1050) { x = 60; y += 120; } }
+    // row 3: in-water capys (clip) and bubbles
+    y = 640;
+    const water = { x: 200, y: y, w: 200, h: 95 };
+    W.water(ctx, { water, deck: null, id: 'rock' }, { cold: false, yuzu: false, lowFx: false }, t);
+    for (let i = 0; i < 3; i++) { const p = Ch.resetPose(Ch.POSE); p.x = 140 + i * 60; p.y = y + 8; p.inWater = water; p.sink = i * 2; p.lid = i; p.hat = i === 1 ? 'yuzu' : null; p.t = t; p.face = 1; Ch.capy(ctx, p); W.soakRing(ctx, p.x, p.y - 34, (t % 3) / 3); }
+    W.floatingYuzu(ctx, { water }, t);
+    const water2 = { x: 470, y: y, w: 160, h: 95 };
+    W.water(ctx, { water: water2, deck: null, id: 'cedar' }, { cold: true, yuzu: false, lowFx: false }, t);
+    { const p = Ch.resetPose(Ch.POSE); p.x = 470; p.y = y + 8; p.inWater = water2; p.shiver = true; p.t = t; p.face = 1; p.tint = { color: PAL.waterCold, alpha: 0.3 }; Ch.capy(ctx, p); }
+    const water3 = { x: 700, y: y, w: 160, h: 95 };
+    W.water(ctx, { water: water3, deck: null, id: 'cedar' }, { cold: false, yuzu: true, lowFx: false }, t);
+    W.floatingYuzu(ctx, { water: water3 }, t);
+    const bubbles = ['bath', 'mochi', 'snow', 'sweat', 'heart'];
+    for (let i = 0; i < bubbles.length; i++) { const p = Ch.resetPose(Ch.POSE); p.x = 830 + i * 55; p.y = y + 50; p.face = 1; p.bubble = bubbles[i]; p.bubbleScale = 1.2; Ch.bubble(ctx, p); label(bubbles[i], p.x - 15, y + 70); }
+    // row 4: silhouettes at 50%
+    y = 790; x = 60; label('silhouettes 50%', 20, y - 40);
+    for (const k of kinds) { Ch.silhouette(ctx, k, x, y, 0.5, fakeS); x += 60; }
+    // row 4b: icons
+    const icons = ['bath', 'mochi', 'snow', 'sweat', 'heart', 'koban', 'bell', 'kettle', 'gear', 'log', 'yuzu', 'check', 'x', 'lock', 'flame', 'wisp', 'chevron', 'lantern', 'pon', 'kero', 'kit'];
+    x = 420; for (const ic of icons) { S_.icon(ctx, ic, x, y - 10, 24); x += 32; }
+    // row 5: structures
+    y = 900;
+    W.deckPlate(ctx, { id: 'rock', deck: { x: 130, y: y + 40, w: 220, h: 155 } });
+    W.tray(ctx, 220, y + 100, 24, 0); W.tray(ctx, 60, y + 100, 3, 0.5);
+    W.step(ctx, 330, y + 100, 0.6, true, t); W.lantern(ctx, 330, y + 62, 0.6, false, t, 0, true);
+    W.step(ctx, 420, y + 100, 1, false, t); W.lantern(ctx, 420, y + 62, 1, true, t, 0, false);
+    W.boilerBody(ctx, 540, y + 100); W.boilerGlow(ctx, 540, y + 100, 0.7, t % 4 < 2, t);
+    W.woodpile(ctx, 660, y + 100);
+    W.treeBody(ctx, 780, y + 100); W.treeFruit(ctx, 780, y + 100, 1, true, t);
+    W.treeBody(ctx, 860, y + 100); W.treeFruit(ctx, 860, y + 100, 0.5, false, t);
+    W.stallBody(ctx, 990, y + 80); W.stallTop(ctx, 990, y + 80, 2, 0.6);
+    y = 1120;
+    W.platform(ctx); // draws at world coords; shift by translating
+    ctx.save(); ctx.translate(0, -1100 + 1300); W.cable(ctx); W.cableCar(ctx, 270, Math.sin(t * 2) * 0.05, false, 3); W.cableCar(ctx, 450, 0, true, 2); ctx.restore();
+    ctx.save(); ctx.translate(-100, -1100 + 900); W.bellPost(ctx, 135, 2005, (t % 18) / 18, (t % 18) > 15 ? t : 0); ctx.restore();
+    W.pine(ctx, 700, y + 80); W.stoneLantern(ctx, 760, y + 80, true); W.stoneLantern(ctx, 800, y + 80, false);
+    for (let i = 0; i < 3; i++) FX.kobanAt(ctx, 860 + i * 30, y + 60, 1);
+    FX.arrow(ctx, 980, y + 60, -Math.PI / 4, 1, 1.2); S_.text(ctx, 'LEAD', 980, y + 20, 34, PAL.cta, { stroke: PAL.cream, lw: 4 });
+    S_.pill(ctx, 700, y + 160, 66, 26, '120', 22, PAL.cream, PAL.ink, 'koban'); S_.pill(ctx, 800, y + 160, 68, 28, 'Lv 3', 18, PAL.cream, PAL.ink, null); S_.pill(ctx, 900, y + 160, 68, 28, 'TAP', 18, PAL.cream, PAL.cta, null);
+    S_.text(ctx, 'SPLASH x3!', 200, y + 220, 34, PAL.coin, { stroke: PAL.ink, lw: 3 });
+    S_.text(ctx, 'x5!!', 400, y + 220, 48, PAL.coin, { stroke: PAL.ink, lw: 3 });
+    S_.text(ctx, 'YUZU BATH!', 600, y + 220, 30, PAL.yuzu, { stroke: PAL.ink, lw: 3 });
+  }
+  let t0 = performance.now(), dead = false;
+  window.addEventListener('error', e => { document.title = 'ERROR: ' + e.message; });
+  (function loop() {
+    if (dead) return;
+    try { frame((performance.now() - t0) / 1000); }
+    catch (e) { dead = true; ctx.fillStyle = '#D93A3A'; ctx.fillRect(0, 0, 1100, 60); S_.text(ctx, 'FRAME ERROR: ' + (e.message || e), 12, 30, 16, '#F6F1E7', { align: 'left' }); document.title = 'ERROR: ' + (e.message || e); console.error(e); }
+    requestAnimationFrame(loop);
+  })();
+})();
+</script>
+</body>
+</html>
