@@ -731,3 +731,17 @@ The phone playtest of Season 2 showed what makes this game fun: **something new 
 **Why it is new.** It is the first thing that happens *to* the inn rather than for it: weather you did not ask for, a path that gets heavier, and a two-second fix with a tiny reward. It also makes the Ridge feel like a place with a climate.
 
 **Harness.** ≥ 1 squall and ≥ 1 drift cleared by 50 min (seed 7: 9 squalls, 15 cleared, 62,364 coins at 50 min; seeds 3 and 11 pass).
+
+### 19.4 The Ridge Lift and Momo the VIP (built 1.9.0)
+
+**The Ridge is a stage.** It spans y −120 to 1100 (1220 px: a whole phone screen) with a frozen pond at (300,330), snow pines and rocks up top; the exit for leaving guests is (270,−40) into the mist (y −200…−40). While Kit is on the Ridge the camera's lower limit is y 1100 − H, blending to the normal limit as he walks down the bridge (y 1000…1150), so the Deck never shares the screen with the Ridge.
+
+**The Ridge Lift** (`MAP.LIFT`). Runs as soon as the Ridge opens: a cable across the gorge at y 1020 between pylons at x 40 and 500, a gondola that slides in from the left, docks at x 130 above a straw-plank platform (130,962) 180×46 (cap 8; mill x 55–205, y 945–980), and leaves right. Dock-to-dock 28 s (14 s during Lantern Night), 4 capys per car, every 5th car golden (streamers, ×2 guests, ×1.5 pay), FULL CAR applies, its own bell post at (228,950) with the countdown ring and a soft chime 3 s before docking. Guests who step off are Ridge guests: they wait on that platform and leave by the top. Nobody has to walk guests up from the Deck any more; the bridge is for Kit and for the arrow's judgement of where he is most useful.
+
+**Momo the snow-monkey VIP.** During Lantern Night, once the Sauna Hut exists, the first lift car of the night carries Momo: he steps off last, "MOMO THE VIP!", fanfare, big confetti. Gold paper crown, pink face, fluff-cloud body; he sparkles while seated. Pay **10×** a capy (60) wherever he is served: a sauna (75), a bath, the pavilion (300, 450 in a full house); after a sauna he wants a plunge like anyone (hot-cold = 180). 60 s patience. Once per night.
+
+**Readable steps (10.6 addendum).** Every offering step draws its name above the price pill and one line of what the koban buy below it whenever Kit is within 200 px or the arrow targets it. Levelled steps have per-level names and lines: the bridge is "Ridge Bridge — Opens the Ridge above, and +25% pay", then "Inn Fame II…V — +5% pay on everything".
+
+**Shake (6.3 addendum).** The Splash Chain's shake and effects are exactly 1.4's (bump 4 / 6 / 8 px, hit-stop on x3 and x5, small confetti and a flash on x5); the camera zoom punch exists but is switched off everywhere (`SPLASH_PUNCH`, `PLUNGE_PUNCH`). The phone verdict was that the stronger version was too much.
+
+**Harness.** ≥ 10 lift cars and Momo served at least once by 50 min (seed 7: 65 lift cars, Momo 11×, 306 plunges, 50 massages, 92,177 coins at 50 min; seeds 3 and 11 pass).

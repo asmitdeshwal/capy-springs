@@ -5,7 +5,14 @@
   const Camera = G.Camera = { x: 0, y: 1440, look: 0, shakeX: 0, shakeY: 0, shakeMag: 0, shakeT: 0, shakeDur: 0, shakeOn: true, z: 1, punchMag: 0, punchT: 0, punchDur: 0 };
 
   Camera.minY = S => (G.Ridge ? G.Ridge.minY(S) : MAP.CAM_MIN_Y);                 // the clamp moves up when the Ridge opens
-  function clampY(S, y) { const H = G.Canvas.H, lo = Camera.minY(S); return U.clamp(y, lo, Math.max(lo, MAP.H - H)); }
+  // the Ridge is a stage of its own: while Kit is up there the view never shows the Deck (the clamp's upper limit blends across the bridge)
+  Camera.maxY = function (S) {
+    const H = G.Canvas.H, R = MAP.RIDGE, full = MAP.H - H;
+    if (!R || !S.built.ridge) return full;
+    const t = U.clamp((S.kit.y - (R.y1 - 100)) / 150, 0, 1);                        // 0 on the Ridge, 1 once Kit is down past the bridge foot
+    return Math.max(Camera.minY(S), U.lerp(R.y1 - H, full, t));
+  };
+  function clampY(S, y) { const lo = Camera.minY(S); return U.clamp(y, lo, Math.max(lo, Camera.maxY(S))); }
   function target(S) { return S.kit.y - C.CAM_KIT_FRAC * G.Canvas.H + Camera.look; }
 
   Camera.init = function (S) { Camera.look = 0; Camera.y = clampY(S, target(S)); Camera.shakeX = Camera.shakeY = 0; Camera.shakeMag = 0; Camera.shakeT = 0; Camera.z = 1; Camera.punchT = 0; Camera.punchMag = 0; };

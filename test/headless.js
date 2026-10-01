@@ -69,8 +69,9 @@ function fuzzInput() {
 // ---- invariants (ARCH 17.4) ----
 function invariants() {
   const t = simT.toFixed(1), k = S.kit;
-  if (!isFinite(k.x) || !isFinite(k.y) || k.x < 0 || k.x > MAP.W || k.y < 0 || k.y > MAP.H) fail('Kit out of world at ' + t + ': ' + k.x + ',' + k.y);
-  for (const g of S.guests) if (!isFinite(g.x) || !isFinite(g.y) || g.x < -80 || g.x > MAP.W + 80 || g.y < 0 || g.y > MAP.H) { fail('guest ' + g.id + ' (' + g.state + ') out of world at ' + t + ': ' + g.x + ',' + g.y); break; }
+  const topY = MAP.STATIC_Y0;                                                                    // the world's top (the Ridge reaches above y 0)
+  if (!isFinite(k.x) || !isFinite(k.y) || k.x < 0 || k.x > MAP.W || k.y < topY || k.y > MAP.H) fail('Kit out of world at ' + t + ': ' + k.x + ',' + k.y);
+  for (const g of S.guests) if (!isFinite(g.x) || !isFinite(g.y) || g.x < -80 || g.x > MAP.W + 80 || g.y < topY - 80 || g.y > MAP.H) { fail('guest ' + g.id + ' (' + g.state + ') out of world at ' + t + ': ' + g.x + ',' + g.y); break; }
   if (S.coins < 0) fail('coins < 0 at ' + t); if (S.earned < S.coins) fail('earned < coins at ' + t);
   if (!(S.heat.v >= 0 && S.heat.v <= S.heat.max)) fail('heat out of range at ' + t + ': ' + S.heat.v + '/' + S.heat.max);
   const cam = G.Camera; if (cam.y < G.Camera.minY(S) - 0.01 || cam.y + G.Canvas.H > MAP.H + 0.01) fail('camera out of clamp at ' + t + ': y=' + cam.y + ' H=' + G.Canvas.H);
@@ -129,7 +130,8 @@ const DECK_CHECKS = [
   [2400, () => { if (!S.built.ridge) fail('2400 s: the Ridge did not open (bridge level ' + S.lanterns.bridge.level + ')'); }],
   [2700, () => { if (!S.built.sauna) fail('2700 s: Sauna Hut not built'); if (!S.built.plunge) fail('2700 s: Cold Plunge not built'); if (S.stats.hotCold < 1) fail('2700 s: no hot-cold plunge (plunges ' + S.stats.plunges + ')'); }],
   [3000, () => { if (!S.built.pavilion) fail('3000 s: Massage Pavilion not built'); if (S.stats.massages < 2) fail('3000 s: massages ' + S.stats.massages + ' < 2'); if (S.stats.fullHouses < 1) fail('3000 s: no full house');
-                 if (S.stats.squalls < 1) fail('3000 s: no snow squall'); if (S.stats.cleared < 1) fail('3000 s: no drift cleared (' + S.snow.drifts.length + ' lying)'); }]
+                 if (S.stats.squalls < 1) fail('3000 s: no snow squall'); if (S.stats.cleared < 1) fail('3000 s: no drift cleared (' + S.snow.drifts.length + ' lying)');
+                 if (S.stats.liftCars < 10) fail('3000 s: lift cars ' + S.stats.liftCars + ' < 10'); if (S.stats.vip < 1) fail('3000 s: Momo never served'); }]
 ];
 // Season 2 (the Mochi Terrace): floors = 70 % of the measured curve (seed 7, build 1.3.0): 243 / 1259 / 4635 / 16803 / 32397 / 49909 at 2 / 5 / 10 / 20 / 30 / 40 min
 const TERRACE_CHECKS = [
@@ -199,7 +201,7 @@ if (!fails.length) {
 // ---- report ----
 if (opt.csv) { try { fs.mkdirSync(path.dirname(path.resolve(root, opt.csv)), { recursive: true }); fs.writeFileSync(path.resolve(root, opt.csv), csvRows.join('\n') + '\n'); log('csv written: ' + opt.csv); } catch (e) { warns.push('csv write failed: ' + e.message); } }
 const st = S.stats;
-log('season ' + G.SEASON.id + ' (' + G.SEASON.name + ') | ' + (fuzz ? 'fuzz ' : 'bot ') + total + ' s in ' + wall.toFixed(1) + ' s wall | earned ' + S.earned + ' coins ' + S.coins + ' | served ' + st.served + ' lost ' + st.lost + ' | combos x3/x4/x5 ' + st.combos[3] + '/' + st.combos[4] + '/' + st.combos[5] + ' | rushes ' + st.rushes + ' chains ' + st.chains + ' | fullCars ' + st.fullCars + ' nights ' + st.nights + ' golden ' + st.golden + ' mochi ' + st.mochi + ' | vip ' + st.vip + ' laps ' + st.laps + ' kaa ' + st.kaa + ' | plunges ' + st.plunges + ' hotCold ' + st.hotCold + ' massages ' + st.massages + ' fullHouses ' + st.fullHouses + ' | squalls ' + st.squalls + ' cleared ' + st.cleared + ' | trailCap ' + S.trailCap + ' car L' + S.car.level + ' | buys ' + bot.buys());
+log('season ' + G.SEASON.id + ' (' + G.SEASON.name + ') | ' + (fuzz ? 'fuzz ' : 'bot ') + total + ' s in ' + wall.toFixed(1) + ' s wall | earned ' + S.earned + ' coins ' + S.coins + ' | served ' + st.served + ' lost ' + st.lost + ' | combos x3/x4/x5 ' + st.combos[3] + '/' + st.combos[4] + '/' + st.combos[5] + ' | rushes ' + st.rushes + ' chains ' + st.chains + ' | fullCars ' + st.fullCars + ' nights ' + st.nights + ' golden ' + st.golden + ' mochi ' + st.mochi + ' | vip ' + st.vip + ' laps ' + st.laps + ' kaa ' + st.kaa + ' | plunges ' + st.plunges + ' hotCold ' + st.hotCold + ' massages ' + st.massages + ' fullHouses ' + st.fullHouses + ' | squalls ' + st.squalls + ' cleared ' + st.cleared + ' | lift ' + st.liftCars + ' | trailCap ' + S.trailCap + ' car L' + S.car.level + ' | buys ' + bot.buys());
 log('lanterns: ' + DATA.LANTERNS.map(d => d.id + ':' + S.lanterns[d.id].level).join(' '));
 if (opt.beats) {
   log('\nBEATS (first time, seconds):');

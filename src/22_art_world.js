@@ -53,9 +53,32 @@
     S_.tri(ctx, x - 20, y - 8, x - 4, y - 8, x - 10, y - 30, SNOW);
   };
   W.ridgeDecor = function (ctx) {
-    const S_ = A(), r = MAP.RIDGE;
+    const S_ = A(), r = MAP.RIDGE, L = MAP.LIFT;
+    if (r.pond) { const p = r.pond; S_.ellipse(ctx, p.x, p.y + 4, p.w / 2 + 6, p.h / 2 + 4, SNOW_D); S_.ellipse(ctx, p.x, p.y, p.w / 2, p.h / 2, '#BFD9E6'); S_.ellipse(ctx, p.x - 30, p.y - 14, 36, 10, PAL.rgba('#FFFFFF', 0.5)); A().line(ctx, p.x - 20, p.y + 10, p.x + 40, p.y - 18, PAL.rgba('#FFFFFF', 0.6), 2); }   // a frozen pond
     for (let i = 0; i < r.rocks.length; i++) { const k = r.rocks[i]; S_.ellipse(ctx, k[0] + 6, k[1] + 2, 16, 9, PAL.stoneDark); S_.ellipse(ctx, k[0], k[1] - 4, 18, 11, PAL.stone); S_.ellipse(ctx, k[0] - 4, k[1] - 10, 12, 5, SNOW); }
     for (let i = 0; i < r.pines.length; i++) W.snowPine(ctx, r.pines[i][0], r.pines[i][1]);
+    if (L) {                                                                                       // the Ridge Lift: a cable across the gorge, pylons, a straw-plank platform
+      for (let i = 0; i < L.pylons.length; i++) { const x = L.pylons[i]; S_.fillRRect(ctx, x - 5, L.pylonTop, 10, L.y - L.pylonTop + 4, 3, PAL.stoneDark); S_.fillRRect(ctx, x - 16, L.pylonTop + 6, 32, 6, 2, PAL.stoneDark); }
+      A().line(ctx, 0, L.y, MAP.W, L.y, PAL.cable, 3);
+      const p = L.platform, x0 = p.x - p.w / 2, y0 = p.y - p.h / 2;
+      S_.plate(ctx, x0, y0, p.w, p.h, 10, PAL.stone, PAL.stoneDark, 8);
+      for (let i = 0; i < 4; i++) { const x = x0 + 16 + i * (p.w - 32) / 3; S_.fillRRect(ctx, x - 3, y0 - 12, 6, 14, 2, PAL.cedarDark); }
+      A().line(ctx, x0 + 14, y0 - 8, x0 + p.w - 14, y0 - 8, PAL.cedar, 4);
+      S_.fillRRect(ctx, x0 + 4, y0 - 4, p.w - 8, 5, 2, SNOW);
+    }
+  };
+  // the Ridge Lift's gondola: a small cabin hanging from the gorge cable (golden variant with streamers)
+  W.liftCar = function (ctx, x, swing, golden, heads) {
+    const S_ = A(), cy = MAP.LIFT.y;
+    ctx.save(); ctx.translate(x, cy); ctx.rotate(swing);
+    S_.circle(ctx, 0, 0, 5, PAL.stoneDark); S_.fillRRect(ctx, -2, 0, 4, 14, 1, PAL.stoneDark);
+    S_.fillRRect(ctx, -28, 14, 56, 36, 12, golden ? PAL.straw : '#5C6F8A');
+    S_.fillRRect(ctx, -28, 40, 56, 10, 6, golden ? PAL.coinRim : '#3E4B5E');
+    S_.fillRRect(ctx, -22, 19, 44, 13, 3, PAL.cream);
+    for (let i = 0; i < heads; i++) { const hx = -12 + i * 12; S_.circle(ctx, hx, 26, 4.5, PAL.capy); S_.circle(ctx, hx + 3, 27, 2.2, PAL.capySnout); }
+    S_.fillRRect(ctx, -24, 8, 48, 4, 2, SNOW);
+    if (golden) for (let i = 0; i < 3; i++) A().line(ctx, -20 + i * 20, 50, -24 + i * 20 + Math.sin(i * 2) * 4, 62, PAL.red, 2);
+    ctx.restore();
   };
   // the sauna hut: a log cabin on a cedar porch; the interior (the 'water' rect) is where guests sit, so the roof stays above it
   W.saunaBody = function (ctx, def) {

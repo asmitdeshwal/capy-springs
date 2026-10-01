@@ -170,6 +170,21 @@
   };
 
   // guest kinds are roles; the pack's `art` names the drawer (a season art file may add Ch.<art>)
+  // ---------------- Momo the snow-monkey VIP (52 tall): fluff cloud body, pink face, paper crown ----------------
+  Ch.momo = function (ctx, p) {
+    const S_ = A(), MONKEY = '#D8D3CB', MONKEY_D = '#9A948B', FACE = '#E36B6B';
+    begin(ctx, p, 18, 6);
+    const lp = p.moving ? Math.sin(p.walk * TAU) * 2 : 0;
+    S_.fillRRect(ctx, -11, -8 - lp, 8, 8 + lp, 3, MONKEY_D); S_.fillRRect(ctx, 3, -8 + lp, 8, 8 - lp, 3, MONKEY_D);
+    S_.circle(ctx, -12, -18, 9, MONKEY); S_.circle(ctx, 12, -18, 9, MONKEY); S_.circle(ctx, 0, -12, 11, MONKEY);
+    ctx.beginPath(); ctx.arc(0, -22, 15, 0, TAU); ctx.fillStyle = MONKEY; ctx.fill(); strokePath(ctx, MONKEY_D);
+    const down = p.dir === 'down', up = p.dir === 'up', fx = down ? 0 : 4;
+    if (!up) { S_.ellipse(ctx, fx, -26, 8, 7, FACE); eye(ctx, fx - 3, -28, 1.8); eye(ctx, fx + 3, -28, 1.8); S_.ellipse(ctx, fx, -23, 2.5, 1.2, P.ink); }
+    S_.fillRRect(ctx, -9, -42, 18, 6, 2, P.coin); S_.tri(ctx, -9, -42, -3, -42, -6, -50, P.coin); S_.tri(ctx, -3, -42, 3, -42, 0, -52, P.coin); S_.tri(ctx, 3, -42, 9, -42, 6, -50, P.coin);
+    if (p.hat) (Ch.hats[p.hat] || hatYuzu)(ctx, fx, -52);
+    end(ctx);
+  };
+
   // ---------------- Madame Tsuru the crane masseuse (70 tall) ----------------
   // pose 'massage': the neck dips and the wings work; idle: a slow sway
   Ch.tsuru = function (ctx, p) {

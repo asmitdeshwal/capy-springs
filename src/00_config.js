@@ -1,5 +1,5 @@
 // Capy Springs - tuning constants (ARCHITECTURE.md section 8). Every number that appears in a GDD table lives here or in 02_data_*.js.
-window.G = window.G || {}; G.VERSION = '1.8.0'; G.HEADLESS = G.HEADLESS || false;
+window.G = window.G || {}; G.VERSION = '1.9.0'; G.HEADLESS = G.HEADLESS || false;
 G.C = {
   // Kit (GDD 5.1, 6)
   KIT_SPEED: 280, KIT_SPRINT: 1.25, KIT_ACCEL_T: 0.12, KIT_RADIUS: 12, KIT_DUST_EVERY: 0.12, KIT_IDLE_STRETCH: 6, KIT_PUMP_T: 0.4,
@@ -12,12 +12,12 @@ G.C = {
   SWEAT_AT: 0.4, COLD_PATIENCE_MULT: 0.5, MILL_MIN: 1.5, MILL_MAX: 3, LEAVE_WAVE_T: 0.4, CLIMB_OUT_T: 0.4, PLOP_T: 0.25, HOP_OUT_T: 0.25,
   HEART_EVERY: 3, STALL_WANT: 0.35, STALL_PATIENCE: 30, LANE_SNAP: 30,
   // Baths and Splash Chain (GDD 5.2, 8.3)
-  PLOP_GAP: 0.12, SPLASH_WINDOW: 2.0, SPLASH_MULT: [1, 1, 1, 1.25, 1.5, 2.0], SPLASH_BUMP: [0, 0, 0, 5, 7, 10], SPLASH_TEXT: [0, 0, 0, 36, 44, 56],
-  SPLASH_PUNCH: [0, 0, 0, 0, 0.03, 0.07], PUNCH_T: 0.3,      // camera zoom punch per chain size (GDD 6.3)
+  PLOP_GAP: 0.12, SPLASH_WINDOW: 2.0, SPLASH_MULT: [1, 1, 1, 1.25, 1.5, 2.0], SPLASH_BUMP: [0, 0, 0, 4, 6, 8], SPLASH_TEXT: [0, 0, 0, 34, 40, 48],
+  SPLASH_PUNCH: [0, 0, 0, 0, 0, 0], PUNCH_T: 0.3,            // camera zoom punch per chain size - off: the 1.4 shake was judged "perfect" on the phone (GDD 6.3)
   HITSTOP_X3: 0.04, HITSTOP_X5: 0.10, HITSTOP_RUSH: 0.12, SOAK_STEP: 0.5, PAY_STEP: 0.15, YUZU_REFRESH_BELOW: 3, RIPPLE_EVERY: 0.9, SLOT_INSET: 24,
   TUTORIAL_SOAK: 5, MULT_CAP: 6.0,
   // the Ridge: sauna guests want a plunge; inside the window the plunge pays HOTCOLD_PAY (GDD 19)
-  PLUNGE_WINDOW: 8, PLUNGE_PATIENCE: 15, HOTCOLD_PAY: 2, PLUNGE_PUNCH: 0.05,
+  PLUNGE_WINDOW: 8, PLUNGE_PATIENCE: 15, HOTCOLD_PAY: 2, PLUNGE_PUNCH: 0,
   // Heat (GDD 5.3, 8.6)
   HEAT_START: 75, HEAT_MAX: 100, TANK_STEP: 15, HEAT_COLD: 30, HEAT_RUSH: 80, HEAT_GRACE: 30, DRAIN_IDLE: 0.5, DRAIN_OCCUPIED: 1.0, DRAIN_RUSH: 4.0,
   LOG_HEAT: 15, STOKE_STEP: 2, STOKE_GAP: 0.15, STOKE_STOP: 0, RUSH_T: 10, RUSH_PAY: [1.5, 1.75, 2.0], RUSH_SOAK: 2, RUSH_SURPLUS_T: 1, STOKE_HINT_BELOW: 40, WASH_COUNT: 20,

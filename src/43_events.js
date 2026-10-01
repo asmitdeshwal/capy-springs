@@ -18,7 +18,7 @@
     G.Bus.on('car:arrive', e => { if (e.golden && !e.empty) Events.S.stats.golden++; });
   };
   Events.startNight = function (S) {
-    const n = S.night; n.active = true; n.t = 0; n.count++; n.lit = {}; S.stats.nights++;
+    const n = S.night; n.active = true; n.t = 0; n.count++; n.lit = {}; n.momo = false; S.stats.nights++;
     G.CableCar.onNight(S);
     G.Bus.emit('night:start', evNone);
   };

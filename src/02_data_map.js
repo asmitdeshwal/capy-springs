@@ -3,14 +3,21 @@
   'use strict';
   G.DATA = G.DATA || {};
   G.DATA.MAP = {
-    W: 540, H: 2400, CAM_MIN_Y: 1100, STATIC_Y0: 500,       // the static cache covers the Ridge too; the camera clamp moves up when the bridge opens
-    // THE RIDGE (GDD 19): the snowy terrace above the bridge. Opens with Ridge Bridge level 1; Kit's bounds, the camera clamp, the lane and the mist move up.
-    RIDGE: { y0: 500, y1: 1100, camMinY: 500, boundsY0: 560, laneY0: 560, mist: { y0: 420, y1: 580 },
+    W: 540, H: 2400, CAM_MIN_Y: 1100, STATIC_Y0: -120,      // the static cache covers the Ridge too; the camera clamp moves up when the bridge opens
+    // THE RIDGE (GDD 19): a full stage above the bridge (1220 px, a whole phone screen). Opens with Ridge Bridge level 1; Kit's bounds, the camera
+    // clamp, the lane and the mist move up, and while Kit is up there the camera never shows the Deck.
+    RIDGE: { y0: -120, y1: 1100, camMinY: -120, boundsY0: -60, laneY0: -60, mist: { y0: -200, y1: -40 },
              chasm: [[0, 1000, 238, 1150], [302, 1000, 540, 1150]],                  // solid drops either side of the bridge
-             mill: { x0: 320, x1: 430, y0: 895, y1: 960 }, exit: { x: 270, y: 580 },  // where sauna guests wait for their plunge; where Ridge guests leave
-             pines: [[40, 620], [30, 760], [510, 760], [150, 600], [40, 960], [500, 960], [200, 690]], rocks: [[90, 700], [220, 620], [160, 990], [500, 990]] },
+             mill: { x0: 320, x1: 430, y0: 895, y1: 960 }, exit: { x: 270, y: -40 },  // where sauna guests wait for their plunge; where Ridge guests leave
+             pines: [[40, 620], [30, 760], [510, 760], [150, 600], [40, 960], [500, 960], [200, 690], [60, 120], [480, 100], [150, -20], [400, -10], [500, 320], [30, 340], [340, 190], [180, 400], [470, 470]],
+             rocks: [[90, 700], [220, 620], [160, 990], [500, 990], [120, 260], [430, 230], [200, 40], [60, 520]],
+             pond: { x: 300, y: 330, w: 190, h: 100 } },                                // a frozen pond, decor only
+    // the Ridge Lift (GDD 19.4): a gondola across the gorge that brings guests to a platform on the Ridge once it is open
+    LIFT: { y: 1020, pylons: [40, 500], pylonTop: 985, dockX: 130, enterX: -80, exitX: 620, doorDY: 44, sortY: 1080,
+            platform: { x: 130, y: 962, w: 180, h: 46, cap: 8, mill: { x0: 55, x1: 205, y0: 945, y1: 980 }, exit: { x: 130, y: 940 } },
+            bell: { x: 228, y: 950 }, period: 28, periodNight: 14, guests: 4, goldenEvery: 5 },
     // snowfall (GDD 19.3): squalls once the Ridge is open; drifts settle on these Ridge path spots and slow anyone until Kit clears them
-    SNOW: { first: 200, every: 150, dur: 30, perSquall: 3, stagger: 5, spots: [[270, 985], [270, 870], [270, 700], [150, 930], [400, 935]],
+    SNOW: { first: 200, every: 150, dur: 30, perSquall: 3, stagger: 5, spots: [[270, 985], [270, 870], [270, 700], [200, 900], [400, 935]],
             driftR: 38, growT: 2, clearT: 0.6, slowKit: 0.4, slowGuest: 0.5, bonus: 3, maxDrifts: 4 },
     VALLEY: { y0: 2200, y1: 2400 },
     BOUNDS: { x0: 14, x1: 526, y0: 1150, y1: 2100 },

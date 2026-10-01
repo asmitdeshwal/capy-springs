@@ -146,6 +146,9 @@
     const fill = lit ? 1 : L.sunk / d.costs[L.level];
     G.Art.W.lantern(ctx, d.x, d.y - C.POST_BACK, fill, lit, S.t, fx.flash, Lanterns.active(S, d.id));
   }
+  // the name of a step at its current level, and the one-line "what you get"
+  Lanterns.labelAt = function (def, level) { return (def.labels && def.labels[Math.min(level, def.labels.length - 1)]) || def.label; };
+  Lanterns.blurbAt = function (def, level) { return (def.blurbs && def.blurbs[Math.min(level, def.blurbs.length - 1)]) || def.blurb || ''; };
   function drawLabel(ctx, o, S) {
     if (S.ui.banner) return;                                   // text priority: banner hides lantern pills
     const d = o.def, L = S.lanterns[d.id], fx = S.lanternFx[d.id];
@@ -153,6 +156,11 @@
     if (fx.check > 0) { A.pill(ctx, d.x, y, 44, 26, '', 22, PAL.cream, PAL.ink, 'check'); return; }
     if (fx.short > 0) { A.pill(ctx, d.x, y, 66, 26, '-' + fx.short, 22, PAL.cream, PAL.red, 'koban'); return; }
     const rem = d.costs[L.level] - L.sunk;
+    const x = Math.max(70, Math.min(470, d.x));                // keep the name and blurb on screen for steps near the edges
+    A.text(ctx, Lanterns.labelAt(d, L.level), x, y - 24, 15, PAL.cream, NAME_OPTS);                     // what this step is
     A.pill(ctx, d.x, y, rem >= 1000 ? 84 : 66, 26, String(rem), 22, PAL.cream, PAL.ink, 'koban');
+    const blurb = Lanterns.blurbAt(d, L.level);
+    if (blurb) A.text(ctx, blurb, x, y + 24, 11, PAL.cream, NAME_OPTS);                                 // what the koban buy
   }
+  const NAME_OPTS = { stroke: G.PAL.ink, lw: 3 };
 })(window.G);

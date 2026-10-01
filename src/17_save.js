@@ -14,7 +14,7 @@
     return {
       v: Save.VERSION, savedAt: S.savedAt, t: S.t, coins: S.coins, earned: S.earned,
       income: { buckets: S.income.buckets.slice(), head: S.income.head, bucketT: S.income.bucketT },
-      car: { index: S.car.index },
+      car: { index: S.car.index }, lift: { index: S.lift.index },
       lanterns, levels,
       heat: { v: S.heat.v, rushSeen: S.heat.rushSeen },
       kit: { x: S.kit.x, y: S.kit.y },
@@ -33,6 +33,7 @@
     if (typeof obj.savedAt === 'number') S.savedAt = obj.savedAt;
     if (obj.income && Array.isArray(obj.income.buckets)) { for (let i = 0; i < C.INCOME_BUCKETS; i++) S.income.buckets[i] = Number(obj.income.buckets[i]) || 0; S.income.head = (obj.income.head | 0) % C.INCOME_BUCKETS; S.income.bucketT = Number(obj.income.bucketT) || 0; }
     if (obj.car && typeof obj.car.index === 'number') S.car.index = Math.max(1, obj.car.index | 0);
+    if (obj.lift && typeof obj.lift.index === 'number') S.lift.index = Math.max(0, obj.lift.index | 0);
     if (obj.lanterns) for (const id in S.lanterns) if (obj.lanterns[id]) { S.lanterns[id].level = Math.max(0, obj.lanterns[id].level | 0); S.lanterns[id].sunk = Math.max(0, obj.lanterns[id].sunk | 0); }
     if (obj.levels) for (const id in S.levels) if (obj.levels[id]) { S.levels[id].speed = obj.levels[id].speed | 0; S.levels[id].slots = obj.levels[id].slots | 0; S.levels[id].pay = obj.levels[id].pay | 0; }
     if (obj.heat) { if (typeof obj.heat.v === 'number') S.heat.v = obj.heat.v; S.heat.rushSeen = !!obj.heat.rushSeen; }

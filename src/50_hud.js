@@ -32,7 +32,8 @@
     Bus.on('coins:collect', e => { G.Camera.toScreen(e.wx, e.wy, P); HUD.flight(P.x, P.y, e.value, 0); });
     Bus.on('trail:join', () => { pipPulse = 0.3; });
     const T = G.Seasons.text;
-    Bus.on('car:arrive', e => { if (e.golden && !e.empty) HUD.banner(HUD.S, T('golden', 'GOLDEN CAR!')); });
+    Bus.on('car:arrive', e => { if (e.golden && !e.empty) HUD.banner(HUD.S, e.lift ? 'GOLDEN LIFT!' : T('golden', 'GOLDEN CAR!')); });
+    Bus.on('vip:arrive', () => HUD.banner(HUD.S, 'MOMO THE VIP!'));
     Bus.on('fullcar', () => HUD.banner(HUD.S, T('fullcar', 'FULL CAR!')));
     Bus.on('famous', () => HUD.banner(HUD.S, T('famous', 'FAMOUS INN!')));
     Bus.on('fame', () => HUD.banner(HUD.S, T('fame', 'SEASON FAME')));

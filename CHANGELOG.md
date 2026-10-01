@@ -1,5 +1,16 @@
 # Capy Springs — changelog
 
+## 1.9.0 — the Ridge Lift, Momo the VIP, a full-screen Ridge, readable steps, the old shake (2026-10-02)
+
+Phone feedback on 1.8: the bigger splash shake was too much (the 1.4 one was perfect); it was unclear how guests ever reach the Ridge; the Ridge only filled the top of the screen; and the bridge's price did not say what it bought.
+
+- **Splash feel reverted** to 1.4 exactly (bump 4 / 6 / 8, hit-stop, x5 confetti + flash); the camera zoom punch is off everywhere (`SPLASH_PUNCH` zeros, `PLUNGE_PUNCH` 0, the gong only bumps). The new sounds stay.
+- **Ridge Lift** (`49_lift.js`, `MAP.LIFT`): once the Ridge opens, a gondola crosses the gorge on a cable at y 1020 and docks above a straw-plank platform at the Ridge's bottom left (28 s dock-to-dock, 14 s at night, 4 capys, every 5th car golden with streamers, its own bell ring, FULL CAR counts). Guests who step off wait there (`area: 'ridge'`) and leave by the top of the Ridge. Nobody has to walk guests up any more; the bridge is for Kit.
+- **Momo the VIP**: during Lantern Night, once the Sauna Hut exists, the first lift car carries Momo the snow monkey (gold paper crown, pink face, sparkles while seated): "MOMO THE VIP!", fanfare, confetti. He pays **10×** wherever he is served (sauna, pavilion, a bath — 300 koban for a massage) and plunges after a sauna like anyone. Once per night.
+- **A full-screen Ridge**: the Ridge now spans y −120 to 1100 (a whole phone screen) with a frozen pond, more snow pines and rocks up top; while Kit is up there the camera stays inside the Ridge (its lower limit blends across the bridge), so the stage fills the screen instead of sharing it with the Deck.
+- **Offering steps say what they are**: every step now shows its name above the price and one line of what the koban buy below it ("Ridge Bridge — Opens the Ridge above, and +25% pay"; the bridge's later levels are "Inn Fame II…V — +5% pay on everything"; "Trail Rope — Lead 8 guests at once"; "Yuzu Grove — drop one in a bath for x2 pay"; …).
+- Harness: ≥ 10 lift cars and Momo served ≥ once by 50 min (seed 7: 65 lift cars, Momo 11×, 92,177 coins at 50 min); the "out of world" invariant now knows the world's top is y −120.
+
 ## 1.8.0 — snowfall (2026-10-02)
 
 - **Snow squalls** once the Ridge is open: the first 200 s after it opens, then every 150 s, lasting 30 s — flakes over the whole mountain, a cool tint, wind and a "SNOW SQUALL" banner. During a squall **snowdrifts** settle on three of the Ridge's path spots (bridge top, the lane, by the plunge and sauna steps), five seconds apart, up to four lying at once.

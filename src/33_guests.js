@@ -37,10 +37,12 @@
   }
   let S_ = null;                                                                            // the state during Guests.update (for the walk helper)
 
-  Guests.spawn = function (S, kind, carId, golden, x0, y0) {
+  // area 'ridge' = stepped off the Ridge Lift onto its platform; otherwise the cable car's platform
+  Guests.spawn = function (S, kind, carId, golden, x0, y0, area) {
     const g = G.State.newGuest(S, kind, carId); if (!g) return null;
-    g.golden = !!golden; g.tutorial = carId === 1; g.x = x0; g.y = y0; g.state = 'arrive'; g.walking = false; g.area = 'platform'; g.millRect = MAP.PLATFORM.mill;
-    const m = MAP.PLATFORM.mill, h = g.hopObj;
+    const ridge = area === 'ridge' && MAP.LIFT;
+    g.golden = !!golden; g.tutorial = carId === 1; g.x = x0; g.y = y0; g.state = 'arrive'; g.walking = false; g.area = ridge ? 'ridge' : 'platform'; g.millRect = ridge ? MAP.LIFT.platform.mill : MAP.PLATFORM.mill;
+    const m = g.millRect, h = g.hopObj;
     h.x0 = x0; h.y0 = y0; h.x1 = U.rand(m.x0, m.x1); h.y1 = U.rand(m.y0, m.y1); h.t = 0; h.dur = C.HOP_OUT_T; h.h = 18; g.hop = h;
     faceTo(g, h.x1);
     return g;

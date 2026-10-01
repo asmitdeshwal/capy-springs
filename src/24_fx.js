@@ -135,19 +135,18 @@
     FX.subscribed = true;
     const Bus = G.Bus, Cam = G.Camera;
     const cur = () => FX.S;
-    // the Splash Chain is the game's big joy: every step up escalates (bump -> shake + zoom punch -> shake, punch, shockwave, confetti, flash)
+    // the Splash Chain is the game's big joy; the 1.4 feel (bump, hit-stop, x5 confetti + flash) was judged perfect on the phone, so it stays exactly that
     Bus.on('splash', e => {
       const S = cur(), b = e.bath, g = e.g, n = Math.min(e.count, 5), w = b.def.water;
       FX.ripple(S, g.x, g.y, b.yuzuT > 0);
-      FX.droplets(S, g.x, g.y - 4, 6 + n);
+      FX.droplets(S, g.x, g.y - 4, 6);
       if (e.count >= 3) {
         const text = e.count === 3 ? G.Seasons.text('splash3', 'SPLASH x3!') : e.count === 4 ? 'x4!' : 'x' + e.count + '!!';
         FX.pop(S, text, w.x, w.y - w.h / 2 - 34, C.SPLASH_TEXT[n], PAL.coin, 'chain', g.batch);
-        Cam.punch(C.SPLASH_PUNCH[n], C.PUNCH_T);
-        if (e.count === 3) { FX.hitStop(S, C.HITSTOP_X3); FX.sparkle(S, w.x, w.y - 10, 4); }
-        if (e.count === 4) { FX.sparkle(S, w.x, w.y - 10, 6); FX.ring(S, w.x, w.y, 60); }
-        if (e.count >= 5) { FX.hitStop(S, C.HITSTOP_X5); FX.confetti(S, w.x, w.y - 20, C.CONFETTI_SMALL * 2); FX.flash(S, 0.25); FX.ring(S, w.x, w.y, 120); FX.ring(S, w.x, w.y, 70); }
-        if (e.count >= 5) Cam.shake(C.SPLASH_BUMP[5], 0.35); else Cam.bump(C.SPLASH_BUMP[n]);
+        if (C.SPLASH_PUNCH[n] > 0) Cam.punch(C.SPLASH_PUNCH[n], C.PUNCH_T);
+        if (e.count === 3) FX.hitStop(S, C.HITSTOP_X3);
+        if (e.count === 5) { FX.hitStop(S, C.HITSTOP_X5); FX.confetti(S, w.x, w.y - 20, C.CONFETTI_SMALL); FX.flash(S, 0.2); }
+        if (e.count >= 5) Cam.shake(C.SPLASH_BUMP[5], 0.3); else Cam.bump(C.SPLASH_BUMP[n]);
       } else Cam.bump(2);
     });
     Bus.on('guest:paid', e => { const S = cur(); FX.pop(S, '+' + e.value, e.g.x, e.g.y - 40, 20, PAL.coin, 'plus'); });
@@ -155,14 +154,14 @@
     Bus.on('plunge', e => {
       const S = cur(), w = e.bath.def.water;
       FX.droplets(S, e.g.x, e.g.y - 4, 10); for (let i = 0; i < 4; i++) FX.steam(S, e.g.x + (i - 1.5) * 10, e.g.y - 8, 12, 0.6);
-      if (e.hot) { FX.pop(S, 'HOT-COLD x2!', w.x, w.y - w.h / 2 - 62, 34, PAL.ripple, 'label'); FX.ring(S, w.x, w.y, 90); for (let i = 0; i < 6; i++) FX.steam(S, w.x + (i - 2.5) * 22, w.y - 6, 16, 0.55); Cam.punch(C.PLUNGE_PUNCH, C.PUNCH_T); Cam.bump(6); FX.flash(S, 0.12); }
+      if (e.hot) { FX.pop(S, 'HOT-COLD x2!', w.x, w.y - w.h / 2 - 62, 34, PAL.ripple, 'label'); FX.ring(S, w.x, w.y, 90); for (let i = 0; i < 6; i++) FX.steam(S, w.x + (i - 2.5) * 22, w.y - 6, 16, 0.55); if (C.PLUNGE_PUNCH > 0) Cam.punch(C.PLUNGE_PUNCH, C.PUNCH_T); Cam.bump(4); }
     });
     // the pavilion's gong: a session starts (FULL HOUSE when every chair was taken)
     Bus.on('gong', e => {
       const S = cur(), w = e.bath.def.water, g = e.bath.def.gongAt;
       FX.ring(S, g.x, g.y - 36, 70); FX.sparkle(S, w.x, w.y - 20, 6);
-      if (e.full) { FX.pop(S, 'FULL HOUSE x' + e.bath.def.fullHouse + '!', w.x, w.y - w.h / 2 - 70, 32, PAL.amber, 'label'); FX.confetti(S, w.x, w.y - 10, C.CONFETTI_SMALL); Cam.punch(0.04, C.PUNCH_T); Cam.bump(5); }
-      else Cam.bump(3);
+      if (e.full) { FX.pop(S, 'FULL HOUSE x' + e.bath.def.fullHouse + '!', w.x, w.y - w.h / 2 - 70, 32, PAL.amber, 'label'); FX.confetti(S, w.x, w.y - 10, C.CONFETTI_SMALL); Cam.bump(4); }
+      else Cam.bump(2);
     });
     // snowfall: a cleared drift bursts into white puffs (its koban rain to Kit on their own)
     Bus.on('snow:clear', e => { const S = cur(); for (let i = 0; i < 8; i++) FX.puff(S, e.x + (U.hash(i, e.x) - 0.5) * 50, e.y + (U.hash(i, e.y) - 0.5) * 20, 'puff', 8 + U.hash(i, 5) * 8); FX.sparkle(S, e.x, e.y - 10, 4); FX.pop(S, '+' + e.bonus, e.x, e.y - 30, 20, PAL.coin, 'plus'); });
@@ -191,7 +190,8 @@
     Bus.on('season:unlock', () => { const S = cur(); FX.confetti(S, S.kit.x, S.kit.y - 30, C.CONFETTI_BIG); FX.flash(S, 0.3); });
     Bus.on('night:light', () => { const S = cur(); FX.sparkle(S, S.kit.x, S.kit.y - 20, 3); });
     Bus.on('helper:hire', e => { const S = cur(), h = S.helpers[e.id]; if (h) FX.puffs(S, h.x, h.y - 20, 6, 30); });
-    Bus.on('car:arrive', e => { const S = cur(); if (e.golden) FX.confetti(S, DATA.MAP.PLATFORM.x, DATA.MAP.PLATFORM.y - 20, C.CONFETTI_SMALL); });
+    Bus.on('car:arrive', e => { const S = cur(); if (e.golden) FX.confetti(S, e.x !== undefined ? e.x : DATA.MAP.PLATFORM.x, (e.y !== undefined ? e.y : DATA.MAP.PLATFORM.y) - 20, C.CONFETTI_SMALL); });
+    Bus.on('vip:arrive', e => { const S = cur(); FX.confetti(S, e.x, e.y - 20, C.CONFETTI_BIG); FX.sparkle(S, e.x, e.y - 30, 8); FX.flash(S, 0.15); });
     Bus.on('ui:cold-refusal', e => { const S = cur(), w = e.bath.def.water; FX.puffs(S, w.x, w.y - w.h / 2, 2, 20); });
   };
 })(window.G);

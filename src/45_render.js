@@ -60,7 +60,7 @@
     list.length = 0;
     G.Player.collect(S, list); G.Trail.collect(S, list); G.Guests.collect(S, list); G.CableCar.collect(S, list); G.Baths.collect(S, list);
     G.Heat.collect(S, list); G.Grove.collect(S, list); G.Stall.collect(S, list); G.Coins.collect(S, list); G.Lanterns.collect(S, list);
-    G.Helpers.collect(S, list); G.Events.collect(S, list); G.Kaa.collect(S, list); G.FX.collect(S, list);
+    G.Helpers.collect(S, list); G.Events.collect(S, list); G.Kaa.collect(S, list); G.Lift.collect(S, list); G.FX.collect(S, list);
     list.sort(byY);
     for (let i = 0; i < list.length; i++) { const d = list[i]; d.draw(ctx, d, S); }
     // 4. FX pass

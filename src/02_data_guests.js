@@ -5,7 +5,9 @@
   G.DATA.GUESTS = {
     // kinds are ROLES ('capy' = the main guest, 'duck' = the fast low-paying flock); art / voice pick the drawing and the sfx so a season can recast them
     capy: { pay: 6, walk: 110, patienceWait: 40, patienceTrail: 25, soakMult: 1,   gap: 28, w: 44, h: 32, bobHz: 1, art: 'capy', voice: null },
-    duck: { pay: 3, walk: 150, patienceWait: 20, patienceTrail: 15, soakMult: 0.5, gap: 24, w: 28, h: 30, bobHz: 2, art: 'duck', voice: 'quack' }
+    duck: { pay: 3, walk: 150, patienceWait: 20, patienceTrail: 15, soakMult: 0.5, gap: 24, w: 28, h: 30, bobHz: 2, art: 'duck', voice: 'quack' },
+    // Momo the snow-monkey VIP (GDD 19.4): rides the Ridge Lift during Lantern Night, pays 10x wherever he is served
+    momo: { pay: 60, walk: 100, patienceWait: 60, patienceTrail: 40, soakMult: 1, gap: 30, w: 40, h: 40, bobHz: 1, art: 'momo', voice: null, vip: true }
   };
   G.DATA.CAR = {      // level index = S.car.level; period is DOCK-TO-DOCK seconds
     levels: [ { capys: 3, spread: 0, ducks: 0,  period: 18 },
