@@ -25,9 +25,9 @@
     G.Save.apply(S, obj);
     initSystems(S);
     const info = G.Save.offline(obj, Date.now());
-    S.heat.v = Math.max(S.heat.v, S.helpers.pon.hired ? C.RETURN_HEAT_PON : C.RETURN_HEAT); S.heat.v = Math.min(S.heat.v, S.heat.max);
-    // the Welcome-back card waits behind the title screen's PLAY in the browser; the harness has no title
-    if (info.show) { if (Game.headless) G.Cards.showOffline(S, info); else G.Title.pending = info; } else G.Coins.add(S, info.coins + info.floorCoins, 'offline');
+    if (info.away >= C.OFFLINE_MIN) { S.heat.v = Math.max(S.heat.v, S.helpers.pon.hired ? C.RETURN_HEAT_PON : C.RETURN_HEAT); S.heat.v = Math.min(S.heat.v, S.heat.max); }   // a real absence warms the boiler back up; a reload does not
+    // the Welcome-back card waits behind the title screen's PLAY in the browser (a COPY: offlineCalc reuses one object); the harness has no title
+    if (info.show) { if (Game.headless) G.Cards.showOffline(S, info); else G.Title.pending = Object.assign({}, info); } else G.Coins.add(S, info.coins + info.floorCoins, 'offline');
     S.mode = 'play'; Game.syncMode(S);
     if (Game.debugFlag) S.ui.debug = true;
     return S;
@@ -62,11 +62,13 @@
     if (S.mode !== 'paused') return;
     // an uncollected offline card is still up: keep it, never recompute over it
     if (S.ui.card && S.ui.card.kind === 'offline' && !(S.ui.card.closing > 0)) { S.mode = S.prevMode === 'paused' ? 'play' : S.prevMode; Game.syncMode(S); return; }
+    // earnings already waiting behind the title's PLAY: keep them (the stamp was not advanced), never recompute over them
+    if (S.prevMode === 'title' && G.Title.pending && G.Title.pending.show) { S.mode = 'title'; return; }
     if (nowMs - S.savedAt >= C.OFFLINE_MIN * 1000) {
       const info = G.Save.offlineLive(S, nowMs);
       S.heat.v = Math.min(S.heat.max, Math.max(S.heat.v, S.helpers.pon.hired ? C.RETURN_HEAT_PON : C.RETURN_HEAT));
       S.mode = S.prevMode === 'paused' ? 'play' : S.prevMode;
-      if (S.mode === 'title') { if (info.show) G.Title.pending = info; else G.Coins.add(S, info.coins, 'offline'); return; }   // the title holds the card until PLAY
+      if (S.mode === 'title') { if (info.show) G.Title.pending = Object.assign({}, info); else G.Coins.add(S, info.coins, 'offline'); return; }   // the title holds the card until PLAY
       if (info.show) G.Cards.showOffline(S, info); else G.Coins.add(S, info.coins, 'offline');
     } else S.mode = S.prevMode === 'paused' ? 'play' : S.prevMode;
     Game.syncMode(S);

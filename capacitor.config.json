@@ -1,0 +1,25 @@
+{
+  "appId": "com.asmitdeshwal.capysprings",
+  "appName": "Capy Springs",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "capacitor"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#F6F1E7"
+  },
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#F6F1E7",
+    "preferredContentMode": "mobile"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "launchShowDuration": 0,
+      "backgroundColor": "#F6F1E7"
+    }
+  }
+}

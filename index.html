@@ -47,6 +47,7 @@
 <canvas id="game"></canvas>
 <script>
 // The game's files, in load order (the harness and tools/pack.js read this list too). Classic scripts on window.G, loaded one after another.
+window.CAPY_DEV_BUILD = true;        // tools/pack.js stamps false into dist/ (the store build): no developer mode there
 window.CAPY_FILES = [
   'src/00_config.js', 'src/01_palette.js', 'src/02_data_map.js', 'src/02_data_stations.js', 'src/02_data_lanterns.js', 'src/02_data_guests.js',
   'src/03_pack_s2.js', 'src/04_seasons.js',

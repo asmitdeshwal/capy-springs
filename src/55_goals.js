@@ -12,9 +12,9 @@
   const POOL = [
     { id: 'served',    label: 'Serve guests',               get: s => s.served,       target: 30, reward: 60,  icon: 'kit' },
     { id: 'x3',        label: 'Land Splash x3 chains',      get: s => s.combos[3],    target: 6,  reward: 80,  icon: 'bath' },
-    { id: 'x5',        label: 'Land Splash x5 chains',      get: s => s.combos[5],    target: 3,  reward: 120, icon: 'bath' },
+    { id: 'x5',        label: 'Land Splash x5 chains',      get: s => s.combos[5],    target: 3,  reward: 120, icon: 'bath',    needs: S => S.trailCap >= 5 },
     { id: 'rush',      label: 'Start Steam Rushes',         get: s => s.rushes,       target: 3,  reward: 90,  icon: 'flame',   needs: 'boiler' },
-    { id: 'fullcar',   label: 'Seat whole cars',            get: s => s.fullCars,     target: 3,  reward: 90,  icon: 'bell' },
+    { id: 'fullcar',   label: 'Seat whole cars',            get: s => s.fullCars,     target: 3,  reward: 90,  icon: 'bell',    needs: S => S.car.level >= 1 },
     { id: 'yuzu',      label: 'Make golden yuzu baths',     get: s => s.yuzu,         target: 4,  reward: 90,  icon: 'yuzu',    needs: 'grove' },
     { id: 'mochi',     label: 'Sell mochi at the stall',    get: s => s.mochi,        target: 6,  reward: 90,  icon: 'mochi',   needs: 'stall' },
     { id: 'night',     label: 'Play a Lantern Night',       get: s => s.nights,       target: 1,  reward: 100, icon: 'lantern', needs: 'cedar' },
@@ -34,7 +34,7 @@
   function pick(S, day) {
     const ids = [day & 1 ? 'x3' : 'served'];
     const rest = [];
-    for (let i = 0; i < POOL.length; i++) { const g = POOL[i]; if (ids.indexOf(g.id) >= 0 || g.id === 'served' || g.id === 'x3') continue; if (g.needs && !S.built[g.needs]) continue; rest.push({ g, k: U.hash(day, i + 1) }); }
+    for (let i = 0; i < POOL.length; i++) { const g = POOL[i]; if (ids.indexOf(g.id) >= 0 || g.id === 'served' || g.id === 'x3') continue; if (g.needs && !(typeof g.needs === 'function' ? g.needs(S) : S.built[g.needs])) continue; rest.push({ g, k: U.hash(day, i + 1) }); }
     rest.sort((a, b) => a.k - b.k);
     for (let i = 0; i < rest.length && ids.length < 3; i++) ids.push(rest[i].g.id);
     while (ids.length < 3) ids.push(ids.length === 1 ? 'x3' : 'golden');            // a brand-new inn: always three
@@ -42,8 +42,10 @@
   }
   Goals.rollIfNewDay = function (S) {
     const day = dayNumber(), gl = S.goals;
-    if (gl.day === day && gl.ids.length === 3) return false;
+    if (day <= gl.day && gl.ids.length === 3) return false;       // a clock set back (a timezone hop) keeps today's goals
+    const had = gl.ids.length === 3;
     gl.day = day; gl.ids = pick(S, day); gl.done = [false, false, false]; gl.allDone = false; snapshot(S, gl.base);
+    if (had && S.t > 0) G.Bus.emit('goal:new', evNone);           // a new day during play: say so, rather than silently swapping the list
     return true;
   };
   Goals.init = function (S) { checkT = 0; Goals.rollIfNewDay(S); };

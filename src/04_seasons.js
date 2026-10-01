@@ -80,6 +80,7 @@
     if (!was && !(opts && opts.silent) && G.Bus) { evUnlock.id = id; G.Bus.emit('season:unlock', evUnlock); }
   };
   Seasons.markDone = function (S) { if (!Seasons.meta.done[cur.id]) { Seasons.meta.done[cur.id] = true; Seasons.writeMeta(); } };
+  Seasons.resetCurrent = function () { delete Seasons.meta.done[cur.id]; Seasons.meta.progress[cur.id] = 0; Seasons.writeMeta(); };   // a reset wipes the meta too, not only the save
   // leave for another season: save this one, point the meta at the other, reload (the pack is applied at load time, so a reload is the switch)
   Seasons.travel = function (S, id) {
     if (!Seasons.canTravel(id)) return false;

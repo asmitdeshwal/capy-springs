@@ -44,10 +44,10 @@ function canvas(size) {
   };
 }
 // the icon: a capybara in a steaming bath with a yuzu on its head, on cream (maskable: full-bleed amber, everything inside the safe zone)
-function icon(size, maskable) {
-  const c = canvas(size);
-  if (maskable) c.rrect(0, 0, 512, 512, 0, '#FFC857'); else c.rrect(0, 0, 512, 512, 110, '#F6F1E7');
-  const k = maskable ? 0.8 : 1, ox = 256 * (1 - k), oy = 256 * (1 - k);
+function icon(size, maskable, opts) {
+  const c = canvas(size), o = opts || {};
+  if (!o.noBg) { if (maskable) c.rrect(0, 0, 512, 512, 0, '#FFC857'); else c.rrect(0, 0, 512, 512, 110, '#F6F1E7'); }
+  const k = o.k || (maskable ? 0.8 : 1), ox = 256 * (1 - k), oy = 256 * (1 - k);
   const X = v => ox + v * k, Y = v => oy + v * k, Sz = v => v * k;
   c.rrect(X(56), Y(300), Sz(400), Sz(150), Sz(40), '#B9B3A6');                            // tub
   c.rrect(X(80), Y(318), Sz(352), Sz(110), Sz(30), '#2FA6A0');                            // water
@@ -60,8 +60,10 @@ function icon(size, maskable) {
   c.ellipse(X(232), Y(100), Sz(40), Sz(16), '#2C5A40'); c.ellipse(X(196), Y(104), Sz(34), Sz(14), '#2C5A40');   // yuzu leaves
   c.circle(X(214), Y(120), Sz(46), '#F5C400'); c.circle(X(200), Y(108), Sz(14), '#FFF1B0');                       // yuzu
   for (let i = 0; i < 3; i++) c.circle(X(110 + i * 150), Y(84 - (i & 1) * 20), Sz(22 + (i & 1) * 8), '#FFFFFF', 0.75);   // steam
-  return png(size, size, c.buf);
+  return o.raw ? c.buf : png(size, size, c.buf);
 }
+// used as a module by tools/native_assets.js (native icons and splash screens); the packaging below runs only from the command line
+if (require.main !== module) { module.exports = { png, canvas, icon, version }; return; }
 fs.mkdirSync(path.join(root, 'icons'), { recursive: true });
 fs.writeFileSync(path.join(root, 'icons/icon-192.png'), icon(192, false));
 fs.writeFileSync(path.join(root, 'icons/icon-512.png'), icon(512, false));
@@ -101,4 +103,6 @@ console.log('sw.js: ' + precache.length + ' files precached, cache capy-springs-
 const dist = path.join(root, 'dist');
 fs.rmSync(dist, { recursive: true, force: true }); fs.mkdirSync(path.join(dist, 'src'), { recursive: true }); fs.mkdirSync(path.join(dist, 'icons'), { recursive: true });
 for (const f of ['index.html', 'manifest.webmanifest', 'sw.js'].concat(files, fs.readdirSync(path.join(root, 'icons')).map(f => 'icons/' + f))) fs.copyFileSync(path.join(root, f), path.join(dist, f));
+// the store build carries no developer mode (no cheat menu, no secret taps)
+fs.writeFileSync(path.join(dist, 'index.html'), fs.readFileSync(path.join(dist, 'index.html'), 'utf8').replace('window.CAPY_DEV_BUILD = true;', 'window.CAPY_DEV_BUILD = false;'));
 console.log('dist/: ' + (3 + files.length + 4) + ' files, version ' + version);

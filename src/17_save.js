@@ -70,13 +70,13 @@
       let obj = JSON.parse(raw);
       if (!obj || typeof obj.v !== 'number' || typeof obj.lanterns !== 'object' || typeof obj.levels !== 'object') return null;
       while (obj.v < Save.VERSION) { const m = MIGRATIONS[obj.v]; if (!m) return null; obj = m(obj); }
-      if (obj.v !== Save.VERSION) return null;
+      if (obj.v > Save.VERSION) obj.v = Save.VERSION;     // a save from a newer build (a downgrade, a stale cache): apply() only reads known fields, so keep it rather than wipe it
       return obj;
     } catch (e) { try { Save.clear(); } catch (e2) { /* ignore */ } return null; }
   };
   Save.write = function (S) {
     // do not advance the stamp while an uncollected offline card is up: a lock / kill before COLLECT must not lose the earnings
-    const pending = S.ui && S.ui.card && S.ui.card.kind === 'offline' && !(S.ui.card.closing > 0);
+    const pending = (S.ui && S.ui.card && S.ui.card.kind === 'offline' && !(S.ui.card.closing > 0)) || !!(G.Title && G.Title.pending && G.Title.pending.show);   // ...or still waiting behind the title's PLAY
     if (!pending) S.savedAt = Date.now();
     G.Seasons.recordProgress(S);
     try { localStorage.setItem(Save.KEY, JSON.stringify(Save.serialize(S))); return true; }

@@ -28,6 +28,7 @@
   Cards.close = function (S) { if (S.ui.card && !(CARD.closing > 0)) CARD.closing = 0.001; };
   // shared by the settings popover and the title screen: 7 taps on a version label within 3 s toggle developer mode; the pips count up
   Cards.versionTap = function (S) {
+    if (!G.Dev.allowed) return;                          // store builds: the version label is just a label
     versionTaps++; versionTapT = 3; G.Bus.emit('ui:pip', evNone);
     if (versionTaps >= 7) { versionTaps = 0; G.Dev.toggle(S); }
     else if (versionTaps >= 4) G.HUD.banner(S, (7 - versionTaps) + ' MORE TAP' + (7 - versionTaps === 1 ? '' : 'S'));
@@ -53,7 +54,7 @@
       if (CARD.kind === 'reset') {
         if (y >= cy + 60 && y <= cy + 124) {
           if (x >= 70 && x <= 260) { CARD.closing = 0.001; }
-          else if (x >= 280 && x <= 470) { G.Save.clear(); S.ui.card = null; G.Game.newGame(); }
+          else if (x >= 280 && x <= 470) { G.Save.clear(); G.Seasons.resetCurrent(); S.ui.card = null; G.Game.newGame(); }
         }
         return true;
       }
@@ -139,7 +140,7 @@
         A.fillRRect(ctx, 160, cy + 76, 220, 64, 32, PAL.cta); A.text(ctx, 'COLLECT', 270, cy + 109, 26, PAL.cream);
       } else if (CARD.kind === 'reset') {
         A.text(ctx, T('resetTitle', 'Start a new inn?'), cx, CR.y0 + 60, 28, PAL.ink);
-        A.text(ctx, 'This season\'s lanterns and upgrades', cx, CR.y0 + 110, 18, PAL.stoneDark); A.text(ctx, 'will be gone for good.', cx, CR.y0 + 134, 18, PAL.stoneDark);
+        A.text(ctx, 'Every lantern, upgrade, koban and', cx, CR.y0 + 110, 18, PAL.stoneDark); A.text(ctx, 'Guestbook stamp will be gone for good.', cx, CR.y0 + 134, 18, PAL.stoneDark);
         A.fillRRect(ctx, 70, cy + 60, 190, 64, 32, PAL.rgba(PAL.ink, 0.12)); A.text(ctx, 'KEEP', 165, cy + 93, 24, PAL.ink);
         A.fillRRect(ctx, 280, cy + 60, 190, 64, 32, PAL.red); A.text(ctx, 'RESET', 375, cy + 93, 24, PAL.cream);
       } else if (CARD.kind === 'travel') {

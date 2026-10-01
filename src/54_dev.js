@@ -8,8 +8,11 @@
   const evNone = {};
   let note = '', noteT = 0;
 
+  // store builds (dist/, stamped by tools/pack.js) carry no cheat menu at all: no flag, no secret taps
+  Dev.allowed = typeof window !== 'undefined' && window.CAPY_DEV_BUILD !== false;
   function readFlag() {
     let on = false;
+    if (!Dev.allowed) return false;
     try { on = localStorage.getItem(Dev.KEY) === '1'; } catch (e) { on = false; }
     try { const m = /[?&]dev=(\d)/.exec(location.search); if (m) { on = m[1] === '1'; localStorage.setItem(Dev.KEY, on ? '1' : '0'); } } catch (e) { /* headless */ }
     return on;
@@ -35,7 +38,7 @@
     { label: 'Fill the gauge', run: S => { S.heat.v = S.heat.max; S.heat.graceT = 0; } },
     { label: 'Empty the gauge', run: S => { S.heat.v = 0; S.heat.graceT = 0; } },
     { label: () => 'Debug overlay: ' + (G.S && G.S.ui.debug ? 'ON' : 'OFF'), run: S => { S.ui.debug = !S.ui.debug; } },
-    { label: 'Reset this season', run: S => { G.Save.clear(); G.Cards.close(S); G.Game.newGame(); G.Game.S.mode = 'title'; } },
+    { label: 'Reset this season', run: S => { G.Save.clear(); G.Seasons.resetCurrent(); G.Cards.close(S); G.Game.newGame(); G.Game.S.mode = 'title'; } },
     { label: 'Wipe everything', run: S => { const L = G.Seasons.list; for (let i = 0; i < L.length; i++) { try { localStorage.removeItem(L[i].saveKey); } catch (e) { /* ignore */ } } G.Seasons.clearMeta(); if (G.SEASON.id !== 1) { G.Seasons.meta.season = 1; G.Seasons.writeMeta(); try { location.reload(); } catch (e) { /* ignore */ } } else { G.Cards.close(S); G.Game.newGame(); G.Game.S.mode = 'title'; } } }
   ];
   // "Go to season n" buttons come from the registry

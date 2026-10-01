@@ -19,6 +19,7 @@
   };
   Events.startNight = function (S) {
     const n = S.night; n.active = true; n.t = 0; n.count++; n.lit = {}; n.momo = false; S.stats.nights++;
+    n.next = S.t + C.NIGHT_T + C.NIGHT_EVERY;      // set now (not only at the end): a reload mid-night waits a normal interval instead of starting the night over
     G.CableCar.onNight(S);
     G.Bus.emit('night:start', evNone);
   };
