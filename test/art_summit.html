@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capy Springs - Summit art preview</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #2F3D47; color: #F6F1E7; font: 13px "Segoe UI", sans-serif; overflow: hidden; }
+  #bar { position: fixed; left: 0; right: 0; top: 0; display: flex; flex-wrap: wrap; gap: 3px; align-items: center; padding: 3px 4px; background: #1F2430; z-index: 2; }
+  #bar button { font: 11px "Segoe UI", sans-serif; padding: 2px 6px; border: 0; border-radius: 9px; background: #3E4B5E; color: #F6F1E7; cursor: pointer; }
+  #bar button.on { background: #E4572E; }
+  #bar span { margin-left: 6px; opacity: 0.7; }
+  #cv { position: fixed; left: 0; top: 30px; }
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<canvas id="cv"></canvas>
+<script>
+// Summit art preview (26_art_summit.js). Loads the game's own script list from index.html (plus the Summit art file right after 25_art_s2.js if the list
+// does not have it yet) WITHOUT booting the game: G.HEADLESS keeps 90_main.js from starting, so this page never touches the save in localStorage.
+// Views: summit (the whole band), top / mid / low / bottom (crops), phone (one phone screen at the top), pools, chars, icons. window.show(view, t) redraws.
+window.G = { HEADLESS: true, SEASON_ID: 1 };
+(function () {
+  const FALLBACK = ['src/00_config.js', 'src/01_palette.js', 'src/02_data_map.js', 'src/02_data_stations.js', 'src/02_data_lanterns.js', 'src/02_data_guests.js',
+    'src/03_pack_s2.js', 'src/04_seasons.js', 'src/10_util.js', 'src/11_bus.js', 'src/12_loop.js', 'src/13_canvas.js', 'src/14_camera.js', 'src/15_input.js', 'src/16_audio.js', 'src/17_save.js',
+    'src/20_art_shapes.js', 'src/21_art_chars.js', 'src/22_art_world.js', 'src/23_art_fx.js', 'src/24_fx.js', 'src/25_art_s2.js',
+    'src/30_state.js', 'src/31_player.js', 'src/32_trail.js', 'src/33_guests.js', 'src/34_cablecar.js', 'src/35_baths.js', 'src/36_heat.js',
+    'src/37_grove.js', 'src/38_stall.js', 'src/39_coins.js', 'src/40_lanterns.js', 'src/41_upgrades.js', 'src/42_helpers.js', 'src/43_events.js',
+    'src/44_hints.js', 'src/45_render.js', 'src/46_kaa.js', 'src/47_ridge.js', 'src/48_snow.js', 'src/49_lift.js', 'src/50_hud.js', 'src/51_sheet.js', 'src/52_cards.js', 'src/53_title.js', 'src/54_dev.js', 'src/55_goals.js', 'src/56_help.js', 'src/57_summit.js',
+    'src/90_main.js'];
+  const bust = '?t=' + Date.now();
+  function listFrom(html) { const l = Array.from(html.matchAll(/'(src\/[^']+\.js)'/g)).map(m => m[1]); return l.length > 10 ? l : null; }
+  function load(list, i, done) {
+    if (i >= list.length) return done();
+    const s = document.createElement('script'); s.src = '../' + list[i] + bust;
+    s.onload = () => load(list, i + 1, done);
+    s.onerror = () => { console.error('could not load ' + list[i]); load(list, i + 1, done); };
+    document.body.appendChild(s);
+  }
+  fetch('../index.html' + bust).then(r => r.text()).then(listFrom, () => null).then(list => {
+    list = list || FALLBACK.slice();
+    if (list.indexOf('src/26_art_summit.js') < 0) list.splice(list.indexOf('src/25_art_s2.js') + 1, 0, 'src/26_art_summit.js');
+    load(list, 0, init);
+  });
+
+  let ctx, cv, view = 'summit', T = 1.3, live = true;           // live: animate with the clock; show(view, t) freezes at t, show(view, 'live') resumes
+  const O = { awake: false, shrine: true, source: true, snowroll: true, burst: 0, frac: 0.6, crack: 0, yuzu: false, lowFx: false, guests: true };
+  const VIEWS = {     // [x, y, w, h, board]; every board is 540 wide so a narrow pane can crop it with look()
+    summit: [0, -1340, 540, 1300, 'world'], top: [0, -1340, 540, 420, 'world'], mid: [0, -1080, 540, 420, 'world'], low: [0, -800, 540, 420, 'world'], bottom: [0, -500, 540, 460, 'world'], phone: [0, -1340, 540, 960, 'world'],
+    pools: [0, 0, 540, 940, 'pools'], chars: [0, 0, 540, 960, 'chars'], icons: [0, 0, 540, 420, 'icons'], look: [0, -1340, 540, 400, 'world']
+  };
+  function init() {
+    const G = window.G;
+    if (!G.Art || !G.Art.W.summitTerrain) { document.title = 'ERROR: Summit art did not load'; return; }
+    cv = document.getElementById('cv'); ctx = cv.getContext('2d');
+    const bar = document.getElementById('bar');
+    for (const k in VIEWS) { if (k === 'look') continue; const b = document.createElement('button'); b.textContent = k; b.onclick = () => show(k); b.id = 'v_' + k; bar.appendChild(b); }
+    for (const k of ['awake', 'shrine', 'source', 'yuzu', 'lowFx']) { const b = document.createElement('button'); b.textContent = k; b.id = 'o_' + k; b.onclick = () => { O[k] = !O[k]; show(view); }; bar.appendChild(b); }
+    const lab = document.createElement('span'); lab.id = 'lab'; bar.appendChild(lab);
+    window.addEventListener('resize', () => show(view));
+    window.addEventListener('error', e => { document.title = 'ERROR: ' + e.message; });
+    show(view);
+    let last = 0; (function loop(ts) { if (live && ts - last > 50) { last = ts; T = ts / 1000; try { draw(); } catch (e) { fail(e); return; } } requestAnimationFrame(loop); })(0);
+  }
+  function fail(e) { console.error(e); document.title = 'ERROR: ' + (e.message || e); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#D93A3A'; ctx.fillRect(0, 0, cv.width, 40); ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif'; ctx.fillText('FRAME ERROR: ' + (e.message || e), 10, 26); }
+  // window.show('mid', 2.5) redraws one view at a fixed time (the browser pane may not run requestAnimationFrame between calls); opts toggle the state
+  window.show = function (v, t, opts) {
+    if (v) view = v; if (typeof t === 'number') { T = t; live = false; } else if (t === 'live') live = true; if (opts) Object.assign(O, opts);
+    for (const k in VIEWS) { const b = document.getElementById('v_' + k); if (b) b.className = k === view ? 'on' : ''; }
+    for (const k of ['awake', 'shrine', 'source', 'yuzu', 'lowFx']) { const b = document.getElementById('o_' + k); if (b) b.className = O[k] ? 'on' : ''; }
+    try { draw(); } catch (e) { fail(e); return 'error: ' + e.message; }
+    return 'ok ' + view + ' t=' + T.toFixed(2);
+  };
+  window.O = O;
+  // window.look(x, y, w, h, t, board): any rect of a board ('world' by default, or 'pools' / 'chars' / 'icons'), fitted to the window
+  window.look = function (x, y, w, h, t, board) { VIEWS.look = [x, y, w, h, board || 'world']; return window.show('look', t); };
+  function draw() {
+    const bh = document.getElementById('bar').offsetHeight, dpr = window.devicePixelRatio || 1, W = window.innerWidth, H = window.innerHeight - bh;
+    cv.style.top = bh + 'px';
+    if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.width = W + 'px'; cv.style.height = H + 'px'; }
+    const v = VIEWS[view], s = Math.min(cv.width / v[2], cv.height / v[3]);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#2F3D47'; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.setTransform(s, 0, 0, s, -v[0] * s, -v[1] * s);
+    G.S = fakeS();                                                       // Ch.guest and W.mist read G.S (settings.lowFx, built.summit)
+    ctx.save(); ctx.beginPath(); ctx.rect(v[0], v[1], v[2], v[3]); ctx.clip();
+    const k = v[4]; if (k === 'pools') drawPools(ctx, T); else if (k === 'chars') drawChars(ctx, T); else if (k === 'icons') drawIcons(ctx, T); else drawWorld(ctx, T);
+    ctx.restore();
+    document.getElementById('lab').textContent = 't=' + T.toFixed(2) + '  scale ' + (s / dpr).toFixed(2) + 'x css';
+  }
+
+  // ---- the whole Summit as the game would draw it: static layer, ground pass, a hand-sorted pass, the mist ----
+  function fakeS() { return { built: { summit: true, ridge: true, shrine: O.shrine, awake: O.awake, source: O.source, snowroll: O.snowroll }, settings: { lowFx: O.lowFx }, t: T }; }
+  const pose = () => G.Art.Ch.resetPose(G.Art.Ch.POSE);
+  function drawWorld(ctx, t) {
+    const G = window.G, W = G.Art.W, Ch = G.Art.Ch, D = G.DATA, MAP = D.MAP, SU = MAP.SUMMIT, TR = MAP.TROUPE, S = fakeS();
+    W.summitTerrain(ctx, MAP.STATIC_Y0, SU.y1); W.ridgeTerrain(ctx, SU.y1, MAP.RIDGE.y1); W.lane(ctx); W.ridgeDecor(ctx);
+    W.summitDecor(ctx, S);
+    const src = D.BATHS.find(d => d.id === 'source'), snow = D.BATHS.find(d => d.id === 'snowroll');
+    if (S.built.source) W.deckPlate(ctx, src); if (S.built.snowroll) W.deckPlate(ctx, snow);
+    // ground pass: offering steps, the two pools with guests sunk in them
+    const L = D.LANTERNS.filter(d => d.y < SU.y1 + 60);
+    for (const d of L) W.step(ctx, d.x, d.y, 0.4, true, t);
+    const burst = O.burst || (((t % 12) > 8) ? 1 : 0), frac = O.burst ? 1 : (t % 12) / 8;
+    if (S.built.source) {
+      W.water(ctx, src, { cold: false, yuzu: O.yuzu, lowFx: O.lowFx, burst, crack: O.crack, awake: O.awake }, t);
+      if (O.guests) for (let i = 0; i < 8; i++) { const p = pose(), sp = slotPos(src, i, 8); p.x = sp.x; p.y = sp.y; p.inWater = src.water; p.t = t; p.face = i & 2 ? -1 : 1; p.lid = i % 4; p.hat = i === 3 ? 'yuzu' : null; Ch.guest(ctx, p, 'monkey'); }
+      if (O.yuzu) W.floatingYuzu(ctx, src, t);
+    }
+    if (S.built.snowroll) {
+      W.water(ctx, snow, { cold: false, yuzu: O.yuzu, lowFx: O.lowFx }, t);
+      if (O.guests) for (let i = 0; i < 3; i++) { const p = pose(), sp = slotPos(snow, i, 3); p.x = sp.x; p.y = sp.y; p.inWater = snow.water; p.t = t; p.face = 1; p.hat = i === 1 ? 'yuzu' : null; Ch.guest(ctx, p, 'monkey'); }
+      if (O.yuzu) W.floatingYuzu(ctx, snow, t);
+    }
+    // sorted pass
+    const list = [];
+    list.push({ y: TR.whistle.y, f: () => W.bellPost(ctx, TR.whistle.x, TR.whistle.y, (t % 20) / 20, 0) });
+    if (S.built.source && src.coneAt) list.push({ y: src.coneAt.y, f: () => W.geyserCone(ctx, src.coneAt.x, src.coneAt.y, frac, burst, t, O.lowFx) });
+    for (const d of L) list.push({ y: d.y - 38, f: () => W.lantern(ctx, d.x, d.y - 38, 0.4, false, t, 0, true) });
+    if (O.guests) {
+      for (let i = 0; i < 6; i++) { const x = 150 + i * 46, y = -1186 + (i & 1) * 18; list.push({ y, f: () => { const p = pose(); p.x = x; p.y = y; p.t = t; p.face = i & 1 ? -1 : 1; p.moving = i === 2; p.walk = t * 3; Ch.guest(ctx, p, 'monkey'); } }); }
+      list.push({ y: -1010, f: () => { const p = pose(); p.x = 270; p.y = -1010; p.t = t; p.moving = true; p.walk = t * 4; p.dir = 'up'; Ch.kit(ctx, p, S); } });
+      for (let i = 0; i < 3; i++) list.push({ y: -620 + i * 30, f: () => { const p = pose(); p.x = 274 - i * 6; p.y = -620 + i * 30; p.t = t; p.moving = true; p.walk = t * 3 + i; p.dir = 'down'; Ch.guest(ctx, p, 'monkey'); } });
+      if (O.awake) list.push({ y: SU.hut.seat.y, f: () => { const p = pose(); p.x = SU.hut.seat.x; p.y = SU.hut.seat.y; p.t = t; p.face = 1; p.pose = 'sit'; Ch.grandma(ctx, p); } });
+      if (O.shrine) list.push({ y: SU.hut.perch.y, f: () => Ch.kaa(ctx, SU.hut.perch.x, SU.hut.perch.y, 0, t, 0) });
+    }
+    list.sort((a, b) => a.y - b.y); for (const d of list) d.f();
+    G.S = S; W.mist(ctx, MAP.SUMMIT.y0, 1300);
+  }
+  function slotPos(def, i, n) {   // mirrors Baths.slotPos (35_baths.js)
+    const w = def.water, inset = 24;
+    if (n <= 4) return { y: w.y + 8, x: n === 1 ? w.x : w.x - w.w / 2 + inset + (w.w - 2 * inset) * i / (n - 1) };
+    const back = (i & 1) === 1, row = back ? Math.floor(i / 2) : i / 2, rowN = back ? Math.floor(n / 2) : Math.ceil(n / 2), rinset = inset + (back ? 18 : 0);
+    return { y: back ? w.y - 6 : w.y + 16, x: rowN === 1 ? w.x : w.x - w.w / 2 + rinset + (w.w - 2 * rinset) * row / (rowN - 1) };
+  }
+
+  // ---- pools board: the Source at rest / bursting / gold + awake / cracking ice, the Snow Roll plain / yuzu, the cone at four moments ----
+  function shifted(def, dx, dy) { const m = r => r && Object.assign({}, r, { x: r.x + dx, y: r.y + dy }); return Object.assign({}, def, { deck: m(def.deck), water: m(def.water), coneAt: m(def.coneAt) }); }
+  function label(ctx, s, x, y) { G.Art.S.text(ctx, s, x, y, 13, '#F6F1E7', { align: 'left' }); }
+  function tag(ctx, s, x, y) { ctx.fillStyle = 'rgba(31,36,48,0.75)'; ctx.fillRect(x - 4, y - 10, s.length * 7 + 8, 19); label(ctx, s, x, y); }
+  function drawPools(ctx, t) {   // 540 x 940: four Source states (2 x 2), the Snow Roll plain / yuzu, the cone at four moments
+    const G = window.G, W = G.Art.W, Ch = G.Art.Ch, D = G.DATA;
+    ctx.fillStyle = '#D9E2E9'; ctx.fillRect(0, 0, 540, 940);
+    const src = D.BATHS.find(d => d.id === 'source'), snow = D.BATHS.find(d => d.id === 'snowroll');
+    const cells = [['at rest', {}], ['burst 1', { burst: 1 }], ['yuzu + awake', { yuzu: true, awake: true }], ['crack ' + (O.crack || 0.35), { crack: O.crack || 0.35 }]];
+    for (let i = 0; i < cells.length; i++) {
+      const cx = 135 + (i & 1) * 270, cy = 120 + (i >> 1) * 230, def = shifted(src, cx - src.deck.x, cy - src.deck.y), st = Object.assign({ cold: false, yuzu: false, lowFx: O.lowFx, burst: 0, crack: 0, awake: false }, cells[i][1]);
+      W.deckPlate(ctx, def); W.water(ctx, def, st, t);
+      for (let k = 0; k < 5; k++) { const p = pose(), sp = slotPos(def, k, 5); p.x = sp.x; p.y = sp.y; p.inWater = def.water; p.t = t; p.face = 1; p.lid = k === 4 ? 3 : 0; Ch.guest(ctx, p, 'monkey'); }
+      if (st.yuzu) W.floatingYuzu(ctx, def, t);
+      tag(ctx, cells[i][0], cx - 110, cy - 104);
+    }
+    for (let i = 0; i < 2; i++) {
+      const cx = 125 + i * 280, cy = 590, def = shifted(snow, cx - snow.deck.x, cy - snow.deck.y), st = { cold: false, yuzu: i === 1, lowFx: O.lowFx };
+      W.deckPlate(ctx, def); W.water(ctx, def, st, t);
+      for (let k = 0; k < 3; k++) { if (i === 1 && k === 1) continue; const p = pose(), sp = slotPos(def, k, 3); p.x = sp.x; p.y = sp.y; p.inWater = def.water; p.t = t; p.face = 1; p.hat = k === 2 ? 'yuzu' : null; Ch.guest(ctx, p, 'monkey'); }
+      W.floatingYuzu(ctx, def, t);
+      tag(ctx, i ? 'snow roll yuzu' : 'snow roll', cx - 60, 494);
+    }
+    const cones = [['frac 0.5', 0.5, 0], ['frac 0.95', 0.95, 0], ['burst', 1, 1], ['burst low', 1, 1]];
+    for (let i = 0; i < cones.length; i++) { const x = 70 + i * 133, y = 900; W.geyserCone(ctx, x, y, cones[i][1], cones[i][2], t, i === 3); tag(ctx, cones[i][0], x - 30, 924); }
+  }
+
+  // ---- characters at 2x: the monkey guest, Grandma in every pose, Kit sitting, Tsuru flying (and plain references for scale) ----
+  function drawChars(ctx, t) {   // 540 x 960: five rows of five at 2x on snow (rows 1-2 the monkey, 3-4 Grandma, Kit sit, Tsuru fly), then a 1x row
+    const G = window.G, Ch = G.Art.Ch, PAL = G.PAL;
+    ctx.fillStyle = '#D9E2E9'; ctx.fillRect(0, 0, 540, 960); ctx.fillStyle = '#A9B6BF'; ctx.fillRect(0, 380, 540, 380); ctx.fillStyle = '#3F7D5A'; ctx.fillRect(0, 760, 540, 200);
+    const fakeKitS = {};
+    const all = [
+      ['momo ref', p => Ch.momo(ctx, p)], ['monkey', p => Ch.monkey(ctx, p)], ['walk', p => { p.moving = true; p.walk = t * 3; Ch.monkey(ctx, p); }], ['yuzu hat', p => { p.hat = 'yuzu'; Ch.monkey(ctx, p); }],
+      ['wave', p => { p.pose = 'wave'; p.dir = 'down'; Ch.monkey(ctx, p); }],
+      ['shiver', p => { p.shiver = true; p.tint = { color: PAL.waterCold, alpha: 0.3 }; Ch.monkey(ctx, p); }], ['down', p => { p.dir = 'down'; Ch.monkey(ctx, p); }],
+      ['up', p => { p.dir = 'up'; Ch.monkey(ctx, p); }], ['capy ref', p => Ch.capy(ctx, p)], ['kit ref', p => Ch.kit(ctx, p, fakeKitS)],
+      ['grandma', p => Ch.grandma(ctx, p)], ['walk', p => { p.moving = true; p.walk = t * 2.5; Ch.grandma(ctx, p); }], ['wave', p => { p.pose = 'wave'; p.poseT = (t * 0.8) % 1; Ch.grandma(ctx, p); }],
+      ['ring', p => { p.pose = 'ring'; p.poseT = (t * 0.7) % 1; Ch.grandma(ctx, p); }], ['down', p => { p.dir = 'down'; Ch.grandma(ctx, p); }],
+      ['sit', p => { p.pose = 'sit'; Ch.grandma(ctx, p); }], ['sitwave', p => { p.pose = 'sitwave'; p.poseT = (t * 0.8) % 1; Ch.grandma(ctx, p); }],
+      ['kit sit', p => { p.pose = 'sit'; Ch.kit(ctx, p, fakeKitS); }], ['tsuru fly', p => { p.pose = 'fly'; Ch.tsuru(ctx, p); }], ['tsuru ref', p => Ch.tsuru(ctx, p)]
+    ];
+    for (let i = 0; i < all.length; i++) {
+      const x = 56 + (i % 5) * 107, y = 160 + Math.floor(i / 5) * 190, p = pose(); p.x = x; p.y = y; p.sx = p.sy = 2; p.t = t; p.face = 1; all[i][1](p);
+      tag(ctx, all[i][0], x - 34, y + 22);
+    }
+    // the phone's own scale (1x): lids 0-3, a monkey in hat, grandma, grandma sit, kit sit, tsuru fly
+    for (let i = 0; i < 9; i++) { const p = pose(); p.x = 34 + i * 58; p.y = 860; p.t = t; p.face = 1; if (i < 4) { p.lid = i; Ch.monkey(ctx, p); } else if (i === 4) { p.hat = 'yuzu'; Ch.monkey(ctx, p); } else if (i === 5) Ch.grandma(ctx, p); else if (i === 6) { p.pose = 'sit'; Ch.grandma(ctx, p); } else if (i === 7) { p.pose = 'sit'; Ch.kit(ctx, p, fakeKitS); } else { p.pose = 'fly'; Ch.tsuru(ctx, p); } }
+    tag(ctx, '1x: lids 0-3, hat, grandma, sit, kit sit, fly', 20, 900);
+  }
+  function drawIcons(ctx, t) {   // 540 x 420: each icon at 72 and 24 px, in a bubble, in a pill
+    const G = window.G, S_ = G.Art.S, PAL = G.PAL;
+    ctx.fillStyle = '#3F7D5A'; ctx.fillRect(0, 0, 540, 420);
+    const names = ['monkey', 'capy', 'plunge', 'source', 'momo', 'kit', 'bath', 'snow'];
+    for (let i = 0; i < names.length; i++) {
+      const x = 70 + (i % 4) * 133, y = (i >> 2) * 210;
+      S_.icon(ctx, names[i], x, y + 50, 72);
+      S_.icon(ctx, names[i], x - 30, y + 125, 24);
+      S_.bubble(ctx, x + 22, y + 120, 36, 32, true); S_.icon(ctx, names[i], x + 22, y + 119, 24);
+      S_.pill(ctx, x, y + 170, 70, 24, '12', 16, PAL.cream, PAL.ink, names[i]);
+      tag(ctx, names[i], x - 28, y + 198);
+    }
+  }
+})();
+</script>
+</body>
+</html>

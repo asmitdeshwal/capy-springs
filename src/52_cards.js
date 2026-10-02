@@ -92,7 +92,7 @@
       if (row === 0) { S.settings.sound = !S.settings.sound; G.Audio.setEnabled(S, S.settings.sound); }
       else if (row === 1) { S.settings.haptics = S.settings.haptics === false ? true : false; }
       else if (row === 2) { S.settings.shakeFlash = !S.settings.shakeFlash; }
-      else if (row === 3) { S.settings.lowFx = !S.settings.lowFx; G.Render.markStaticDirty(); }
+      else if (row === 3) { S.settings.lowFx = !S.settings.lowFx; G.Canvas.resize(); G.Render.markStaticDirty(); }   // the pixel ratio cap changes with it
       else if (y >= r.y + 244) {
         const b = SET.buttons[Math.floor((y - (r.y + 244)) / 48)];
         if (b === 'Guestbook') { Cards.showGoals(S); }

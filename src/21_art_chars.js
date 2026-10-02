@@ -226,7 +226,33 @@
     if (ring > 0) A().ring(ctx, x, y - 22, 30, ring, 4, P.cta, P.rgba(P.cream, 0.5));
   };
 
-  Ch.guest = function (ctx, p, kind) { const d = G.DATA.GUESTS[kind], fn = (d && d.art && Ch[d.art]) || (kind === 'duck' ? Ch.duck : Ch.capy); fn(ctx, p); };
+  // Low effects only: a walking or waiting guest is baked once per (kind, facing, direction, 4 walk frames, hat, lids) into a small canvas and
+  // blitted, so a crowded frame on a weak phone costs one drawImage per guest instead of ~90 path operations (normal effects are untouched)
+  const SPR = { map: new Map(), s: 0 }, KINDS = {}, BAKE = Object.assign({}, Ch.POSE), SW = 76, SH = 84, AX = 38, AY = 70;
+  let kindN = 0;
+  function sprite(kind, fn, p) {
+    const s = (G.Render && G.Render.sdpr) || 1;
+    if (s !== SPR.s) { SPR.map.clear(); SPR.s = s; }
+    const frame = p.moving ? (Math.floor((((p.walk % 1) + 1) % 1) * 4) & 3) : 4;
+    const k = KINDS[kind] || (KINDS[kind] = ++kindN);
+    const key = ((((k * 2 + (p.face < 0 ? 1 : 0)) * 3 + (p.dir === 'up' ? 1 : p.dir === 'down' ? 2 : 0)) * 5 + frame) * 3 + (p.hat ? (p.hat === 'yuzu' ? 1 : 2) : 0)) * 4 + (p.lid | 0);
+    let cv = SPR.map.get(key);
+    if (!cv) {
+      if (SPR.map.size > 240) SPR.map.clear();
+      cv = document.createElement('canvas'); cv.width = Math.ceil(SW * s); cv.height = Math.ceil(SH * s);
+      const c = cv.getContext('2d'); c.setTransform(s, 0, 0, s, AX * s, AY * s);
+      const b = Ch.resetPose(BAKE); b.x = 0; b.y = 0; b.face = p.face; b.dir = p.dir; b.moving = p.moving; b.walk = frame < 4 ? frame / 4 + 0.125 : 0; b.hat = p.hat; b.lid = p.lid | 0; b.t = 0;
+      fn(c, b); SPR.map.set(key, cv);
+    }
+    return cv;
+  }
+  Ch.guest = function (ctx, p, kind) {
+    const d = G.DATA.GUESTS[kind], fn = (d && d.art && Ch[d.art]) || (kind === 'duck' ? Ch.duck : Ch.capy);
+    if (!(G.S && G.S.settings.lowFx) || P === INK || p.inWater || p.tint || p.pose || p.vip || p.scarf || p.shiver || p.carry || (p.z || 0) > 0.5 || p.alpha !== 1) { fn(ctx, p); return; }
+    const cv = sprite(kind, fn, p);
+    if (p.sx !== 1 || p.sy !== 1) { ctx.save(); ctx.translate(p.x, p.y); ctx.scale(p.sx, p.sy); ctx.drawImage(cv, -AX, -AY, SW, SH); ctx.restore(); }
+    else ctx.drawImage(cv, p.x - AX, p.y - AY, SW, SH);
+  };
 
   // bubble above a guest: p.bubble = bath | mochi | snow | sweat | heart; p.bubbleScale grows the sweat drop
   Ch.bubble = function (ctx, p) {

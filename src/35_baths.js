@@ -180,7 +180,7 @@
     const b = S.baths[o.id], gy = o.def.geyser, W = G.Art.W, c = o.def.coneAt;
     if (!W.geyserCone) return;
     W.geyserCone(ctx, c.x, c.y, b.burstT > 0 ? 1 : U.clamp(1 - b.geyserT / gy.every, 0, 1), b.burstT > 0 ? Math.min(1, b.burstT / 0.6, (gy.dur - b.burstT) / 0.25 + 0.2) : 0, S.t, !!S.settings.lowFx);
-    if (b.burstT <= 0 && b.geyserT <= 3 && b.geyserT > 0) G.Art.S.pill(ctx, c.x, c.y - 96, 40, 30, String(Math.ceil(b.geyserT)), 20, PAL.cream, PAL.cta, null);   // 3, 2, 1
+    if (b.burstT <= 0 && b.geyserT <= 3 && b.geyserT > 0) G.Art.S.pill(ctx, c.x - 72, c.y - 40, 40, 32, String(Math.ceil(b.geyserT)), 21, PAL.cream, PAL.cta, null);   // 3, 2, 1 (left of the cone, clear of the HUD)
   }
   function drawGong(ctx, o, S) { const b = S.baths[o.id], d = o.def; G.Art.W.gong(ctx, d.gongAt.x, d.gongAt.y, 1 - b.gongT / d.gong, b.session, S.t); }
   function drawTsuru(ctx, o, S) {

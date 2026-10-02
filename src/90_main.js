@@ -15,6 +15,8 @@
   }
   Game.newGame = function () {
     const S = G.State.create();
+    // a phone that reports 2 GB of memory or less (Android Chrome; iPhones never report it) starts on Low effects; Settings can turn it off
+    if (!Game.headless) { try { const m = navigator.deviceMemory; if (m && m <= 2) S.settings.lowFx = true; } catch (e) { /* not reported */ } }
     initSystems(S);
     S.mode = 'intro'; S.introT = 0;
     if (Game.debugFlag) S.ui.debug = true;
@@ -44,6 +46,7 @@
     if (obj) Game.loadGame(obj); else Game.newGame();
     if (Game.headless) return Game.S;
     Game.S.mode = 'title'; G.Title.t = 0;                // the browser always starts on the title screen
+    if (Game.S.settings.lowFx) G.Canvas.resize();         // Low effects caps the pixel ratio: size the canvas for it now
     G.Loop.start(Game.step, Game.frame);
     try { const b = document.getElementById('boot'); if (b) { b.classList.add('gone'); setTimeout(() => { if (b.parentNode) b.parentNode.removeChild(b); }, 450); } } catch (e) { /* no boot screen */ }
     document.addEventListener('visibilitychange', () => {

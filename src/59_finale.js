@@ -26,7 +26,7 @@
     S.ui.sheet = null; S.ui.settings = false; S.ui.card = null; S.ui.banner = null;
     S.mode = 'finale'; popDone = resume; splashN = 0; credits = null; chimeT = 0;
     const st = S.story; for (let i = 0; i < st.queue.length; i++) st.seen[st.queue[i]] = true; st.queue.length = 0; st.cur = null;   // Grandma has said it all in person
-    const src = S.baths.source; if (src && resume) { src.burstT = 999; src.yuzuT = 999; }
+    const src = S.baths.source; if (src && resume) { src.burstT = 999; }
     buildWave(S); buildCast(S);
     if (G.Render.markStaticDirty) G.Render.markStaticDirty();                 // the waterfall thaws, the hut door glows
     G.Bus.emit('finale:start', EV);
@@ -63,7 +63,7 @@
   function actor(who, keys, o) { const a = Object.assign({ who, keys, plopAt: 0, slot: null, carry: null, hat: false, face: 1, sortY: 0, draw: drawActor, landed: false, x: 0, y: 0, z: 0, pose: null, moving: false, vis: false, inWater: false, fly: 0 }, o || {}); return a; }
   function buildCast(S) {
     CAST.length = 0;
-    const seat = SU.hut.seat, door = SU.hut.door, w = S.baths.source.def.water, kx = S.kit.x, ky = S.kit.y;
+    const seat = SU.hut.seat, door = SU.hut.door, w = S.baths.source.def.water, wk = G.Lanterns.def('wake'), kx = wk.x, ky = wk.y;   // Kit starts on the Wake step (also for a replay)
     const slots = []; for (let r = 0; r < 3; r++) for (let c = 0; c < 6; c++) slots.push({ x: w.x - w.w / 2 + 22 + c * (w.w - 44) / 5 + (r & 1) * 10, y: w.y - 22 + r * 22 });
     let si = 0; const slot = () => slots[(si++) % slots.length];
     CAST.push(actor('kit', [[0, kx, ky, 'pump'], [3, kx, ky], [T.gather + 4, kx, ky], [T.gather + 7, seat.x + 2, seat.y - 70, 'wave'], [T.sit, seat.x + 2, seat.y - 70], [T.sit + 0.01, seat.x, seat.y + 44, 'sit']], { face: 1 }));
@@ -129,7 +129,7 @@
     if (at(T.crack)) { Au.play('rumble'); Cam.shake(6, 2.0); }
     if (t >= T.crack && t < T.burst) Finale.crack = (t - T.crack) / (T.burst - T.crack);
     if (at(T.burst)) {
-      Finale.crack = 1; if (src) { src.burstT = 999; src.yuzuT = 999; }
+      Finale.crack = 1; if (src) { src.burstT = 999; }
       const w = src.def.water; FX.confetti(S, w.x - 60, w.y - 40, C.CONFETTI_BIG); FX.confetti(S, w.x + 60, w.y - 40, C.CONFETTI_BIG); FX.flash(S, 0.35); Cam.shake(8, 0.5);
       FX.ring(S, w.x, w.y, 200); FX.droplets(S, w.x, w.y - 20, 30); Au.play('geyser'); Au.play('fanfare');
     }
@@ -156,7 +156,7 @@
     if (t > T.end + 0.6 && Math.abs(x - 270) <= 170 && Math.abs(y - (H * 0.5 + 96)) <= 40) Finale.end(S);
   };
   function skipTo(S, tt) {
-    const src = S.baths.source; Finale.crack = 1; if (src) { src.burstT = 999; src.yuzuT = 999; }
+    const src = S.baths.source; Finale.crack = 1; if (src) { src.burstT = 999; }
     for (let i = 0; i < WAVE.length; i++) WAVE[i].done = true;
     Finale.t = tt; popDone = true; for (let i = 0; i < CAST.length; i++) place(CAST[i], tt);
   }

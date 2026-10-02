@@ -30,7 +30,7 @@
     const vg = ctx.createLinearGradient(0, y0, 0, y1); vg.addColorStop(0, PAL.rgba(PAL.ink, 0.12)); vg.addColorStop(0.55, PAL.rgba(PAL.ink, 0.03)); vg.addColorStop(1, PAL.rgba(PAL.cream, 0.05));
     ctx.fillStyle = vg; ctx.fillRect(0, y0, MAP.W, y1 - y0);         // light falls toward the platform, the slope darkens toward the mountain
     W.grain(ctx, 0, y0, MAP.W, y1 - y0);
-    for (let i = 0; i < 14; i++) {                                  // flower patches: three blooms and a leaf
+    for (let i = 0; i < (G.Golden && G.Golden.cur === 3 ? 0 : 14); i++) {   // flower patches: three blooms and a leaf (none under winter snow)
       const x = U.hash(i, 43) * 540, y = y0 + U.hash(i, 44) * (y1 - y0), col = (i % 3 === 0) ? '#F2A7B6' : (i % 3 === 1) ? PAL.cream : '#F6D27A';
       S_.ellipse(ctx, x + 6, y + 3, 7, 3, g1);
       for (let k = 0; k < 3; k++) { const fx = x + (k - 1) * 9, fy = y - (k & 1) * 5; S_.circle(ctx, fx, fy, 4, col); S_.circle(ctx, fx, fy, 1.5, PAL.amberDeep); }
