@@ -47,7 +47,7 @@
     G.Bus.emit('story:note', EV);
   };
   const EV = {};
-  function layout() { R.y0 = (G.Canvas.st || 0) + 214; }
+  function layout() { R.y0 = (G.Canvas.st || 0) + 244; }         // below the gear and the Guestbook chip (Kaa stands on the top edge)
   Story.tap = function (S, x, y) {
     const st = S.story; if (!st.cur) return false;
     layout(); if (x < R.x0 || x > R.x1 || y < R.y0 - 20 || y > R.y0 + R.h) return false;

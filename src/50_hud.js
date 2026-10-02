@@ -25,7 +25,7 @@
     R.dragHint = { x: 270, y: 0.78 * H };
   };
   HUD.init = function (S) {
-    HUD.S = S; inFlight = 0; pipPulse = 0; rushBannerShown = false; BANNER.t = 0;
+    HUD.S = S; inFlight = 0; pipPulse = 0; rushBannerShown = false; BANNER.t = 0; QUEUE.length = 0;
     if (!HUD.fly) HUD.fly = U.pool(C.HUD_FLY_POOL, flyItem);
     HUD.fly.clear();
     HUD.layout();
@@ -54,7 +54,12 @@
   };
   HUD.flight = function (x0, y0, value, delay) { const f = HUD.fly.alloc(); if (!f) { HUD.S.ui.coinBounce = 1; return; } f.x0 = x0; f.y0 = y0; f.t = 0; f.value = value; f.delay = delay || 0; inFlight += value; };
   HUD.offlineRain = function (S, value) { const n = Math.min(20, Math.max(1, value)); for (let i = 0; i < n; i++) HUD.flight(270 + (U.hash(i, 1) - 0.5) * 300, G.Canvas.H * 0.5 + (U.hash(i, 2) - 0.5) * 200, i === n - 1 ? value - Math.floor(value / n) * (n - 1) : Math.floor(value / n), i * 0.04); };
-  HUD.banner = function (S, text, sub) { BANNER.text = text; BANNER.sub = sub || null; BANNER.t = 0; S.ui.banner = BANNER; };
+  // a banner that arrives while another has only just appeared waits its turn (at most three wait; the same text never twice)
+  const QUEUE = [];
+  HUD.banner = function (S, text, sub) {
+    if (S.ui.banner && BANNER.t < 1.0 && BANNER.text !== text) { if (QUEUE.length < 3 && !QUEUE.some(q => q.text === text)) QUEUE.push({ text, sub: sub || null }); return; }
+    BANNER.text = text; BANNER.sub = sub || null; BANNER.t = 0; S.ui.banner = BANNER;
+  };
   HUD.tapGear = function (S, x, y) { const r = HUD.R.gearHit; if (x < r.x0 || x > r.x1 || y < r.y0 || y > r.y1) return false; G.Cards.toggleSettings(S); return true; };
   HUD.farTap = function (S, id) { PILL.bounce = 1; if (!S.ui.arrowFlash) S.ui.arrowFlash = { id, t: C.ARROW_FLASH_T }; else { S.ui.arrowFlash.id = id; S.ui.arrowFlash.t = C.ARROW_FLASH_T; } G.Bus.emit('ui:pip', evNone); };
   HUD.levelPillFor = function (S) {
@@ -90,6 +95,7 @@
     if (ui.kettleSlide > 0) ui.kettleSlide = Math.max(0, ui.kettleSlide - dt / 0.4);
     ui.ribbon += ((S.heat.rush ? 1 : 0) - ui.ribbon) * Math.min(1, dt * 8);
     if (ui.banner) { BANNER.t += dt; if (BANNER.t >= C.BANNER_T + (BANNER.sub ? 1.2 : 0)) ui.banner = null; }
+    if (!ui.banner && QUEUE.length) { const q = QUEUE.shift(); HUD.banner(S, q.text, q.sub); }
     // one-time captions: the boiler gauge when it slides in, "in line" by the pips on the first pickup
     if (ui.kettleSlide > 0 && !S.tutorial.X_GAUGE) { S.tutorial.X_GAUGE = 1; kettleCapT = 6; }
     if (kettleCapT > 0) kettleCapT -= dt;

@@ -29,7 +29,7 @@
     const size = 192, cv = document.createElement('canvas'); cv.width = size; cv.height = size;
     const c = cv.getContext('2d');
     const g = c.createRadialGradient(size / 2, size / 2, 4, size / 2, size / 2, size / 2);
-    g.addColorStop(0, PAL.rgba(PAL.amber, 0.9)); g.addColorStop(0.45, PAL.rgba(PAL.amber, 0.35)); g.addColorStop(1, PAL.rgba(PAL.amber, 0));
+    g.addColorStop(0, PAL.rgba(PAL.coinHi, 0.9)); g.addColorStop(0.35, PAL.rgba(PAL.amber, 0.5)); g.addColorStop(0.7, PAL.rgba(PAL.amberDeep, 0.18)); g.addColorStop(1, PAL.rgba(PAL.amberDeep, 0));   // a flame's warm falloff, not a flat disc
     c.fillStyle = g; c.fillRect(0, 0, size, size);
     Render.haloSprite = cv;
   }

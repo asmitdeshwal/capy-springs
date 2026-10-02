@@ -7,12 +7,19 @@
   const FX = Art.FX = {};
   const TAU = Math.PI * 2;
 
+  // one soft puff baked once (a radial fade), blitted for steam, dust and puffs: plumes instead of hard discs, and cheaper than an arc
+  let SOFT = null;
+  FX.soft = function () {
+    if (SOFT) return SOFT;
+    const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+    const gr = g.createRadialGradient(32, 32, 2, 32, 32, 32); gr.addColorStop(0, 'rgba(255,253,246,0.95)'); gr.addColorStop(0.5, 'rgba(250,246,236,0.55)'); gr.addColorStop(1, 'rgba(246,241,231,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 64, 64); SOFT = c; return SOFT;
+  };
+  function puff(ctx, x, y, r, a) { const d = r * 2; ctx.globalAlpha = Math.min(1, a); ctx.drawImage(FX.soft(), x - r, y - r, d, d); ctx.globalAlpha = 1; }
   FX.steam = function (ctx, p) {
     const k = p.t / p.life, a = p.alpha * (1 - k);
     if (a <= 0.01) return;
-    ctx.globalAlpha = a; ctx.fillStyle = PAL.cream;
-    ctx.beginPath(); ctx.arc(p.x + Math.sin(p.t * 2 + p.drift) * 6, p.y - p.t * C.STEAM_RISE, p.r * (0.7 + k * 0.6), 0, TAU); ctx.fill();
-    ctx.globalAlpha = 1;
+    puff(ctx, p.x + Math.sin(p.t * 2 + p.drift) * 6, p.y - p.t * C.STEAM_RISE, p.r * (0.7 + k * 0.6) * 1.9, a * 1.3);
   };
   FX.ripple = function (ctx, r) {
     const k = r.t / r.life, rad = r.r0 + (r.r1 - r.r0) * k, a = 0.5 * (1 - k);
@@ -25,8 +32,8 @@
   FX.part = function (ctx, p) {
     const k = p.t / p.life, A = S();
     switch (p.kind) {
-      case 'dust': ctx.globalAlpha = 0.35 * (1 - k); A.circle(ctx, p.x, p.y, p.size * (1 + k * 1.5), PAL.cream); ctx.globalAlpha = 1; break;
-      case 'puff': ctx.globalAlpha = 0.6 * (1 - k); A.circle(ctx, p.x, p.y - p.z, p.size * (0.6 + k), PAL.cream); ctx.globalAlpha = 1; break;
+      case 'dust': puff(ctx, p.x, p.y, p.size * (1 + k * 1.5) * 1.8, 0.45 * (1 - k)); break;
+      case 'puff': puff(ctx, p.x, p.y - p.z, p.size * (0.6 + k) * 1.9, 0.8 * (1 - k)); break;
       case 'confetti':
         ctx.globalAlpha = k > 0.7 ? (1 - k) / 0.3 : 1; ctx.fillStyle = p.color || PAL.amber;
         ctx.save(); ctx.translate(p.x, p.y - p.z); ctx.rotate(p.rot + p.t * 6); ctx.fillRect(-p.size, -p.size * 0.5, p.size * 2, p.size); ctx.restore();

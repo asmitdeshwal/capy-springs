@@ -15,7 +15,7 @@
     if (MAP.RIDGE && y0 < MAP.RIDGE.y1) { W.ridgeTerrain(ctx, y0, MAP.RIDGE.y1); y0 = MAP.RIDGE.y1; }   // the snowy ridge above, the green deck below
     const g0 = PAL.ground || PAL.pine, g1 = PAL.groundDark || PAL.pineDark, gm = PAL.groundMoss || PAL.moss;   // the season's ground (60_golden.js)
     ctx.fillStyle = g0; ctx.fillRect(0, y0, MAP.W, y1 - y0);
-    for (let i = 0; i < 26; i++) {                                  // darker patches
+    for (let i = 0; i < 14; i++) {                                  // darker patches
       const x = U.hash(i, 1) * 540, y = y0 + U.hash(i, 2) * (y1 - y0), rx = 40 + U.hash(i, 3) * 70, ry = 14 + U.hash(i, 4) * 22;
       S_.ellipse(ctx, x, y, rx, ry, g1);
     }
@@ -23,10 +23,13 @@
       const x = U.hash(i, 5) * 540, y = y0 + U.hash(i, 6) * (y1 - y0), rx = 18 + U.hash(i, 7) * 40, ry = 6 + U.hash(i, 8) * 12;
       S_.ellipse(ctx, x, y, rx, ry, gm);
     }
-    for (let i = 0; i < 34; i++) {                                  // grass tufts
+    for (let i = 0; i < 150; i++) {                                 // grass tufts
       const x = U.hash(i, 41) * 540, y = y0 + U.hash(i, 42) * (y1 - y0), c = (i & 1) ? g1 : PAL.mix(gm, PAL.cream, 0.25);
       for (let k = -1; k <= 1; k++) A().line(ctx, x + k * 4, y, x + k * 7, y - 7 - (k === 0 ? 3 : 0), c, 2);
     }
+    const vg = ctx.createLinearGradient(0, y0, 0, y1); vg.addColorStop(0, PAL.rgba(PAL.ink, 0.12)); vg.addColorStop(0.55, PAL.rgba(PAL.ink, 0.03)); vg.addColorStop(1, PAL.rgba(PAL.cream, 0.05));
+    ctx.fillStyle = vg; ctx.fillRect(0, y0, MAP.W, y1 - y0);         // light falls toward the platform, the slope darkens toward the mountain
+    W.grain(ctx, 0, y0, MAP.W, y1 - y0);
     for (let i = 0; i < 14; i++) {                                  // flower patches: three blooms and a leaf
       const x = U.hash(i, 43) * 540, y = y0 + U.hash(i, 44) * (y1 - y0), col = (i % 3 === 0) ? '#F2A7B6' : (i % 3 === 1) ? PAL.cream : '#F6D27A';
       S_.ellipse(ctx, x + 6, y + 3, 7, 3, g1);
@@ -139,6 +142,13 @@
     }
     ctx.globalAlpha = 1;
   };
+  // a faint paper grain, baked into the static layer only (one 64-px pattern of hash dots)
+  let GRAIN = null;
+  W.grain = function (ctx, x, y, w, h) {
+    if (!ctx.createPattern) return;
+    if (!GRAIN) { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); for (let i = 0; i < 90; i++) { g.fillStyle = (i & 1) ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'; g.fillRect(Math.floor(U.hash(i, 81) * 64), Math.floor(U.hash(i, 82) * 64), 1 + (i % 3 === 0 ? 1 : 0), 1); } GRAIN = c; }
+    const pat = ctx.createPattern(GRAIN, 'repeat'); if (!pat) return; ctx.fillStyle = pat; ctx.fillRect(x, y, w, h);
+  };
   W.valley = function (ctx) {
     const S_ = A(), v = MAP.VALLEY;
     ctx.fillStyle = PAL.pineDark; ctx.fillRect(0, v.y0, MAP.W, v.y1 - v.y0);
@@ -152,8 +162,13 @@
   };
   W.lane = function (ctx) {
     const S_ = A(), L = MAP.LANE, y0 = MAP.RIDGE ? MAP.RIDGE.laneY0 : L.y0;      // the stepping-stone path runs on up the Ridge
-    ctx.globalAlpha = 0.6; ctx.fillStyle = PAL.stone; ctx.fillRect(L.x0, y0, L.x1 - L.x0, L.y1 - y0); ctx.globalAlpha = 1;
-    for (let y = y0 + 20; y < L.y1; y += 40) S_.circle(ctx, L.cx + (U.hash(y, 9) - 0.5) * 16, y, 9, PAL.mix(PAL.stone, PAL.cream, 0.35));
+    ctx.globalAlpha = 0.18; ctx.fillStyle = PAL.stone; ctx.fillRect(L.x0 + 6, y0, L.x1 - L.x0 - 12, L.y1 - y0); ctx.globalAlpha = 1;   // a worn path
+    for (let y = y0 + 18, i = 0; y < L.y1; y += 36 + U.hash(i, 91) * 6, i++) {                                                     // stepping stones
+      const x = L.cx + (U.hash(i, 92) - 0.5) * 18, w = 26 + U.hash(i, 93) * 8, h = 14 + U.hash(i, 94) * 4;
+      S_.fillRRect(ctx, x - w / 2 + 2, y - h / 2 + 3, w, h, 7, PAL.rgba(PAL.ink, 0.18));
+      S_.fillRRect(ctx, x - w / 2, y - h / 2, w, h, 7, PAL.mix(PAL.stone, PAL.cream, 0.25));
+      S_.fillRRect(ctx, x - w / 2 + 3, y - h / 2 + 2, w - 10, 3, 2, PAL.rgba('#FFFFFF', 0.35));
+    }
   };
   W.rocks = function (ctx) { const S_ = A(); for (let i = 0; i < MAP.ROCKS.length; i++) { const r = MAP.ROCKS[i]; S_.ellipse(ctx, r[0] + 6, r[1] + 2, 16, 9, PAL.stoneDark); S_.ellipse(ctx, r[0], r[1] - 4, 18, 11, PAL.stone); S_.ellipse(ctx, r[0] - 6, r[1] - 9, 8, 4, PAL.mix(PAL.stone, PAL.cream, 0.4)); } };
   W.pine = function (ctx, x, y) {
@@ -222,6 +237,7 @@
     for (let i = 0; i < 6; i++) { const nx = x0 + 14 + i * (d.w - 28) / 5; S_.circle(ctx, nx, y0 + 12, 1.6, PAL.cedarDark); S_.circle(ctx, nx, y0 + d.h - 12, 1.6, PAL.cedarDark); }   // nail heads
     if (def.stripes) { for (let i = 0; i < 6; i++) S_.fillRRect(ctx, x0 + 6 + i * 6, y0 - 6, 4, d.h + 4, 2, PAL.moss); }
   };
+  const DEPTH = PAL.rgba(PAL.cream, 0.13), DEPTH_COLD = PAL.rgba(PAL.cream, 0.08);
   // state: { cold, yuzu, lowFx }
   W.water = function (ctx, def, state, t) {
     const S_ = A(), w = def.water, x0 = w.x - w.w / 2, y0 = w.y - w.h / 2;
@@ -253,14 +269,11 @@
     S_.fillRRect(ctx, x0, y0, w.w, w.h, 18, fill);
     S_.strokeRRect(ctx, x0 + 2, y0 + 2, w.w - 4, w.h - 4, 16, state.cold ? PAL.stone : state.yuzu ? PAL.amberDeep : PAL.waterHotDeep, 3);
     if (state.cold) S_.strokeRRect(ctx, x0 + 1, y0 + 1, w.w - 2, w.h - 2, 17, PAL.cream, 2, true);
-    else if (!state.lowFx) {
+    S_.fillRRect(ctx, x0 + 6, y0 + 5, w.w - 14, w.h - 18, 14, state.cold ? DEPTH_COLD : DEPTH);          // depth: the shallow, sunlit side
+    if (!state.cold && !state.lowFx) {
       ctx.globalAlpha = 0.18; ctx.fillStyle = PAL.ripple;
       for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.ellipse(w.x + Math.sin(t * 0.7 + i * 2.1) * (w.w * 0.22), w.y - 10 + i * 12 + Math.cos(t * 0.5 + i) * 4, 26, 6, 0, 0, TAU); ctx.fill(); }
-      // a soft light band sweeping across and a foam line along the near edge
-      ctx.globalAlpha = 0.12; ctx.fillStyle = PAL.cream;
-      ctx.save(); ctx.beginPath(); S_.rrect(ctx, x0 + 4, y0 + 4, w.w - 8, w.h - 8, 14); ctx.clip();
-      const bx = x0 + ((t * 18) % (w.w + 60)) - 30; ctx.beginPath(); ctx.moveTo(bx, y0); ctx.lineTo(bx + 34, y0); ctx.lineTo(bx + 10, y0 + w.h); ctx.lineTo(bx - 24, y0 + w.h); ctx.closePath(); ctx.fill();
-      ctx.restore();
+      // a foam line along the near edge
       ctx.globalAlpha = 0.35; ctx.strokeStyle = PAL.cream; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x0 + 16, y0 + w.h - 8); ctx.quadraticCurveTo(w.x, y0 + w.h - 12 + Math.sin(t * 2) * 2, x0 + w.w - 16, y0 + w.h - 8); ctx.stroke();
       ctx.globalAlpha = 1;
     }
@@ -279,7 +292,7 @@
     S_.plate(ctx, x - 24, y - 10, 48, 20, 6, PAL.stone, PAL.stoneDark, 5);
     S_.fillRRect(ctx, x - 10, y - 46, 20, 12, 3, PAL.post);                                   // saisen box at the post's foot
     ctx.save(); ctx.translate(x, y); ctx.scale(pulse, pulse);
-    S_.ring(ctx, 0, 0, 30, fill, 6, PAL.cta, affordable ? PAL.rgba(PAL.cta, 0.55) : PAL.rgba(PAL.stoneDark, 0.7), !affordable);
+    S_.ring(ctx, 0, 0, 30, fill, 6, PAL.cta, affordable ? PAL.rgba(PAL.cta, 0.55) : PAL.rgba(PAL.stoneDark, 0.7), !affordable && !(G.S && G.S.settings.lowFx));   // the dash is the costliest stroke on screen: none on Low effects
     ctx.restore();
   };
   // post + lamp + flame at the post's feet (x, y); flash = 0..1 after lighting; active = the step still accepts coins

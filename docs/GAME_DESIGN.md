@@ -766,3 +766,27 @@ The phone playtest of Season 2 showed what makes this game fun: **something new 
 **Where it lives.** GUESTBOOK on the title screen (with today's "1/3"), a Guestbook button in Settings, a small "1/3" chip under the gear in play (tap to open), and the Guestbook card: three rows (icon, label, progress bar, "n / target", a reward pill that turns into a STAMP once done), the all-three line and the stamp card. Opening the card pauses the sim like any card.
 
 **Harness.** By 10 min the Guestbook holds three goals and at least one stamp; all seeds reach 4 stamps (the three goals plus the all-done bonus) well before 50 min.
+
+## 20. The Summit, the story and the ending (built 1.12.0)
+
+Full design with every number: `docs/plans/summit_and_ending.md`. As built:
+
+**Story.** Every bath is fed by one spring at the top, the Source, asleep under the ice. Grandma Yuzu (Kit's grandmother, the old innkeeper) went up to tend it and left Kit the one-pool inn. Kaa the crow carries her notes down (`58_story.js`): seven notes on milestones the climb already has, one catch-up note for older saves. The ending is the reunion at the Source.
+
+**The Summit** (y −1340 … −120, a whole phone screen): opened by the Pilgrim Stairs (6,000) at the top of the Ridge; the cliff either side of the stairs is solid. Right: the Source and its geyser cone. Left: Grandma's hut. Top: the troupe ledge under the cliff, a sea of clouds. Bottom: the Snow Roll and a frozen waterfall. The camera keeps the Ridge off-screen while Kit is up there (a second blend across the stairs).
+
+| step | cost | requires | effect |
+|---|---|---|---|
+| Pilgrim Stairs | 6,000 | Massage Pavilion | opens the Summit |
+| The Source | 10,000 | stairs | bath x3, 8→12 seats, geyser every 24 s (6 s burst, x2 for guests landing in it); the troupe starts |
+| Grandma's Shrine | 9,000 | Source | Kaa the crow on Season 1 (lands on a full tray near Kit; tap: 6 % of koban, 15-400) |
+| Snow Roll | 15,000 | Source | plunge-only snow bank; Source guests want it; HOT-COLD x2 within 8 s |
+| Wake the Source | 40,000, then 60,000 x1.35 | Snow Roll, Shrine, Inn Fame V, Longer Line III, Bigger Car III | level 1: the ending; level 2+: Source Stars |
+
+**The troupe**: 6 snow monkeys (pay 12, quick, patience 30 s) every 20 s (12 at night), hopping down the cliff; every fifth troupe is golden with Momo stepping down last. **Patience**: a waiting guest only loses patience while Kit is on the guest's stage.
+
+**The ending** (`59_finale.js`, ~75 s, sim paused, tap to skip ahead): crack (0.5 s) → burst, THE SOURCE WAKES (2.5) → the wave down the mountain (4-22: every bath steams, every lantern flares, an amber glow) → back up (22-28) → the gathering (28-40: Grandma from her door, Pon with a log and a conga of capybaras and ducks up the stairs, Kero hopping in with a yuzu, Momo and four monkeys down the cliff, Tsuru flying in, Kaa to the perch) → gifts (40: the log, the yuzu, hats for all) → everyone jumps in (42, SOURCE SPLASH) → Kit and Grandma sit (46) → the letter (48) → credits with the player's numbers (54-74) → THE GOLDEN AGE card. Replayable from Settings.
+
+**The Golden Age** (`60_golden.js`): Source Stars turn the season (spring, summer, autumn, winter: ground, foliage, ambient petals / fluff / leaves / snow, snow on every Deck pine in winter) and add +10 % pay (ten at most). Festival Nights: the night after the ending and after each Star, then every third night; 90 s, x1.5, fireworks, a live score under the coin pill, NEW BEST FESTIVAL.
+
+**Guestbook additions**: Serve snow monkeys (30), Catch geyser bursts (8), Welcome Momo's Troupe, Catch Kaa on a tray (3), Play a Festival Night, Beat your best festival.

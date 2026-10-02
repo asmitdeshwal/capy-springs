@@ -85,6 +85,7 @@
   };
 
   // ---------------- Capybara (44 x 32) ----------------
+  const CAPY_BELLY = 'rgba(246,241,231,0.16)', CAPY_RIM = 'rgba(246,241,231,0.4)';
   Ch.capy = function (ctx, p) {
     const S_ = A();
     begin(ctx, p, 20, 6);
@@ -95,13 +96,16 @@
     // thickness band + body
     S_.fillRRect(ctx, -22, -27, 44, 26, 11, P.capyDark);
     S_.rrect(ctx, -22, -30, 44, 26, 11); ctx.fillStyle = P.capy; ctx.fill(); strokePath(ctx, P.capyDark);
+    S_.ellipse(ctx, 0, -9, 14, 3.5, CAPY_BELLY);                          // a lighter belly and a rim of light along the back (light from the top-left)
+    S_.line(ctx, -13, -28.2, 9, -28.2, CAPY_RIM, 1.5);
     // snout, ears, eyes
     const down = p.dir === 'down', up = p.dir === 'up';
     if (!up) {
       S_.fillRRect(ctx, down ? -7 : 10, down ? -20 : -24, 14, 12, 5, P.capySnout);
       S_.circle(ctx, -8, -31, 4, P.capyDark); S_.circle(ctx, 2, -31, 4, P.capyDark);
       const e1x = down ? -8 : 4, e2x = down ? 8 : 10, e1y = -22, e2y = down ? -22 : -20;
-      eye(ctx, e1x, e1y, 3.2); eye(ctx, e2x, e2y, 3.2);
+      eye(ctx, e1x, e1y, 3.7); eye(ctx, e2x, e2y, 3.7);
+      if (!down) { S_.circle(ctx, 21, -21, 1.3, P.capyDark); S_.circle(ctx, 21, -17, 1.1, P.capyDark); }   // nostrils at the front of the snout
       if (down) { blush(ctx, -14, -16, 3); blush(ctx, 14, -16, 3); } else blush(ctx, 2, -15, 3);
       lids(ctx, e1x, e1y, p.lid, P.capyDark); lids(ctx, e2x, e2y, p.lid, P.capyDark);
     } else { S_.circle(ctx, -8, -31, 4, P.capyDark); S_.circle(ctx, 2, -31, 4, P.capyDark); }

@@ -25,6 +25,7 @@
     Finale.active = true; Finale.replay = replay; Finale.t = resume ? T.gather - 1 : 0; Finale.crack = resume ? 1 : 0;
     S.ui.sheet = null; S.ui.settings = false; S.ui.card = null; S.ui.banner = null;
     S.mode = 'finale'; popDone = resume; splashN = 0; credits = null; chimeT = 0;
+    const st = S.story; for (let i = 0; i < st.queue.length; i++) st.seen[st.queue[i]] = true; st.queue.length = 0; st.cur = null;   // Grandma has said it all in person
     const src = S.baths.source; if (src && resume) { src.burstT = 999; src.yuzuT = 999; }
     buildWave(S); buildCast(S);
     if (G.Render.markStaticDirty) G.Render.markStaticDirty();                 // the waterfall thaws, the hut door glows

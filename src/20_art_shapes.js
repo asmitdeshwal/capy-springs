@@ -28,10 +28,12 @@
     if (dash) ctx.setLineDash(EMPTY_DASH);
   };
   // paper-cutout plate (x, y = top-left): side band `thick` px below, top on top
-  S.plate = function (ctx, x, y, w, h, r, top, side, thick) { S.fillRRect(ctx, x, y + thick, w, h, r, side); S.fillRRect(ctx, x, y, w, h, r, top); };
+  // ...with a soft paper rim along the top face, so every plate reads as a cut card catching the light
+  S.plate = function (ctx, x, y, w, h, r, top, side, thick) { S.fillRRect(ctx, x, y + thick, w, h, r, side); S.fillRRect(ctx, x, y, w, h, r, top); if (w > 12 && h > 12) S.strokeRRect(ctx, x + 1.5, y + 1.5, w - 3, h - 3, Math.max(0, r - 1.5), RIM, 1.5); };
+  const RIM = PAL.rgba(PAL.cream, 0.3);
   S.shadow = function (ctx, x, y, rx, ry, alpha) {
     ctx.fillStyle = alpha === undefined ? PAL.shadow : PAL.rgba('#000000', alpha);
-    ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + 4, y + 2, rx * 1.1, ry * 0.9, 0, 0, TAU); ctx.fill();          // light from the top-left: every shadow falls down-right
   };
   S.ellipse = function (ctx, x, y, rx, ry, color) { ctx.fillStyle = color; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.fill(); };
   S.circle = function (ctx, x, y, r, color) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); };
@@ -58,8 +60,9 @@
   };
   // cream pill centred at (x, y) with unstroked text and an optional icon on the left: the only way labels, costs and level pills are drawn
   S.pill = function (ctx, x, y, w, h, str, size, fill, color, icon) {
-    S.fillRRect(ctx, x - w / 2, y - h / 2 + 2, w, h, h / 2, PAL.rgba('#000000', 0.15));
+    S.fillRRect(ctx, x - w / 2, y - h / 2 + 3, w, h, h / 2, PILL_DROP);
     S.fillRRect(ctx, x - w / 2, y - h / 2, w, h, h / 2, fill || PAL.cream);
+    if (w > h + 4) S.line(ctx, x - w / 2 + h / 2, y - h / 2 + 2, x + w / 2 - h / 2, y - h / 2 + 2, PILL_HI, 1.5);   // a highlight along the top edge
     if (icon) {
       const isz = h * 0.62;
       if (!str) { S.icon(ctx, icon, x, y, isz); return; }
@@ -67,6 +70,7 @@
       S.text(ctx, str, x + h * 0.25, y + 1, size, color || PAL.ink);
     } else S.text(ctx, str, x, y + 1, size, color || PAL.ink);
   };
+  const PILL_DROP = PAL.rgba('#000000', 0.12), PILL_HI = PAL.rgba('#FFFFFF', 0.45);
   // rounded speech bubble centred at (x, y) with a tail at the bottom-left
   S.bubble = function (ctx, x, y, w, h, tail) {
     const x0 = x - w / 2, y0 = y - h / 2, r = 9;

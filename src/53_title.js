@@ -60,14 +60,24 @@
   Title.draw = function (ctx, S) {
     const A = G.Art.S, Ch = G.Art.Ch, H = G.Canvas.H, t = Title.t, season = G.SEASON;
     layout();
-    ctx.fillStyle = PAL.rgba(PAL.ink, 0.42); ctx.fillRect(0, 0, 540, H);
+    ctx.fillStyle = PAL.rgba(PAL.ink, 0.30); ctx.fillRect(0, 0, 540, H);
+    if (!SKY.g || SKY.h !== H) { SKY.h = H; SKY.g = ctx.createLinearGradient(0, 0, 0, H * 0.45); SKY.g.addColorStop(0, PAL.rgba(PAL.skyDay, 0.9)); SKY.g.addColorStop(1, PAL.rgba(PAL.skyDay, 0)); }
+    ctx.fillStyle = SKY.g; ctx.fillRect(0, 0, 540, H * 0.45);          // a morning sky over the inn
     // logo with steam
     for (let i = 0; i < 3; i++) { const k = (t * 0.5 + i / 3) % 1; ctx.globalAlpha = 0.5 * (1 - k); A.circle(ctx, 200 + i * 70 + Math.sin(t + i) * 8, R.logoY - 70 - k * 50, 12 + k * 14, PAL.cream); }
     ctx.globalAlpha = 1;
+    // the logo hangs on a wooden sign from two ropes, swaying a little
+    const sw = 420, sh = 176, sy = R.logoY + 14, sway = Math.sin(t * 1.3) * 0.012;
+    A.line(ctx, 270 - 150, 0, 270 - 150, sy - sh / 2 + 14, PAL.cedarDark, 4); A.line(ctx, 270 + 150, 0, 270 + 150, sy - sh / 2 + 14, PAL.cedarDark, 4);
+    ctx.save(); ctx.translate(270, sy - sh / 2); ctx.rotate(sway); ctx.translate(-270, -(sy - sh / 2));
+    A.plate(ctx, 270 - sw / 2, sy - sh / 2, sw, sh, 26, PAL.cedar, PAL.cedarDark, 12);
+    for (let i = 1; i < 4; i++) A.line(ctx, 270 - sw / 2 + 22, sy - sh / 2 + i * sh / 4, 270 + sw / 2 - 22, sy - sh / 2 + i * sh / 4 + (i & 1 ? 3 : -2), PAL.rgba(PAL.cedarDark, 0.22), 2);
+    for (const nx of [-1, 1]) A.circle(ctx, 270 + nx * 150, sy - sh / 2 + 14, 5, PAL.cedarDark);
     A.text(ctx, 'CAPY', 270, R.logoY - 20, 78, PAL.cta, LOGO); A.text(ctx, 'SPRINGS', 270, R.logoY + 50, 64, PAL.amber, LOGO);
-    if (G.Seasons.list.length > 1 || season.id !== 1) A.pill(ctx, 270, R.logoY + 104, 300, 30, 'Season ' + season.id + '  ·  ' + season.name, 16, PAL.rgba(PAL.cream, 0.92), PAL.ink, null);
-    else if (S.built.awake) A.pill(ctx, 270, R.logoY + 104, 400, 30, 'The Golden Age  ·  ' + G.Golden.seasonName(S) + (S.festival.best > 0 ? '  ·  best festival ' + A.fmtCoins(S.festival.best) : ''), 15, PAL.rgba(PAL.cream, 0.92), PAL.ink, null);
-    else A.pill(ctx, 270, R.logoY + 104, 360, 30, season.teaser || 'Lead capybaras into steaming baths.', 15, PAL.rgba(PAL.cream, 0.92), PAL.ink, null);   // what the game is, in one line
+    ctx.restore();
+    if (G.Seasons.list.length > 1 || season.id !== 1) A.pill(ctx, 270, R.logoY + 136, 300, 30, 'Season ' + season.id + '  ·  ' + season.name, 16, PAL.rgba(PAL.cream, 0.92), PAL.ink, null);
+    else if (S.built.awake) A.pill(ctx, 270, R.logoY + 136, 400, 30, 'The Golden Age  ·  ' + G.Golden.seasonName(S) + (S.festival.best > 0 ? '  ·  best festival ' + A.fmtCoins(S.festival.best) : ''), 15, PAL.rgba(PAL.cream, 0.92), PAL.ink, null);
+    else A.pill(ctx, 270, R.logoY + 136, 360, 30, season.teaser || 'Lead capybaras into steaming baths.', 15, PAL.rgba(PAL.cream, 0.92), PAL.ink, null);   // what the game is, in one line
     // Kit waving and a capy in a yuzu hat, bobbing
     const p = Ch.resetPose(Ch.POSE);
     p.x = 215; p.y = R.heroY + Math.sin(t * 2) * 3; p.face = 1; p.t = t; p.pose = 'wave'; p.poseT = t % 1; Ch.kit(ctx, p, S);
@@ -84,7 +94,7 @@
       ctx.restore();
     }
     A.text(ctx, 'v' + G.VERSION + (G.Dev.on ? '  ·  developer mode' : ''), G.Dev.on ? 200 : 270, H - (G.Canvas.sb || 0) - 18, 12, PAL.rgba(PAL.cream, 0.75));
-    if (S.ui.banner) { const b = S.ui.banner; A.pill(ctx, 270, R.logoY + 150, 260, 40, b.text, 20, PAL.cream, PAL.cta, null); }   // "3 MORE TAPS", "DEV MODE ON"
+    if (S.ui.banner) { const b = S.ui.banner; A.pill(ctx, 270, R.logoY + 180, 260, 40, b.text, 20, PAL.cream, PAL.cta, null); }   // "3 MORE TAPS", "DEV MODE ON"
   };
-  const LOGO = { stroke: PAL.cream, lw: 8 }, EV = {};
+  const LOGO = { stroke: PAL.cream, lw: 8 }, EV = {}, SKY = { g: null, h: 0 };
 })(window.G);

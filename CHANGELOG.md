@@ -1,5 +1,22 @@
 # Capy Springs — changelog
 
+## 1.12.0 — the Summit, Grandma Yuzu, the ending and the Golden Age (2026-10-02)
+
+The mountain gets its top, its story and its ending, and the game goes on after it. Design: `docs/plans/summit_and_ending.md` (a three-designer panel and a judge).
+
+- **The Summit**, a third full-screen stage above the clouds, opened by the **Pilgrim Stairs** (6,000) at the top of the Ridge: a red torii, a cliff with the stairs as the only way up, a sea of clouds, Grandma Yuzu's hut, a frozen waterfall.
+- **The Source** (10,000): the mountain's own spring, x3 pay, 8-12 seats. Its **geyser** bursts every 24 s for 6 s (a 3-2-1 count on the cone); guests who land during a burst pay **x2** and chains read SOURCE xN!!.
+- **Snow monkeys**: once the Source exists, a whistle and a troupe of six hops down the cliff onto their ledge every 20 s (12 s at night); every fifth is **Momo's Troupe** (twelve, golden, Momo last). FULL TROUPE pays like FULL CAR.
+- **Snow Roll** (15,000): monkeys come out of the Source wanting snow; roll them in the bank within 8 s for **HOT-COLD x2** (the arrow says ROLL).
+- **Grandma's Shrine** (9,000): **Kaa the crow** keeps watch, landing on a full tray near Kit; tap him for koban.
+- **Grandma Yuzu's notes**: Kaa brings seven short notes at milestones (the first lantern, the Ridge, the Pavilion, Momo, the Summit, the Source, the Shrine); an older save gets one catch-up note.
+- **Wake the Source** (40,000, needs every lantern lit, Inn Fame V, Longer Line III and Bigger Car III): **the ending**. The ice cracks, the Source bursts, a wave of steam runs down the whole mountain past every bath and lantern, Pon, Kero, Madame Tsuru, Momo, the monkeys, the capybaras and the ducks gather and jump in together, Kit sits with Grandma, her letter, the credits with your own numbers, then THE GOLDEN AGE. Tap to skip ahead; Settings › Watch the ending replays it.
+- **The Golden Age** (endless): Wake the Source keeps going as **Source Stars** (60,000, x1.35 each): every Star turns the season and repaints the mountain (spring, summer, autumn, winter: the ground, the trees, petals, leaves or snow) and adds +10% pay (ten at most). **Festival Nights** (after the ending, after each Star, then every third night): 90 s at x1.5 pay with fireworks and a score; beat your best.
+- **Kinder to explorers**: guests only lose patience while Kit is on their stage; arrivals stop when a platform is full. Lost guests in a full climb: 8% (was 35%).
+- Guestbook: six new goals (snow monkeys, geyser bursts, Momo's Troupe, Kaa, a Festival Night, a best festival). The title shows "The Golden Age · season · best festival" once the story is done; the bridge sign reads RIDGE, SUMMIT, then SOURCE.
+- **Graphics**: light from the top-left on every shadow, a paper rim on every plate and pill, soft baked steam and puffs, two-tone water without the swimming-pool light sweep, a painted ground (more grass, a value gradient, a faint paper grain), stepping stones on the lane, a capybara with a belly, a rim of light and nostrils, and the title logo on a swaying wooden sign under a morning sky.
+- Harness: the full run is now 6,000 s (`npm test`) and must open the Summit, serve monkeys and catch bursts, read the notes, tap Kaa, wake the Source, play a festival and earn a Source Star; seeds 7 / 3 / 11 pass (seed 7: Summit 48 min, ending 70 min, 557 monkeys, 2 Stars and 3 festivals by 100 min). `test/trace.js` prints Kit's line and the arrow second by second for debugging.
+
 ## 1.11.0 — release readiness: help for new players, bug sweep, low-end speed, app-store projects (2026-10-02)
 
 An eight-lens audit (state and saves, simulation, UI and input, low-end rendering, platform, store rules and legal, the brand-new player, "unfinished" tells), every bug finding checked by a second reviewer, then fixed.
