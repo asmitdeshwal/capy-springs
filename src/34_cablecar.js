@@ -20,7 +20,7 @@
   CableCar.planCar = function (S, index) {
     const lv = DATA.CAR.levels[S.car.level];
     let n = lv.capys + (lv.spread ? U.randInt(-lv.spread, lv.spread) : 0), kind = 'capy', golden = false;
-    if (G.Events.isGolden(index)) { golden = true; n = n * C.GOLDEN_GUESTS; }
+    if (G.Events.isGolden(index) || S.car.giftGolden) { golden = true; S.car.giftGolden = false; n = n * C.GOLDEN_GUESTS; }   // giftGolden: a Free gift
     else if (S.car.level >= 1 && !S.night.active && index % C.DUCK_EVERY === 0) { kind = 'duck'; n = lv.ducks; }
     n = Math.max(0, Math.min(n, MAP.PLATFORM.cap - G.Guests.countWaiting(S, 'platform')));
     // the VIP (a season's DATA.VIP) rides the golden car that docks during the night event, once its station is built; one extra seat, one extra guest

@@ -37,6 +37,7 @@
     { label: 'Golden car next', run: S => { const e = C.GOLDEN_EVERY; S.car.index = Math.ceil((S.car.index + 1) / e) * e - 1; say(S, 'next car is golden'); } },
     { label: 'Test ads on/off', run: S => { const on = !G.Ads.fake; G.Ads.fake = on; G.Save.store.set('capysprings.fakeads', on ? '1' : '0'); say(S, on ? 'test ads ON (web)' : 'test ads off'); } },
     { label: 'Gift lantern now', run: S => { if (!G.Ads.can('rewarded')) { say(S, 'turn test ads on first'); return; } S.offers.giftNext = 0; G.Cards.close(S); } },
+    { label: 'Reset gifts & purchase', run: S => { G.Gifts.reset(); G.Shop.reset(); say(S, 'gifts day and Remove ads reset'); } },
     { label: 'Age question', run: S => { G.Cards.close(S); setTimeout(() => G.Cards.showAge(G.Game.S), 350); } },
     { label: 'Kaa now', run: S => { if (!DATA.KAA) { say(S, 'no crow in this season'); return; } if (!G.Kaa.active(S)) { say(S, 'build the ' + DATA.KAA.requires + ' first'); return; } S.kaa.state = 'away'; S.kaa.t = 0; } },
     { label: 'Fill the gauge', run: S => { S.heat.v = S.heat.max; S.heat.graceT = 0; } },

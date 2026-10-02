@@ -41,7 +41,7 @@
     if (Native.platform() === 'ios' && !young) { try { const t = await AM.trackingAuthorizationStatus(); if (t.status === 'notDetermined') await AM.requestTrackingAuthorization(); } catch (e) { /* no ATT */ } }
     Ads.ok = !!info.canRequestAds;
     if (!Ads.ok) return;
-    listen(); load('rewarded'); load('interstitial');
+    listen(); load('rewarded'); if (!G.Shop.noAds()) load('interstitial');          // Remove ads: no short ads to fetch
   }
   function listen() {
     AM.addListener('onRewardedVideoAdLoaded', () => { Ads.ready.rewarded = true; backoff.rewarded = 20; });
@@ -59,7 +59,7 @@
     const o = { adId: unit(kind), isTesting: testing(), npa: G.Age.underConsent() };   // young players: never personalised
     (kind === 'rewarded' ? AM.prepareRewardVideoAd(o) : AM.prepareInterstitial(o)).then(() => { Ads.ready[kind] = true; }, () => later(kind));
   }
-  function later(kind) { Ads.ready[kind] = false; const s = backoff[kind]; backoff[kind] = Math.min(300, s * 2); setTimeout(() => { if (Ads.ok && !Ads.ready[kind]) load(kind); }, s * 1000); }
+  function later(kind) { Ads.ready[kind] = false; const s = backoff[kind]; backoff[kind] = Math.min(300, s * 2); setTimeout(() => { if (Ads.ok && !Ads.ready[kind] && !(kind === 'interstitial' && G.Shop.noAds())) load(kind); }, s * 1000); }
 
   // ---- showing: the game and its sound wait while an ad plays ----
   Ads.can = kind => !Ads.showing && (Ads.fake || (Ads.ok && Ads.ready[kind]));
@@ -72,7 +72,7 @@
     return true;
   };
   Ads.interstitial = function (S, placement) {
-    if (!Ads.can('interstitial')) return false;
+    if (G.Shop.noAds() || !Ads.can('interstitial')) return false;
     begin(S, 'interstitial', placement, null);
     if (!Ads.fake) AM.showInterstitial().catch(() => finish('interstitial', true));
     return true;
@@ -93,8 +93,8 @@
     if (kind === 'rewarded') Ads.lastRewarded = now(); else Ads.lastInterstitial = now();
     if (!failed) Ads.shown++;
     if (j && kind === 'rewarded') { if (j.earned && j.onReward) j.onReward(S); else if (failed) G.HUD.banner(S, 'NO VIDEO RIGHT NOW', 'try again in a moment'); }
-    EV.kind = kind; EV.placement = j ? j.placement : null; G.Bus.emit('ad:end', EV);
-    if (!Ads.fake && Ads.ok) load(kind);
+    EV.kind = kind; EV.placement = j ? j.placement : null; EV.earned = !!(j && j.earned); G.Bus.emit('ad:end', EV);   // Free gifts count earned videos
+    if (!Ads.fake && Ads.ok && !(kind === 'interstitial' && G.Shop.noAds())) load(kind);
   }
   // the fake ad counts down. A real ad covers the game, so time here only runs while the game is visible: a real ad that never reports
   // back is let go after 150 s of that, and a tap on the game (which a real ad would have caught) means it is gone already

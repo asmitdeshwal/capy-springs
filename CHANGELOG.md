@@ -1,5 +1,12 @@
 # Capy Springs — changelog
 
+## 1.14.0 — Free gifts and Remove ads (2026-10-02)
+
+- **Free gifts**: a GIFTS chip under 2x KOBAN opens a card with three gifts, each for a short video and each with its own cooldown: **a bag of koban** (about 4 minutes of income), **a Steam Rush** (the boiler fills to the top) and **a golden cable car** (the next car docks golden with a crowd).
+- **The Mountain chest**: every video a player finishes in a day, from anywhere in the game, fills five pips on the card; the fifth opens a chest worth about 12 minutes of income, no video needed. A red dot on the chip says it is ready. The count and cooldowns are kept on the phone, so they hold across restarts and seasons.
+- **Remove ads**: one optional, one-time purchase (`capysprings.remove_ads`, Google Play Billing 9 / StoreKit 2 through `@capgo/native-purchases`) that turns the short ads off for good; the optional videos and their gifts stay. In Settings, linked from the Free gifts card, and offered right after a short ad at most every two days. **Restore purchase** on the same card; ownership is checked with the store at every launch (pending payments, reinstalls, new phones) and Android purchases are acknowledged.
+- Privacy policy, terms, the store listing kit and `docs/MONETIZATION.md` cover the purchase (store setup for both consoles, pricing, payouts, test purchases). Developer mode buys from a pretend store on the web; *Reset gifts & purchase* clears both.
+
 ## 1.13.0 — ads that pay for the game, store builds in the cloud (2026-10-02)
 
 The store apps (Android and iOS) now earn from Google AdMob, built to earn well without spoiling a cosy game; the web version stays ad-free. Both store builds run on GitHub Actions, so no Mac or Android Studio is needed. Guides: `docs/MONETIZATION.md`, `docs/NATIVE_BUILD.md`.

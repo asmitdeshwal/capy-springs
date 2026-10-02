@@ -37,7 +37,7 @@
     o.interT += dt;
     if (o.breakIn > 0) { o.breakIn -= dt; if (o.breakIn <= 0) o.breakWin = R.breakWindow; }
     else if (o.breakWin > 0) o.breakWin -= dt;
-    if (o.breakWin > 0 && !G.Age.child() && o.interT >= R.interstitialEvery && S.t >= R.firstMinutes * 60 && G.Ads.sinceRewarded() >= R.afterRewarded && calm(S) && G.Ads.can('interstitial')) { o.interT = 0; o.breakWin = 0; G.Ads.interstitial(S, 'break'); }
+    if (o.breakWin > 0 && !G.Age.child() && !G.Shop.noAds() && o.interT >= R.interstitialEvery && S.t >= R.firstMinutes * 60 && G.Ads.sinceRewarded() >= R.afterRewarded && calm(S) && G.Ads.can('interstitial')) { o.interT = 0; o.breakWin = 0; G.Ads.interstitial(S, 'break'); }
   };
   function giftAmount(S) { return Math.max(R.giftMin, Math.round(G.Save.rate(S.income) * 60 * R.giftMinutes / 10) * 10); }
   function calm(S) {

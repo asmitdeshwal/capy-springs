@@ -47,7 +47,7 @@ Good to know: the home-screen app has its own save, separate from Safari's; a ta
 
 **App-store builds:** they run in the cloud on GitHub Actions (no Mac needed): every deploy makes an installable Android APK under the repo's *Actions* tab. Signing keys: `npm run store-keys`; Google Play and TestFlight steps in `docs/NATIVE_BUILD.md`, store texts and privacy answers in `docs/STORE_LISTING.md`.
 
-**Ads:** the Android and iOS apps earn from Google AdMob (optional videos plus a rare short ad; the web version has none). They use Google's test ids until `npm run ad-ids` writes yours: `docs/MONETIZATION.md`.
+**Ads:** the Android and iOS apps earn from Google AdMob (optional videos plus a rare short ad; the web version has none). A GIFTS chip opens a Free gifts card (pick a reward, watch a video, and a daily Mountain chest), and one optional purchase, Remove ads, turns the short ads off. They use Google's test ids until `npm run ad-ids` writes yours: `docs/MONETIZATION.md`.
 
 Rebuild the icons, the service worker and `dist/` after any change with:
 

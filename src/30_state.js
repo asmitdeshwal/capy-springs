@@ -46,7 +46,7 @@
     const S = {
       v: 2, season: G.SEASON.id, mode: 'intro', prevMode: 'play', introT: 0, t: 0, coins: 0, earned: 0,
       income: { buckets: [0, 0, 0, 0, 0, 0], head: 0, bucketT: 0 },
-      car: { level: 0, index: 1, timer: 0, phase: 'dock', phaseT: 0, x: MAP.CABLE.dockX, swing: 0, kind: 'capy', golden: false, empty: false, vip: false,
+      car: { level: 0, index: 1, timer: 0, phase: 'dock', phaseT: 0, x: MAP.CABLE.dockX, swing: 0, kind: 'capy', golden: false, empty: false, vip: false, giftGolden: false,
              toSpawn: DATA.CAR.levels[0].capys, n: DATA.CAR.levels[0].capys, spawnT: C.CAR_FIRST_HOP_AT, carId: 1, warned: true, pulse: 0 },
       carLog: {},
       splash: { count: 0, t: -99, mult: 1, bathId: null, c3: false, c4: false, c5: false },

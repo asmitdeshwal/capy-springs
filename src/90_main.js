@@ -49,7 +49,7 @@
     if (Game.headless) return Game.S;
     Game.S.mode = 'title'; G.Title.t = 0;                // the browser always starts on the title screen
     if (Game.S.settings.lowFx) G.Canvas.resize();         // Low effects caps the pixel ratio: size the canvas for it now
-    G.Ads.init(); G.Reminders.init();                     // store apps only: consent, ads, reminders (the web build loads none of it)
+    G.Ads.init(); G.Reminders.init(); G.Shop.init(); G.Gifts.init();   // store apps only: consent, ads, reminders, the store (the web build loads none of it)
     G.Loop.start(Game.step, Game.frame);
     try { const b = document.getElementById('boot'); if (b) { b.classList.add('gone'); setTimeout(() => { if (b.parentNode) b.parentNode.removeChild(b); }, 450); } } catch (e) { /* no boot screen */ }
     document.addEventListener('visibilitychange', () => {
@@ -107,6 +107,7 @@
     if (G.HUD.tapGear(S, x, y)) return;
     if (G.Goals.tapChip(S, x, y)) return;
     if (G.Offers.tapScreen(S, x, y)) return;
+    if (G.Gifts.tapChip(S, x, y)) return;
     if (G.Dev.tapChip(S, x, y)) return;
     G.Camera.toWorld(x, y, W);
     if (G.Kaa.tap(S, W.x, W.y)) return;

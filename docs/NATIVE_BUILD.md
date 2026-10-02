@@ -71,10 +71,10 @@ Open the run and the red step. The usual causes, with the words the log uses:
 | item | where | value |
 |---|---|---|
 | app id | `capacitor.config.json`, `build.gradle`, Xcode project | `com.asmitdeshwal.capysprings` |
-| plugins | `package.json` | `@capacitor/preferences` (saves), `@capacitor-community/admob` (ads), `@capacitor/local-notifications` (reminders) |
+| plugins | `package.json` | `@capacitor/preferences` (saves), `@capacitor-community/admob` (ads), `@capacitor/local-notifications` (reminders), `@capgo/native-purchases` (Remove ads: Google Play Billing 9, StoreKit 2) |
 | AdMob app ids | `strings.xml`, `Info.plist` | Google's sample ids until `npm run ad-ids` writes yours (`docs/MONETIZATION.md`) |
 | iOS ads | `Info.plist` | `GADApplicationIdentifier`, 50 `SKAdNetworkItems`, the tracking question text (`NSUserTrackingUsageDescription`) |
-| Android permissions | `AndroidManifest.xml` + plugin manifests | INTERNET, the advertising id (from the ads SDK), POST_NOTIFICATIONS, RECEIVE_BOOT_COMPLETED, WAKE_LOCK; the exact-alarm permission the reminders plugin asks for is removed (Play restricts it; reminders don't need exact times) |
+| Android permissions | `AndroidManifest.xml` + plugin manifests | INTERNET, the advertising id (from the ads SDK), BILLING (from Play Billing), POST_NOTIFICATIONS, RECEIVE_BOOT_COMPLETED, WAKE_LOCK; the exact-alarm permission the reminders plugin asks for is removed (Play restricts it; reminders don't need exact times) |
 | notification icon | `android/app/src/main/res/drawable/ic_stat_capy.xml`, `capacitor.config.json` | a white koban, tinted `#E4572E` |
 | release signing | `android/app/build.gradle` | reads the upload key from the `CAPY_*` environment variables the workflow fills; without them the release build is left unsigned |
 | orientation | `AndroidManifest.xml`, `Info.plist` | portrait only, full screen |

@@ -135,7 +135,7 @@
     const pulse = S.trail.length >= S.trailCap ? 1 + 0.08 * Math.sin(S.t * 8) : 1;
     for (let i = 0; i < S.trailCap; i++) A.circle(ctx, R.pips.x + i * 15, R.pips.y, 6 * (i < S.trail.length ? pulse : 1), i < S.trail.length ? PAL.amber : PAL.rgba(PAL.ink, 0.3));
     if (lineCapT > 0) A.text(ctx, 'guests in line', R.pips.x + S.trailCap * 15 + 6, R.pips.y + 1, 13, PAL.cream, CAPTION);
-    if (S.night.active && S.night.festival) A.pill(ctx, R.coinPill.x + 80, R.pips.y + 66, 160, 28, 'FESTIVAL +' + A.fmtCoins(S.earned - S.festival.start), 14, PAL.rgba(PAL.cta, 0.92), PAL.cream, null);
+    if (S.night.active && S.night.festival) A.pill(ctx, R.coinPill.x + 80, R.pips.y + 112, 160, 28, 'FESTIVAL +' + A.fmtCoins(S.earned - S.festival.start), 14, PAL.rgba(PAL.cta, 0.92), PAL.cream, null);
     // flights
     const fp = HUD.fly;
     for (let i = 0; i < fp.n; i++) { const f = fp.items[i]; if (f.delay > 0) continue; const u = U.easeInOutQuad(Math.min(1, f.t)); G.Art.FX.kobanAt(ctx, f.x0 + (R.coinIcon.x - f.x0) * u, f.y0 + (R.coinIcon.y - f.y0) * u - Math.sin(u * Math.PI) * 30, 1); }

@@ -23,4 +23,14 @@
       freeShare: 0.5, freeMin: 100, freeCooldown: 180   // "FREE" upgrade with a video: half the price in hand, 100+ koban, once per 3 minutes
     }
   };
+  // the Free gifts card (65_gifts.js): pick a gift, watch a video. Every video a player finishes in a day (any of them) counts toward the
+  // Mountain Chest, which opens without a video once the day's count is reached.
+  G.DATA.GIFTS = {
+    bag: { minutes: 4, min: 100, cooldown: 180 },   // a bag of koban worth ~4 minutes of income (at least 100), every 3 minutes
+    rush: { cooldown: 300 },                        // the boiler fills to the top: a Steam Rush, every 5 minutes
+    golden: { cooldown: 300 },                      // the next cable car docks golden, every 5 minutes
+    chestAt: 5, chestMinutes: 12, chestMin: 300     // five videos in a day open a chest worth ~12 minutes of income
+  };
+  // the one purchase (66_shop.js): the short ads go away for good; the optional videos stay. Same product id in both stores.
+  G.DATA.SHOP = { removeAds: 'capysprings.remove_ads', offerEvery: 48 * 3600 };   // offered after a short ad at most every 2 days
 })(window.G);

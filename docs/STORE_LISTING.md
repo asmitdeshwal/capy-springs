@@ -31,14 +31,14 @@ Every day the Guestbook sets three small goals with stamps to collect. The inn k
 
 • One thumb, portrait, made for short breaks or long soaks
 • Plays fully offline
-• No in-app purchases and no account: optional videos give bonuses
+• No account. Optional videos give free gifts, and one optional purchase removes the short ads
 • Every picture is drawn and every sound is made in code
 
 ## Categories and rating
 
 - Category: Games › Casual (Apple secondary: Simulation). Play: Game › Casual. Tags: Cozy, Idle, Animals.
-- Apple age rating questionnaire: no violence, no frightening content, no mature themes, no gambling or simulated gambling, no contests, no unrestricted web access, no user-generated content, no messaging, no AI chat, no purchases. If it asks about advertising, answer **Yes**. Expected result **4+**: the ads are limited to PG, and to general-audience content for players under 13.
-- Google Play IARC questionnaire: category Game; violence none (a crow that takes coins is cartoon mischief, not violence); no fear, sex, language, drugs, gambling, user interaction, shared location or digital purchases → **Everyone / PEGI 3 / USK 0**. The "contains ads" question: **Yes**.
+- Apple age rating questionnaire: no violence, no frightening content, no mature themes, no gambling or simulated gambling, no contests, no unrestricted web access, no user-generated content, no messaging, no AI chat. If it asks about advertising, answer **Yes**. Expected result **4+**: the ads are limited to PG, and to general-audience content for players under 13.
+- Google Play IARC questionnaire: category Game; violence none (a crow that takes coins is cartoon mischief, not violence); no fear, sex, language, drugs, gambling, user interaction or shared location → **Everyone / PEGI 3 / USK 0**. "Contains ads": **Yes**. "Digital purchases": **Yes** (Remove ads).
 - Play **Target audience**: tick **6–8, 9–12, 13–15, 16–17 and 18+** (a mixed audience). Cute animals would get a 13+-only listing flagged as "appeals to children" anyway, so the game is built for the Families policy instead: a neutral age screen at first launch (`src/64_age.js`), child-directed and non-personalised G-rated ads for players under 13 and no short ads for them at all, and AdMob, which is a Families self-certified ads SDK. When Play asks: the app uses a **neutral age screen**, the ads SDK is **Google AdMob**, and ads to children are **not personalised**.
 
 ## Privacy answers
@@ -57,13 +57,13 @@ The game's own code collects nothing; everything below is what the Google Mobile
   - Usage Data › **Product Interaction** and **Advertising Data**: Third-Party Advertising, Analytics; Advertising Data **used for tracking**.
   - Location › **Coarse Location**: Third-Party Advertising, Analytics.
   - Diagnostics › **Crash Data**, **Performance Data**, **Other Diagnostic Data**: Analytics, App Functionality.
-- In-app purchases: **none** (both stores).
+- In-app purchases: **one**, the non-consumable *Remove ads* (`capysprings.remove_ads`; setup in `docs/MONETIZATION.md`). Google Play or the App Store handles the payment; the game only keeps an "ads removed" note on the phone and sends nothing anywhere, so the game itself adds no data type to the forms above.
 - Apple export compliance: no non-exempt encryption (`ITSAppUsesNonExemptEncryption = false` is already in Info.plist).
 - EU Digital Services Act: declare **non-trader** (an individual offering a free app) in both consoles, or the app is held back in the EU. (If the ads income ever makes this a business, switch to trader with a business address.)
 
 ## Notes for the reviewer (Apple "App Review Information")
 
-No account is needed and the game works offline. "Koban" is the in-game coin and is only earned by playing; nothing can be bought. At first launch the game asks the player's birth year (a neutral age screen) so that players under 13 get only child-directed, non-personalised ads; players 16 and over then see Apple's tracking question, and players in Europe see Google's consent form. Ads are optional reward videos (marked with a play icon) plus an occasional short ad at a natural pause. The game is a complete, self-contained Canvas game bundled in the app; only the ads use the network. The version line on the title screen is just a label.
+No account is needed and the game works offline. "Koban" is the in-game coin and is only earned by playing; koban can't be bought. The only purchase is Remove ads (Settings > Remove ads, or the link on the Free gifts card), a non-consumable that turns off the short ads; Restore purchase is on the same card. At first launch the game asks the player's birth year (a neutral age screen) so that players under 13 get only child-directed, non-personalised ads; players 16 and over then see Apple's tracking question, and players in Europe see Google's consent form. Ads are optional reward videos (marked with a play icon, also offered on the Free gifts card behind the GIFTS chip) plus an occasional short ad at a natural pause. The game is a complete, self-contained Canvas game bundled in the app; only the ads use the network. The version line on the title screen is just a label.
 
 ## Screenshots and graphics
 
@@ -90,6 +90,7 @@ Suggested six shots and captions:
 ## Console checklist (in order)
 
 1. **AdMob** (`docs/MONETIZATION.md`): create the account, the two apps and four ad units; publish the European and US-states messages under Privacy & messaging. Keep the test ids in the game until the public release.
+   **Remove ads** (same guide): the Payments profile and one-time product in Play Console, the Paid Apps agreement and the non-consumable in App Store Connect, product id `capysprings.remove_ads` in both.
 2. **Builds** (`docs/NATIVE_BUILD.md`): `npm run store-keys -- android` and `npm run store-keys -- ios ...`, then run the Android and iOS builds on GitHub.
 3. **Google Play**: create the developer account early (personal accounts made after November 2023 must run a **closed test with at least 12 testers for 14 days** before production). Create the app; fill Store listing, Data safety, Ads = yes, Advertising ID, Content rating (IARC), Target audience (mixed, with the neutral age screen), App access = no login. Upload the `.aab` to the closed-testing track.
 4. **Apple**: enrol in the Developer Program ($99/year), register the App ID and create the app record, fill App Information, Pricing (free), App Privacy, Age Rating, the DSA trader status, the screenshots and texts above; run the iOS build to send a build to TestFlight, test it, then submit for review.

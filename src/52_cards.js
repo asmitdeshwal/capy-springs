@@ -11,7 +11,7 @@
   const ROW_H = 74, ROWS_MAX = 3, MISSING = [];
   let pendingTravel = 0, pendingT = 0, versionTaps = 0, versionTapT = 0;
   // the popover's buttons under the toggles (Developer only in dev mode); height follows
-  function settingsButtons() { const b = SET.buttons; b.length = 0; b.push('How to play'); b.push('Guestbook'); if (G.Game.S && G.Game.S.ending.seen) b.push('Watch the ending'); if (G.Seasons.list.length > 1) b.push('Seasons'); b.push('About'); b.push('Main menu'); if (G.Dev.on) b.push('Developer'); if (G.Ads && G.Ads.privacyRequired) b.push('Privacy choices'); b.push('Reset save');
+  function settingsButtons() { const b = SET.buttons; b.length = 0; b.push('How to play'); b.push('Guestbook'); if (G.Shop && G.Shop.available()) b.push(G.Shop.owned ? 'Ads removed' : 'Remove ads'); if (G.Game.S && G.Game.S.ending.seen) b.push('Watch the ending'); if (G.Seasons.list.length > 1) b.push('Seasons'); b.push('About'); b.push('Main menu'); if (G.Dev.on) b.push('Developer'); if (G.Ads && G.Ads.privacyRequired) b.push('Privacy choices'); b.push('Reset save');
     const n = settingsRows().length; LAY.row = n > 4 ? 52 : 56; LAY.btn0 = 8 + n * LAY.row + 12; LAY.bh = b.length >= 7 ? 44 : 48; SET.h = LAY.btn0 + b.length * LAY.bh + 16; return b; }
 
   Cards.init = function (S) {
@@ -26,6 +26,8 @@
   Cards.showReset = function (S) { CARD.kind = 'reset'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
   Cards.showTravel = function (S, id) { const d = G.Seasons.byId[id]; if (!d) return; CARD.kind = 'travel'; CARD.info = d; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
   Cards.showSeasons = function (S) { CARD.kind = 'seasons'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
+  Cards.showGifts = function (S) { S.ui.settings = false; CARD.kind = 'gifts'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
+  Cards.showShop = function (S) { S.ui.settings = false; CARD.kind = 'shop'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
   Cards.showAge = function (S) { S.ui.settings = false; G.Age.open(); CARD.kind = 'age'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
   Cards.showDev = function (S) { if (!G.Dev.on) return; S.ui.settings = false; CARD.kind = 'dev'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
   Cards.showGift = function (S, amount) { CARD.kind = 'gift'; CARD.info = { amount }; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
@@ -50,6 +52,7 @@
     if (versionTapT > 0) { versionTapT -= dt; if (versionTapT <= 0) versionTaps = 0; }
     if (S.ui.card) { CARD.t += dt; if (CARD.closing > 0) { CARD.closing += dt; if (CARD.closing > 0.3) { const then = CARD.kind === 'help' && CARD.info && CARD.info.then; evClose.kind = CARD.kind; S.ui.card = null; G.Game.syncMode(S); G.Bus.emit('ui:card:close', evClose); if (then) then(S); } } }
     else if (G.Age.needed() && (S.mode === 'title' || S.mode === 'play')) Cards.showAge(S);   // store apps: the age question comes before anything else
+    else if (G.Shop.offerDue(S)) Cards.showShop(S);                                     // just after a short ad: mention Remove ads (every 2 days at most)
     else if (remindPending && S.mode === 'play') { remindPending = false; Cards.showRemind(S); }
     else if (pendingTravel) { pendingT -= dt; if (pendingT <= 0 && S.mode === 'play') { const id = pendingTravel; pendingTravel = 0; Cards.showTravel(S, id); } }
   };
@@ -104,6 +107,8 @@
         return true;
       }
       if (CARD.kind === 'age') return G.Age.tap(S, x, y);
+      if (CARD.kind === 'gifts') return G.Gifts.tap(S, x, y);
+      if (CARD.kind === 'shop') return G.Shop.tap(S, x, y);
       if (CARD.kind === 'dev') return G.Dev.tap(S, x, y);
       if (CARD.kind === 'goals') return G.Goals.tap(S, x, y);
       if (CARD.kind === 'help') return G.Help.tap(S, x, y);
@@ -135,6 +140,7 @@
         if (b === 'Guestbook') { Cards.showGoals(S); }
         else if (b === 'How to play') { Cards.showHelp(S, null); }
         else if (b === 'About') { Cards.showAbout(S); }
+        else if (b === 'Remove ads' || b === 'Ads removed') { Cards.showShop(S); }
         else if (b === 'Watch the ending') { S.ui.settings = false; G.Game.syncMode(S); G.Finale.start(S, { replay: true }); }
         else if (b === 'Seasons') { S.ui.settings = false; Cards.showSeasons(S); }
         else if (b === 'Main menu') { S.ui.settings = false; G.Game.syncMode(S); G.Title.show(S); }
@@ -173,6 +179,8 @@
       ctx.fillStyle = PAL.rgba(PAL.ink, 0.45 * (1 - k)); ctx.fillRect(0, 0, 540, H);
       ctx.save(); ctx.translate(0, k * H);
       if (CARD.kind === 'age') { G.Age.draw(ctx, S, k); ctx.restore(); return; }
+      if (CARD.kind === 'gifts') { G.Gifts.draw(ctx, S, k); ctx.restore(); return; }
+      if (CARD.kind === 'shop') { G.Shop.draw(ctx, S, k); ctx.restore(); return; }
       if (CARD.kind === 'dev') { G.Dev.draw(ctx, S, k); ctx.restore(); return; }
       if (CARD.kind === 'goals') { G.Goals.draw(ctx, S, k); ctx.restore(); return; }
       if (CARD.kind === 'help') { G.Help.draw(ctx, S, k); ctx.restore(); return; }
