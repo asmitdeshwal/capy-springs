@@ -87,6 +87,7 @@
     Bus.on('gong', e => { Audio.play('gong'); if (e.full) { Audio.play('fanfare', 1, 0.7); Audio.haptic(cur(), 25); } });
     Bus.on('snow:start', () => { Audio.play('wind'); Audio.play('chime', 0.7, 0.5); }); Bus.on('snow:clear', () => Audio.play('scrape'));
     Bus.on('lift:warn', () => Audio.play('chime', 1.2, 0.6));
+    Bus.on('guest:lost', () => Audio.play('nope', 1, 0.5));
     Bus.on('goal:done', () => { Audio.play('stamp'); Audio.play('pip'); }); Bus.on('goal:all', () => Audio.play('fanfare')); Bus.on('goal:card', () => Audio.play('fanfare')); Bus.on('vip:arrive', () => { Audio.play('fanfare'); Audio.play('chime'); Audio.haptic(cur(), 30); });
     Bus.on('kaa:land', () => Audio.play('caw')); Bus.on('kaa:steal', () => Audio.play('caw', 0.8)); Bus.on('kaa:tap', () => { Audio.play('chime'); Audio.play('fanfare', 1, 0.6); });
     Bus.on('heat:cold', () => Audio.play('shiver')); Bus.on('ui:cold-refusal', () => Audio.play('shiver'));

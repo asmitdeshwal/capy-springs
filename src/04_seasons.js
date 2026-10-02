@@ -26,13 +26,14 @@
     d.unlocked[1] = true;
     return d;
   };
-  Seasons.writeMeta = function () { try { localStorage.setItem(Seasons.META_KEY, JSON.stringify(Seasons.meta)); return true; } catch (e) { return false; } };
-  Seasons.clearMeta = function () { Seasons.meta = defaultMeta(); try { localStorage.removeItem(Seasons.META_KEY); } catch (e) { /* ignore */ } };
+  // writes go through Save.store once it exists (native apps mirror it into Capacitor Preferences); this file loads before 17_save.js
+  Seasons.writeMeta = function () { const raw = JSON.stringify(Seasons.meta); if (G.Save && G.Save.store) return G.Save.store.set(Seasons.META_KEY, raw); try { localStorage.setItem(Seasons.META_KEY, raw); return true; } catch (e) { return false; } };
+  Seasons.clearMeta = function () { Seasons.meta = defaultMeta(); if (G.Save && G.Save.store) { G.Save.store.remove(Seasons.META_KEY); return; } try { localStorage.removeItem(Seasons.META_KEY); } catch (e) { /* ignore */ } };
 
   // ---- pick the season for this page load and apply its pack ----
   Seasons.meta = Seasons.readMeta();
   let want = typeof G.SEASON_ID === 'number' ? G.SEASON_ID : (G.HEADLESS ? 1 : Seasons.meta.season), forced = false;
-  try { const m = /[?&]season=(\d+)/.exec(location.search); if (m) { want = parseInt(m[1], 10); forced = true; } } catch (e) { /* no location (headless) */ }   // dev shortcut: ?season=2
+  try { const m = /[?&]season=(\d+)/.exec(location.search); if (m && window.CAPY_DEV_BUILD !== false) { want = parseInt(m[1], 10); forced = true; } } catch (e) { /* no location (headless) */ }   // dev shortcut: ?season=2 (never in a store build)
   if (!Seasons.byId[want] || (!G.HEADLESS && !forced && (!Seasons.meta.unlocked[want] || Seasons.byId[want].hidden))) want = 1;
   if (!G.HEADLESS && Seasons.meta.season !== want && !forced) { Seasons.meta.season = want; Seasons.writeMeta(); }   // a save pointing at a hidden place comes home
   const cur = Seasons.current = G.SEASON = Seasons.byId[want];

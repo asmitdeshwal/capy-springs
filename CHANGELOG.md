@@ -1,5 +1,20 @@
 # Capy Springs — changelog
 
+## 1.11.0 — release readiness: help for new players, bug sweep, low-end speed, app-store projects (2026-10-02)
+
+An eight-lens audit (state and saves, simulation, UI and input, low-end rendering, platform, store rules and legal, the brand-new player, "unfinished" tells), every bug finding checked by a second reviewer, then fixed.
+
+- **How to play**: three illustrated pages (walk and lead, grow the inn, hot water and splashes) open before the very first PLAY, and from HOW TO PLAY on the title and in Settings. Tap the right half for next; X skips.
+- **About**: version, credits, privacy policy and terms (both stores require an in-app privacy link), the Capacitor licence line.
+- **Explained the first time**: GOLDEN CAR, FULL CAR, LANTERN NIGHT, STEAM RUSH, SNOW SQUALL, MOMO and a cold boiler each carry a one-line explanation under their banner the first time; the boiler gauge and the line of guests get a caption when they first appear; the title says what the game is in one line; every Guestbook goal says how to do it.
+- **Kinder controls**: a slow press on a button now counts; the drag hint (now with the word DRAG) stays until the first real drag; walking across an offering step no longer pays into it (stand still); taps during a card's slide-in are ignored, so a double tap on Reset can no longer wipe the save; bigger hit areas on the Guestbook and DEV chips; the version strip no longer overlaps the last Settings button.
+- **Clearer words**: Trail Rope → **Longer Line**, Cable Car → **Bigger Car**, Haptics → **Vibration**, the bridge's later levels announce **INN FAME II…V** (not "SEASON FAME"), no "Lv 0" badge, guests who give up show "waited too long" and do not wave.
+- **Bug fixes**: FULL CAR counted sauna→plunge guests twice; a golden Ridge Lift could overfill its platform; the first snow squall fired the moment the Ridge opened, hiding THE RIDGE OPENS; a paid sauna guest who skipped the plunge counted as lost; Kit could pick a yuzu with nowhere to go; a Lantern Night restarted on every reload; a reload refilled a cold boiler; Welcome-back earnings could be lost if the phone locked on the title; a reset left the season marked finished; a new inn's Guestbook could offer goals it could not do yet (or the same goal twice); goals now re-roll with a banner at midnight and never on a clock set back; a save from a newer build is kept instead of wiped.
+- **Low-end phones**: rounded rectangles use the fast native path; the static world is cached in 640-px tiles built only near the camera (no canvas ever passes the 4096-px GPU limit, and the Summit can now grow upwards); automatic Low effects now watches the real frame rate, caps the pixel ratio at 1.25 and swaps the multiply tints for plain ones; the game canvas is opaque; the sort and the drop-off no longer allocate every frame; 1,000,000 shows as 1M.
+- **Saves**: in the app-store builds every save is mirrored into Capacitor Preferences and restored at boot (the phone can clear WebView storage); a failed save shows SAVE FAILED once.
+- **Store builds**: Capacitor 8 Android and iOS projects (`android/`, `ios/`), portrait only, generated icons and splash screens, `android:appCategory="game"`, an iOS privacy manifest, no-encryption declaration, iPhone-only device family, home-indicator deferral, native version numbers kept in step by `npm run deploy`, developer mode and `?season=` / `?debug=` stripped from the store build; `npm run native` does the whole sync. Docs: `docs/NATIVE_BUILD.md`. Privacy policy and terms pages on the site.
+- Boot errors now say "Something did not load" with a Retry button instead of developer instructions; a sideways browser tab says "Turn your phone upright"; any portrait browser window fits by width.
+
 ## 1.10.0 — the Guestbook: daily goals, stamps, a stamp card (2026-10-02)
 
 The last item of the "one mountain" plan: a reason to open the inn every day.

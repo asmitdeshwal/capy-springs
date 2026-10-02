@@ -35,7 +35,7 @@
   Game.boot = function (opts) {
     Game.headless = !!(opts && opts.headless) || !!G.HEADLESS;
     if (!Game.headless) {
-      try { Game.debugFlag = /[?&]debug=1/.test(location.search); } catch (e) { Game.debugFlag = false; }
+      try { Game.debugFlag = G.Dev.allowed && /[?&]debug=1/.test(location.search); } catch (e) { Game.debugFlag = false; }
       G.Canvas.init(document.getElementById('game'));
     }
     G.Audio.init(null);
@@ -98,7 +98,7 @@
     if (G.Kaa.tap(S, W.x, W.y)) return;
     const id = G.Sheet.stationAt(S, W.x, W.y);
     if (id) { G.Hints.stationPoint(S, id, P); if (U.dist(S.kit.x, S.kit.y, P.x, P.y) <= C.STATION_TAP_DIST) G.Sheet.open(S, id); else G.HUD.farTap(S, id); return; }
-    if (tap.zone === 'joy' && S.car.index === 1 && !S.tutorial.DRAG) Game.nudge(S);
+    if (tap.zone === 'joy' && !S.tutorial.DRAG) Game.nudge(S);     // a tapper still gets a hop until the first real drag
   };
   Game.key = function (name) {
     const S = Game.S; if (!S) return;
@@ -109,7 +109,7 @@
       if (best) G.Sheet.open(S, best);
     } else if (name === 'ESC') { if (S.ui.sheet) G.Sheet.close(S); if (S.ui.settings) { S.ui.settings = false; Game.syncMode(S); } if (S.mode === 'intro') { S.mode = 'play'; Game.syncMode(S); } }
     else if (name === 'M') { S.settings.sound = !S.settings.sound; G.Audio.setEnabled(S, S.settings.sound); }
-    else if (name === 'DEBUG') S.ui.debug = !S.ui.debug;
+    else if (name === 'DEBUG') { if (G.Dev.on) S.ui.debug = !S.ui.debug; }
     else if (name === 'ENTER') { if (S.mode === 'title' && !S.ui.card && !S.ui.settings) G.Title.play(S); else if (S.mode === 'intro') { S.mode = 'play'; S.introT = C.INTRO_T; Game.syncMode(S); } }
     else if (name === 'DEV') { if (!G.Dev.on) return; if (S.ui.card && S.ui.card.kind === 'dev') G.Cards.close(S); else if (!S.ui.card) G.Cards.showDev(S); }
   };
@@ -136,7 +136,15 @@
   Game.updatePerf = function (dt) {
     const S = Game.S, L = G.Loop; if (!S) return;
     S.perf.frameMs = L.frameMs; S.perf.stepMs = L.stepMs;
-    if (!S.settings.lowFx) { if (L.frameMs > C.LOWFX_MS) { S.perf.slowT += dt; if (S.perf.slowT >= C.LOWFX_WINDOW) { S.settings.lowFx = true; G.Render.markStaticDirty(); } } else S.perf.slowT = 0; }
+    // slow = the real frame interval (a weak GPU rasterises after our callback returns, so JS time alone never sees it); settle a second after a start
+    if (!S.settings.lowFx && L.hitstop <= 0) { if ((L.fps < C.LOWFX_FPS || L.frameMs > C.LOWFX_MS) && L.runT > 1) { S.perf.slowT += dt; if (S.perf.slowT >= C.LOWFX_WINDOW) { S.settings.lowFx = true; G.Canvas.resize(); } } else S.perf.slowT = 0; }
   };
-  if (!G.HEADLESS) window.addEventListener('load', Game.boot);
+  // the native apps first bring back any save that WebView storage lost (Capacitor Preferences keeps a copy), then boot
+  // (the season meta was read before the restore: re-read it, and reload once if the restored meta points at another place)
+  if (!G.HEADLESS) window.addEventListener('load', () => {
+    G.Save.store.restore().then(r => {
+      if (r) { const m = G.Seasons.readMeta(); if (m.season !== G.SEASON.id) { try { location.reload(); return; } catch (e) { /* boot anyway */ } } G.Seasons.meta = m; }
+      G.Dev.refresh(); Game.boot();
+    }, () => Game.boot());
+  });
 })(window.G);

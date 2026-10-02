@@ -3,7 +3,11 @@
   'use strict';
   const C = G.C, U = G.U, PAL = G.PAL, DATA = G.DATA;
   const HUD = G.HUD = { R: {}, fly: null, S: null };
-  const BANNER = { text: '', t: 0 };
+  const BANNER = { text: '', t: 0, sub: null };
+  let kettleCapT = 0, lineCapT = 0;
+  // an event's one-line explanation, shown under its banner the FIRST time only (persisted in S.tutorial)
+  function explain(S, key, sub) { if (S.tutorial[key] > 0) return null; S.tutorial[key] = 1; return sub; }
+  const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
   const PILL = { id: null, x: 0, y: 0, text: '', bounce: 0 };
   const evLand = { value: 0 }, evNone = {};
   const P = { x: 0, y: 0 };
@@ -32,21 +36,22 @@
     Bus.on('coins:collect', e => { G.Camera.toScreen(e.wx, e.wy, P); HUD.flight(P.x, P.y, e.value, 0); });
     Bus.on('trail:join', () => { pipPulse = 0.3; });
     const T = G.Seasons.text;
-    Bus.on('car:arrive', e => { if (e.golden && !e.empty) HUD.banner(HUD.S, e.lift ? 'GOLDEN LIFT!' : T('golden', 'GOLDEN CAR!')); });
-    Bus.on('vip:arrive', () => HUD.banner(HUD.S, 'MOMO THE VIP!'));
-    Bus.on('goal:new', () => HUD.banner(HUD.S, 'NEW GUESTBOOK GOALS')); Bus.on('goal:done', e => HUD.banner(HUD.S, 'GOAL DONE  +' + e.reward)); Bus.on('goal:all', () => HUD.banner(HUD.S, 'ALL GOALS DONE!')); Bus.on('goal:card', () => HUD.banner(HUD.S, 'STAMP CARD FULL!'));
-    Bus.on('fullcar', () => HUD.banner(HUD.S, T('fullcar', 'FULL CAR!')));
-    Bus.on('famous', () => HUD.banner(HUD.S, T('famous', 'FAMOUS INN!')));
-    Bus.on('fame', () => HUD.banner(HUD.S, T('fame', 'SEASON FAME')));
-    Bus.on('night:start', () => HUD.banner(HUD.S, T('night', 'LANTERN NIGHT')));
-    Bus.on('heat:rush:start', e => { if (e.chain === 0 && !rushBannerShown) { rushBannerShown = true; HUD.banner(HUD.S, T('rush', 'STEAM RUSH')); } });
+    Bus.on('car:arrive', e => { if (e.golden && !e.empty) HUD.banner(HUD.S, e.lift ? 'GOLDEN LIFT!' : T('golden', 'GOLDEN CAR!'), explain(HUD.S, 'X_GOLDEN', 'twice the guests, x1.5 pay: seat them all')); });
+    Bus.on('vip:arrive', () => HUD.banner(HUD.S, 'MOMO THE VIP!', explain(HUD.S, 'X_VIP', 'he pays x10 wherever he soaks')));
+    Bus.on('goal:new', () => HUD.banner(HUD.S, 'NEW GUESTBOOK GOALS')); Bus.on('goal:done', e => HUD.banner(HUD.S, 'GOAL DONE  +' + e.reward)); Bus.on('goal:all', () => HUD.banner(HUD.S, 'ALL GOALS DONE!')); Bus.on('goal:card', () => HUD.banner(HUD.S, 'STAMP CARD FULL!', 'the next car is golden'));
+    Bus.on('fullcar', () => HUD.banner(HUD.S, T('fullcar', 'FULL CAR!'), explain(HUD.S, 'X_FULLCAR', 'a whole car seated: +2 koban per guest')));
+    Bus.on('famous', () => HUD.banner(HUD.S, T('famous', 'FAMOUS INN!'), '+25% pay on everything'));
+    Bus.on('fame', e => HUD.banner(HUD.S, T('fame', 'INN FAME ' + (ROMAN[e.level] || '')), '+5% pay on everything'));
+    Bus.on('night:start', () => HUD.banner(HUD.S, T('night', 'LANTERN NIGHT'), explain(HUD.S, 'X_NIGHT', 'cars every 12 s and everyone pays x1.2')));
+    Bus.on('heat:rush:start', e => { if (e.chain === 0 && !rushBannerShown) { rushBannerShown = true; HUD.banner(HUD.S, T('rush', 'STEAM RUSH'), explain(HUD.S, 'X_RUSH', 'hot baths soak twice as fast at x1.5 pay. Keep stoking!')); } });
     Bus.on('season:unlock', e => HUD.banner(HUD.S, 'SEASON ' + e.id + ' OPEN!'));
-    Bus.on('ridge:open', () => HUD.banner(HUD.S, 'THE RIDGE OPENS!'));
-    Bus.on('snow:start', () => HUD.banner(HUD.S, 'SNOW SQUALL'));
+    Bus.on('ridge:open', () => HUD.banner(HUD.S, 'THE RIDGE OPENS!', 'walk up the bridge: the lift brings guests there'));
+    Bus.on('snow:start', () => HUD.banner(HUD.S, 'SNOW SQUALL', explain(HUD.S, 'X_SNOW', 'drifts slow everyone: walk through them to clear')));
+    Bus.on('heat:cold', () => { if (!HUD.S.tutorial.X_COLD) { HUD.S.tutorial.X_COLD = 1; HUD.banner(HUD.S, 'THE BOILER IS COLD', 'carry logs from the woodpile to the boiler'); } });
   };
   HUD.flight = function (x0, y0, value, delay) { const f = HUD.fly.alloc(); if (!f) { HUD.S.ui.coinBounce = 1; return; } f.x0 = x0; f.y0 = y0; f.t = 0; f.value = value; f.delay = delay || 0; inFlight += value; };
   HUD.offlineRain = function (S, value) { const n = Math.min(20, Math.max(1, value)); for (let i = 0; i < n; i++) HUD.flight(270 + (U.hash(i, 1) - 0.5) * 300, G.Canvas.H * 0.5 + (U.hash(i, 2) - 0.5) * 200, i === n - 1 ? value - Math.floor(value / n) * (n - 1) : Math.floor(value / n), i * 0.04); };
-  HUD.banner = function (S, text) { BANNER.text = text; BANNER.t = 0; S.ui.banner = BANNER; };
+  HUD.banner = function (S, text, sub) { BANNER.text = text; BANNER.sub = sub || null; BANNER.t = 0; S.ui.banner = BANNER; };
   HUD.tapGear = function (S, x, y) { const r = HUD.R.gearHit; if (x < r.x0 || x > r.x1 || y < r.y0 || y > r.y1) return false; G.Cards.toggleSettings(S); return true; };
   HUD.farTap = function (S, id) { PILL.bounce = 1; if (!S.ui.arrowFlash) S.ui.arrowFlash = { id, t: C.ARROW_FLASH_T }; else { S.ui.arrowFlash.id = id; S.ui.arrowFlash.t = C.ARROW_FLASH_T; } G.Bus.emit('ui:pip', evNone); };
   HUD.levelPillFor = function (S) {
@@ -57,7 +62,9 @@
     const lv = S.levels[best]; PILL.id = best; PILL.x = P.x; PILL.y = (S.baths[best] ? S.baths[best].def.deck.y - S.baths[best].def.deck.h / 2 : P.y - 90) - 20;
     const cheap = G.Upgrades.cheapestAffordable(S);
     const tapGate = !(S.ui.arrow && S.ui.arrow.showWord) && G.Seasons.firstLit(S) && cheap && cheap.id === best && S.tutorial.TAP < 2;
-    PILL.text = tapGate ? 'TAP' : 'Lv ' + (lv.speed + lv.slots + lv.pay);
+    const sum = lv.speed + lv.slots + lv.pay;
+    if (!tapGate && sum === 0) return null;                 // nothing bought yet: no "Lv 0" badge
+    PILL.text = tapGate ? 'TAP' : 'Lv ' + sum;
     return PILL;
   };
 
@@ -79,7 +86,12 @@
     if (pipPulse > 0) pipPulse -= dt;
     if (ui.kettleSlide > 0) ui.kettleSlide = Math.max(0, ui.kettleSlide - dt / 0.4);
     ui.ribbon += ((S.heat.rush ? 1 : 0) - ui.ribbon) * Math.min(1, dt * 8);
-    if (ui.banner) { BANNER.t += dt; if (BANNER.t >= C.BANNER_T) ui.banner = null; }
+    if (ui.banner) { BANNER.t += dt; if (BANNER.t >= C.BANNER_T + (BANNER.sub ? 1.2 : 0)) ui.banner = null; }
+    // one-time captions: the boiler gauge when it slides in, "in line" by the pips on the first pickup
+    if (ui.kettleSlide > 0 && !S.tutorial.X_GAUGE) { S.tutorial.X_GAUGE = 1; kettleCapT = 6; }
+    if (kettleCapT > 0) kettleCapT -= dt;
+    if (pipPulse > 0 && !S.tutorial.X_LINE) { S.tutorial.X_LINE = 1; lineCapT = 4; }
+    if (lineCapT > 0) lineCapT -= dt;
     for (const id in ui.squash) if (ui.squash[id] > 0) ui.squash[id] = Math.max(0, ui.squash[id] - dt * 4);
     if (PILL.bounce > 0) PILL.bounce = Math.max(0, PILL.bounce - dt * 3);
     // level pill + TAP gate
@@ -89,8 +101,8 @@
     const cheap = G.Upgrades.cheapestAffordable(S); ui.chevron = cheap ? cheap.id : null;
     // drag hint
     const In = G.Input;
-    if (S.tutorial.DRAG === 0 && In.lastStickT >= 0) S.tutorial.DRAG = 1;
-    ui.dragHint = S.tutorial.DRAG === 0 && S.car.index === 1 && S.t >= C.CAR_FIRST_HOP_AT + C.DRAG_HINT_AFTER && In.lastStickT < 0 && S.mode === 'play';
+    if (S.mode === 'play' && S.tutorial.DRAG === 0 && In.lastStickT >= 0) S.tutorial.DRAG = 1;   // only a real drag in play counts (not fiddling on the title)
+    ui.dragHint = S.tutorial.DRAG === 0 && S.t >= C.CAR_FIRST_HOP_AT + C.DRAG_HINT_AFTER && In.lastStickT < 0 && S.mode === 'play';   // until the first drag, however long that takes
   };
 
   HUD.collectWorld = function (S, list) {
@@ -113,6 +125,7 @@
     // trail pips
     const pulse = S.trail.length >= S.trailCap ? 1 + 0.08 * Math.sin(S.t * 8) : 1;
     for (let i = 0; i < S.trailCap; i++) A.circle(ctx, R.pips.x + i * 15, R.pips.y, 6 * (i < S.trail.length ? pulse : 1), i < S.trail.length ? PAL.amber : PAL.rgba(PAL.ink, 0.3));
+    if (lineCapT > 0) A.text(ctx, 'guests in line', R.pips.x + S.trailCap * 15 + 6, R.pips.y + 1, 13, PAL.cream, CAPTION);
     // flights
     const fp = HUD.fly;
     for (let i = 0; i < fp.n; i++) { const f = fp.items[i]; if (f.delay > 0) continue; const u = U.easeInOutQuad(Math.min(1, f.t)); G.Art.FX.kobanAt(ctx, f.x0 + (R.coinIcon.x - f.x0) * u, f.y0 + (R.coinIcon.y - f.y0) * u - Math.sin(u * Math.PI) * 30, 1); }
@@ -128,20 +141,24 @@
       A.icon(ctx, G.Seasons.text('coldIcon', 'snow'), kb.x + kb.w * C.HEAT_COLD / h.max, kb.y - 8, 10); A.icon(ctx, 'wisp', kb.x + kb.w * C.HEAT_RUSH / h.max, kb.y - 9, 12);
       if (frac >= C.HEAT_RUSH / h.max) for (let i = 0; i < 3; i++) A.icon(ctx, 'wisp', kb.x + kb.w * (0.75 + i * 0.1), kb.y - 14 - Math.abs(Math.sin(S.t * 3 + i)) * 6, 12);
       if (ui.ribbon > 0.02) { const rb = R.ribbon, rt = G.Seasons.text('rush', 'STEAM RUSH'); ctx.globalAlpha = ui.ribbon; A.fillRRect(ctx, rb.x + (1 - ui.ribbon) * 140, rb.y, rb.w, rb.h, 6, PAL.cta); A.text(ctx, h.chain > 0 ? rt + ' x' + (h.chain + 1) : rt, rb.x + rb.w / 2 + (1 - ui.ribbon) * 140, rb.y + rb.h / 2 + 1, 13, PAL.cream); ctx.globalAlpha = 1; }
+      else if (kettleCapT > 0 && ui.kettleSlide <= 0) { const rb = R.ribbon; A.fillRRect(ctx, rb.x - 150, rb.y, rb.w + 150, rb.h + 4, 6, PAL.rgba(PAL.cream, 0.92)); A.text(ctx, 'Boiler heat: logs keep the baths hot', rb.x + rb.w / 2 - 75, rb.y + rb.h / 2 + 3, 13, PAL.ink); }
       ctx.restore();
     }
     // gear
     A.fillRRect(ctx, R.gear.x, R.gear.y, R.gear.w, R.gear.h, 14, PAL.rgba(PAL.ink, 0.35)); A.icon(ctx, 'gear', R.gear.x + 24, R.gear.y + 24, 30);
     // banner
     if (ui.banner) {
-      const b = R.banner, t = BANNER.t, k = t < 0.3 ? 1 - U.easeOutQuad(t / 0.3) : t > C.BANNER_T - 0.3 ? U.easeInQuad((t - (C.BANNER_T - 0.3)) / 0.3) : 0;
-      const x = b.x + k * 600;
-      A.fillRRect(ctx, x - b.w / 2, b.y - b.h / 2 + 3, b.w, b.h, 28, PAL.rgba(PAL.ink, 0.25));
-      A.fillRRect(ctx, x - b.w / 2, b.y - b.h / 2, b.w, b.h, 28, PAL.cream);
-      A.text(ctx, BANNER.text, x, b.y + 1, 28, PAL.cta, BANNER_OPTS);
+      const b = R.banner, t = BANNER.t, total = C.BANNER_T + (BANNER.sub ? 1.2 : 0), k = t < 0.3 ? 1 - U.easeOutQuad(t / 0.3) : t > total - 0.3 ? U.easeInQuad((t - (total - 0.3)) / 0.3) : 0;
+      const x = b.x + k * 600, sub = BANNER.sub, w = sub ? 420 : b.w, h = sub ? 78 : b.h;
+      A.fillRRect(ctx, x - w / 2, b.y - b.h / 2 + 3, w, h, 28, PAL.rgba(PAL.ink, 0.25));
+      A.fillRRect(ctx, x - w / 2, b.y - b.h / 2, w, h, 28, PAL.cream);
+      A.text(ctx, BANNER.text, x, b.y + 1, 28, PAL.cta);
+      if (sub) A.text(ctx, sub, x, b.y + 30, 13, PAL.stoneDark);
     }
+    // a browser tab turned sideways: the game is a tiny column; say so
+    if (G.Canvas.cssW > G.Canvas.cssH && G.Canvas.cssW < 900) A.pill(ctx, 270, 0.5 * H, 300, 44, 'Turn your phone upright', 18, PAL.cream, PAL.ink, null);
   };
-  const LEFT = { align: 'left' }, BANNER_OPTS = { stroke: PAL.cream, lw: 3 };
+  const LEFT = { align: 'left' }, CAPTION = { align: 'left', stroke: PAL.rgba(PAL.ink, 0.6), lw: 3 };
   HUD.drawJoystick = function (ctx, S) {
     const A = G.Art.S, st = G.Input.stick, R = HUD.R;
     if (st.alpha > 0.01) {
@@ -153,6 +170,7 @@
     if (S.ui.dragHint && S.ui.arrow) {
       const a = S.ui.arrow, k = (S.t % C.DRAG_HINT_LOOP) / C.DRAG_HINT_LOOP, dx = a.x - S.kit.x, dy = a.y - S.kit.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
       G.Art.FX.dragHint(ctx, R.dragHint.x, R.dragHint.y, dx / d * 60 * U.easeOutQuad(k), dy / d * 60 * U.easeOutQuad(k), k < 0.7 ? 1 : (1 - k) / 0.3);
+      if (!S.ui.banner) A.text(ctx, G.Seasons.word('DRAG'), R.dragHint.x, R.dragHint.y + 70, 34, PAL.cta, WORD);
     }
   };
   HUD.drawDebug = function (ctx, S) {
@@ -167,5 +185,5 @@
     ctx.fillStyle = PAL.rgba(PAL.ink, 0.6); ctx.fillRect(0, y0, 400, 70);
     for (let i = 0; i < lines.length; i++) A.text(ctx, lines[i], 8, y0 + 12 + i * 15, 11, bad ? PAL.cta : PAL.cream, DBG);
   };
-  const DBG = { align: 'left', weight: 400 };
+  const DBG = { align: 'left', weight: 400 }, WORD = { stroke: PAL.cream, lw: 4 };
 })(window.G);

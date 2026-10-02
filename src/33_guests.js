@@ -59,7 +59,7 @@
     return best;
   };
   // area: 'platform' (the cable car's cap) | 'ridge' | undefined = everyone waiting anywhere
-  Guests.countWaiting = function (S, area) { let n = 0; for (let i = 0; i < S.guests.length; i++) { const g = S.guests[i], s = g.state; if ((s === 'wait' || s === 'arrive') && (!area || g.area === area)) n++; } return n; };
+  Guests.countWaiting = function (S, area, mill) { let n = 0; for (let i = 0; i < S.guests.length; i++) { const g = S.guests[i], s = g.state; if ((s === 'wait' || s === 'arrive') && (!area || g.area === area) && (!mill || g.millRect === mill)) n++; } return n; };
   // out of the sauna: this guest now wants the Cold Plunge, waits beside the hut and the hot-cold window starts ticking (GDD 19)
   Guests.wantPlunge = function (S, g) {
     const m = MAP.RIDGE.mill;
@@ -77,8 +77,9 @@
   };
   Guests.leaveImpatient = function (S, g) {
     if (g.node) G.Trail.removeNode(S, g.node);
-    g.want = null; S.stats.lost++;
-    evG.g = g; G.Bus.emit('guest:lost', evG);
+    // a paid sauna guest who tires of waiting for the plunge was served: bored, not lost (no tally, no FULL CAR spoiled)
+    if (g.want === 'plunge' && g.paid > 0) { g.want = null; evG.g = g; G.Bus.emit('guest:bored', evG); }
+    else { g.want = null; g.lost = true; S.stats.lost++; evG.g = g; G.Bus.emit('guest:lost', evG); }
     const ex = G.Ridge.exitFor(S, g); Guests.startWalk(S, g, ex.x, ex.y, 'leave');
   };
   Guests.remove = function (S, g) { evG.g = g; G.Bus.emit('guest:gone', evG); G.State.freeGuest(S, g); };
@@ -198,7 +199,7 @@
     if (g.state === 'trail' && g.node) { p.y = g.y + g.node.bob; p.z = g.node.z; p.moving = S.kit.moving; p.walk = S.t * 8 * (g.kind === 'duck' ? 2 : 1); }
     if (g.state === 'wait' && g.walking === false && g.moving) p.dir = Math.abs(g.my - g.y) > Math.abs(g.mx - g.x) ? (g.my > g.y ? 'down' : 'up') : 'side';
     if (g.walking && g.routeI < g.routeN) { const r = g.routeArr[g.routeI]; if (Math.abs(r.x - g.x) < 1) p.dir = r.y > g.y ? 'down' : 'up'; }
-    if (g.state === 'leave' && !g.walking) { p.pose = 'wave'; p.dir = 'down'; }
+    if (g.state === 'leave' && !g.walking && !g.lost) { p.pose = 'wave'; p.dir = 'down'; }   // a guest who gave up does not wave goodbye
     return p;
   };
   const TINT = { color: null, alpha: 0 };

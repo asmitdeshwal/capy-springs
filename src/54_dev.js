@@ -18,7 +18,8 @@
     return on;
   }
   Dev.on = readFlag();
-  Dev.toggle = function (S) { Dev.on = !Dev.on; try { localStorage.setItem(Dev.KEY, Dev.on ? '1' : '0'); } catch (e) { /* ignore */ } if (!Dev.on) { Dev.infinite = false; Dev.setSpeed(1); } G.HUD.banner(S, Dev.on ? 'DEV MODE ON' : 'DEV MODE OFF'); };
+  Dev.refresh = function () { Dev.on = readFlag(); };          // after Save.store.restore() at boot
+  Dev.toggle = function (S) { Dev.on = !Dev.on; G.Save.store.set(Dev.KEY, Dev.on ? '1' : '0'); if (!Dev.on) { Dev.infinite = false; Dev.setSpeed(1); } G.HUD.banner(S, Dev.on ? 'DEV MODE ON' : 'DEV MODE OFF'); };
   Dev.setSpeed = function (v) { Dev.speed = v; G.Loop.timescale = v; };
   function say(S, text) { note = text; noteT = 2.5; G.Bus.emit('ui:pip', evNone); }
 
@@ -39,7 +40,7 @@
     { label: 'Empty the gauge', run: S => { S.heat.v = 0; S.heat.graceT = 0; } },
     { label: () => 'Debug overlay: ' + (G.S && G.S.ui.debug ? 'ON' : 'OFF'), run: S => { S.ui.debug = !S.ui.debug; } },
     { label: 'Reset this season', run: S => { G.Save.clear(); G.Seasons.resetCurrent(); G.Cards.close(S); G.Game.newGame(); G.Game.S.mode = 'title'; } },
-    { label: 'Wipe everything', run: S => { const L = G.Seasons.list; for (let i = 0; i < L.length; i++) { try { localStorage.removeItem(L[i].saveKey); } catch (e) { /* ignore */ } } G.Seasons.clearMeta(); if (G.SEASON.id !== 1) { G.Seasons.meta.season = 1; G.Seasons.writeMeta(); try { location.reload(); } catch (e) { /* ignore */ } } else { G.Cards.close(S); G.Game.newGame(); G.Game.S.mode = 'title'; } } }
+    { label: 'Wipe everything', run: S => { for (const id in G.Seasons.byId) G.Save.store.remove(G.Seasons.byId[id].saveKey); G.Seasons.clearMeta(); if (G.SEASON.id !== 1) { G.Seasons.meta.season = 1; G.Seasons.writeMeta(); try { location.reload(); } catch (e) { /* ignore */ } } else { G.Cards.close(S); G.Game.newGame(); G.Game.S.mode = 'title'; } } }
   ];
   // "Go to season n" buttons come from the registry
   const SEASON_BTNS = [];
@@ -78,6 +79,6 @@
   };
   // the DEV chip under the gear while developer mode is on (tap it to open the panel)
   Dev.chipRect = function () { const st = G.Canvas.st || 0; CHIP.x0 = 466; CHIP.y0 = st + 202; CHIP.x1 = 530; CHIP.y1 = st + 230; return CHIP; };   // under the Guestbook chip
-  Dev.tapChip = function (S, x, y) { if (!Dev.on) return false; const r = Dev.chipRect(); if (x < r.x0 || x > r.x1 || y < r.y0 || y > r.y1) return false; G.Cards.showDev(S); return true; };
+  Dev.tapChip = function (S, x, y) { if (!Dev.on) return false; const r = Dev.chipRect(); if (x < r.x0 - 16 || x > 540 || y < r.y0 - 4 || y > r.y1 + 10) return false; G.Cards.showDev(S); return true; };
   Dev.drawChip = function (ctx, S) { if (!Dev.on) return; const r = Dev.chipRect(); G.Art.S.pill(ctx, (r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2, r.x1 - r.x0, r.y1 - r.y0, 'DEV' + (Dev.speed > 1 ? ' x' + Dev.speed : ''), 13, PAL.ink, PAL.amber, null); };
 })(window.G);

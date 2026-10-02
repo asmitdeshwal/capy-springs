@@ -5,7 +5,7 @@
     STEP_MAX: 1 / 50, MAX_FRAME: 0.1, HITSTOP_CAP: 0.15,
     running: false, last: 0, timescale: 1,
     hitstop: 0, hitstopSpent: 0, hitstopWindowT: 0,
-    fps: 60, stepMs: 0, frameMs: 16,
+    fps: 60, stepMs: 0, frameMs: 16, runT: 0,          // runT: seconds since the last start (the slow-frame detector waits a second)
     stepFn: null, frameFn: null, rafId: 0
   };
   const now = () => (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
@@ -14,7 +14,7 @@
     Loop.stepFn = stepFn; Loop.frameFn = frameFn;
     if (Loop.running) return;
     Loop.running = true;
-    Loop.last = now();                       // a visibility return never produces a jump
+    Loop.last = now(); Loop.runT = 0;        // a visibility return never produces a jump
     Loop.rafId = requestAnimationFrame(tick);
   };
   Loop.stop = function () {
@@ -35,7 +35,7 @@
     let raw = (t - Loop.last) / 1000; Loop.last = t;
     if (!(raw >= 0)) raw = 0;
     const dt = Math.min(raw, Loop.MAX_FRAME) * Loop.timescale;
-    Loop.hitstopWindowT += raw;
+    Loop.hitstopWindowT += raw; Loop.runT += raw;
     if (Loop.hitstopWindowT >= 1) { Loop.hitstopWindowT -= 1; Loop.hitstopSpent = 0; }
     const t0 = now();
     const n = Math.max(1, Math.ceil(dt / Loop.STEP_MAX)), h = dt / n;   // 1 sub-step at 60-120 Hz, 2 at 30 Hz, at most 5 after a stall

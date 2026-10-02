@@ -46,6 +46,7 @@
   Sheet.tap = function (S, x, y) {
     const sh = S.ui.sheet; if (!sh) return false;
     const top = Sheet.top(S);
+    if (sh.y - top > 8) return true;                       // still rising: a double-tap on the station must not buy on the way up
     if (y < top) { Sheet.close(S); return true; }
     if (x >= 540 - 64 - 6 && x <= 540 - 4 && y >= top + 2 && y <= top + 62) { Sheet.close(S); return true; }
     for (let i = 0; i < 3; i++) {

@@ -75,7 +75,7 @@
     const c = cand(e.pointerId);
     if (c) {
       G.Canvas.toLogical(e.clientX, e.clientY, L);
-      if (U.dist(c.x, c.y, L.x, L.y) < C.TAP_PX && nowS() - c.t0 < C.TAP_MS / 1000) pushTap(c.x, c.y, c.ui ? 'ui' : null);
+      if (U.dist(c.x, c.y, L.x, L.y) < C.TAP_PX && (c.ui || nowS() - c.t0 < C.TAP_MS / 1000)) pushTap(c.x, c.y, c.ui ? 'ui' : null);   // a slow press on a button still counts
       c.used = false;
     }
   }

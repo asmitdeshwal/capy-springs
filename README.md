@@ -2,7 +2,7 @@
 
 A one-thumb, offline, arcade-idle resort builder. You are Kit, a fox innkeeper on a mountain hot spring: lead capybaras in a wobbly line into steaming baths, land Splash Chains, feed the boiler for Steam Rushes, drop yuzu in the water for double pay, and light lanterns with coins to grow the inn. No failure state, no internet needed.
 
-The game comes in **seasons**. Season 1 is the Deck (the hot spring). Light the Ridge Bridge, then the **Season Pass** (5,000 koban) beside it, and Season 2 opens: **The Mochi Terrace**, an autumn teahouse where you pound rice into mochi, seat guests at tables, run laps around the mortar and tap a thieving crow. Each season has its own save and keeps earning while you are away; the gear menu's **Seasons** card shows what is left to buy and lets you travel back and forth. To peek at Season 2 without earning it, open `index.html?season=2`.
+The whole game is one mountain. It starts on the **Deck**: hot baths to fill, a boiler to keep stoked, the yuzu grove, the mochi stall, the cable car that brings guests up the slope, the helpers Pon and Kero, and Lantern Nights when the whole inn glows. Light the Ridge Bridge and the inn climbs to the **Ridge**: the Sauna Hut, the Cold Plunge, the Massage Pavilion run by Madame Tsuru, the Ridge Lift that brings Momo the VIP, and snow squalls that roll in over the top. Every day the **Guestbook** sets three small goals and stamps a card for each one you finish. (A second season, the Mochi Terrace, was built and then shelved; `index.html?season=2` and `node test/headless.js --season 2` still run it for testing.)
 
 ## Play it right now
 
@@ -16,6 +16,8 @@ node tools/serve.js
 ```
 
 It prints a `http://192.168.x.x:5173` address. Open that on the phone, then "Add to Home Screen" for a full-screen icon. Touch anywhere in the lower part of the screen and drag: that is the joystick. Tap a bath, the boiler, the grove or the stall to upgrade it.
+
+Privacy policy and terms: `privacy.html`, `terms.html` on the site (`https://asmitdeshwal.github.io/capy-springs/privacy.html` and `.../terms.html`).
 
 ## Install it on your iPhone (no server needed afterwards)
 
@@ -41,7 +43,9 @@ Good to know: the home-screen app has its own save, separate from Safari's; a ta
 
 **Windows / Mac PC (Chrome or Edge):** run `node tools/serve.js`, open `http://localhost:5173`, and click the **install icon** at the right end of the address bar (or menu → "Install Capy Springs"). You get a Start-menu / desktop app with its own window that runs with the server off.
 
-**Android (if ever needed):** same as the iPhone, from Chrome ("Install app"). A real APK would need a Capacitor project plus Android Studio (`npm i -D @capacitor/core @capacitor/cli @capacitor/android`, `npx cap init`, `npx cap add android`).
+**Android (web version):** same as the iPhone, from Chrome ("Install app").
+
+**App-store builds:** `npm run native`, see `docs/NATIVE_BUILD.md` and `docs/STORE_LISTING.md`.
 
 Rebuild the icons, the service worker and `dist/` after any change with:
 
@@ -69,6 +73,7 @@ Open `index.html?dev=1` once, or — on the phone — tap the **version line** s
 | `test/art_smoke.html` | every character, pose and structure on one page |
 | `test/balance/` | the measured economy curve |
 | `tools/serve.js` | tiny local server for phone testing |
+| `android/`, `ios/`, `docs/NATIVE_BUILD.md`, `docs/STORE_LISTING.md` | the Capacitor app-store projects (`npm run native`), how to build them, and the store listing kit |
 
 Numbers live in `src/00_config.js` (tuning) and `src/02_data_*.js` (map, baths, lanterns, guests). Change a number there, refresh, done.
 
@@ -84,6 +89,6 @@ Prints `PASS` when the bot reaches every milestone (Cedar Bath by 30 s, Pon by 1
 
 - Play it on a real phone for 20 minutes with `?debug=1` and watch the overlay stay green (60 fps target).
 - Tune feel in `00_config.js`: Kit's speed, soak times, car period, drain rates.
-- When you want an app-store build: wrap this folder with Capacitor (Android/iOS) — nothing in the game needs a server.
+- App-store builds: `npm run native`, see `docs/NATIVE_BUILD.md` and `docs/STORE_LISTING.md`.
 - Season 3: follow `docs/SEASONS.md` §17.6 (copy the Season 2 pack and art file, add a `travel:3` step to the Terrace's ladder).
 - Remaining stretch ideas from `docs/GAME_DESIGN.md` §14.3: the Scamper dash, cosmetic headbands, photo mode (the Guestbook daily goals shipped in 1.10.0).

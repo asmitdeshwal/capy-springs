@@ -25,7 +25,7 @@
   };
   Events.endNight = function (S) { const n = S.night; n.active = false; n.next = S.t + C.NIGHT_EVERY; G.Bus.emit('night:end', evNone); };
   Events.onSeated = function (S, g) {
-    const log = S.carLog[g.carId]; if (!log) return;
+    const log = S.carLog[g.carId]; if (!log || g.paid > 0) return;    // a sauna guest re-seated at the plunge or the pavilion counts once
     log.seated++;
     if (log.seated >= log.n && !log.lost && !log.done) {
       log.done = true;

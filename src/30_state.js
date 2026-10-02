@@ -73,7 +73,8 @@
       kaa: { state: 'away', t: DATA.KAA ? DATA.KAA.every : 0, x: 0, y: 0, trayId: null, timer: 0, leaveT: 0, won: 0 },
       snow: { next: 0, active: false, t: 0, count: 0, dropT: 0, dropped: 0, drifts: [] },     // snowfall (GDD 19.3); drifts are runtime only
       goals: { day: 0, ids: [], done: [false, false, false], base: {}, stamps: 0, allDone: false },     // the Guestbook (GDD 20), persisted
-      tutorial: { LEAD: 0, SOAK: 0, COLLECT: 0, LIGHT: 0, STOKE: 0, YUZU: 0, TAP: 0, DRAG: 0, LAP: 0, PLUNGE: 0, CLEAR: 0 },
+      tutorial: { LEAD: 0, SOAK: 0, COLLECT: 0, LIGHT: 0, STOKE: 0, YUZU: 0, TAP: 0, DRAG: 0, LAP: 0, PLUNGE: 0, CLEAR: 0,
+                  HELP: 0, X_GOLDEN: 0, X_VIP: 0, X_FULLCAR: 0, X_NIGHT: 0, X_RUSH: 0, X_SNOW: 0, X_COLD: 0, X_GAUGE: 0, X_LINE: 0 },   // X_*: one-time banner explanations
       stats: { served: 0, ducks: 0, combos: [0, 0, 0, 0, 0, 0], rushes: 0, chains: 0, fullCars: 0, nights: 0, golden: 0, mochi: 0, lost: 0, vip: 0, laps: 0, kaa: 0, plunges: 0, hotCold: 0, massages: 0, fullHouses: 0, squalls: 0, cleared: 0, liftCars: 0, yuzu: 0 },
       settings: { sound: true, haptics: null, shakeFlash: true, lowFx: false },
       fx: { steam: U.pool(C.STEAM_CAP, steamItem), ripples: U.pool(C.RIPPLE_CAP, rippleItem), parts: U.pool(C.PARTICLE_CAP, partItem), pops: U.pool(C.POP_CAP, popItem), flash: 0, wash: 0 },
@@ -93,7 +94,7 @@
     g.id = S.nextId++; g.kind = kind; g.carId = carId; g.state = 'arrive'; g.golden = false; g.face = 1;
     g.patience = d.patienceWait; g.patienceMax = d.patienceWait; g.want = 'bath'; g.bathId = null; g.slot = -1; g.soakT = 0; g.soakMax = 0; g.batch = null; g.yuzuHat = false;
     g.node = null; g.sx = 1; g.sy = 1; g.squashT = 0; g.bobPhase = U.rand() * 6.28; g.hop = null; g.route = null; g.routeI = 0; g.routeN = 0; g.nextState = null; g.walk = d.walk;
-    g.millT = 0; g.waveT = 0; g.heartT = 0; g.sleepy = 0; g.shiver = false; g.queueSpot = -1; g.queueT = 0; g.paid = 0; g.sortY = 0; g.alpha = 1; g.tutorial = false; g.moving = false; g.coldOnce = false;
+    g.lost = false; g.millT = 0; g.waveT = 0; g.heartT = 0; g.sleepy = 0; g.shiver = false; g.queueSpot = -1; g.queueT = 0; g.paid = 0; g.sortY = 0; g.alpha = 1; g.tutorial = false; g.moving = false; g.coldOnce = false;
     g.area = 'platform'; g.millRect = null; g.plungeT = 0; g.hotCold = false; g.fullHouse = false; g.inSession = false;
     g.draw = G.Guests.draw;
     S.guests.push(g);

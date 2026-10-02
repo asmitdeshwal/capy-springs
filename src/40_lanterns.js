@@ -58,7 +58,7 @@
       if (fx.wiggle > 0) fx.wiggle = Math.max(0, fx.wiggle - dt * 3);
       if (fx.rearm > 0) fx.rearm -= dt;
       if (!Lanterns.active(S, id)) { fx.standT = 0; fx.acc = 0; fx.shortOn = false; fx.short = 0; fx.on = false; continue; }
-      const on = fx.rearm <= 0 && U.dist2(kit.x, kit.y, d.x, d.y) <= C.PAD_STAND_R * C.PAD_STAND_R;
+      const on = fx.rearm <= 0 && kit.stoppedT >= 0.15 && U.dist2(kit.x, kit.y, d.x, d.y) <= C.PAD_STAND_R * C.PAD_STAND_R;   // standing on the step, not walking across it
       if (!on) { fx.standT = 0; fx.acc = 0; fx.shortOn = false; fx.short = 0; fx.on = false; continue; }
       const L = S.lanterns[id], cost = d.costs[L.level], remaining = cost - L.sunk;
       if (!fx.on) { fx.on = true; fx.tickT = C.DRAIN_TICK; }

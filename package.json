@@ -1,6 +1,6 @@
 {
   "name": "capy-springs",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "private": true,
   "description": "Capy Springs - a one-thumb offline arcade-idle onsen builder (vanilla Canvas JS, no dependencies)",
   "scripts": {
@@ -8,7 +8,9 @@
     "share": "node tools/share.js 5173",
     "pack": "node tools/pack.js",
     "test": "node test/headless.js --seconds 3000 && node test/headless.js --season 2 --seconds 2400 && node test/headless.js --fuzz 300 && node test/headless.js --fuzz 300 --season 2",
-    "deploy": "node tools/deploy.js"
+    "deploy": "node tools/deploy.js",
+    "native": "node tools/pack.js && node tools/native_assets.js && npx capacitor-assets generate --ios --android --iconBackgroundColor \"#FFC857\" --iconBackgroundColorDark \"#FFC857\" --splashBackgroundColor \"#F6F1E7\" --splashBackgroundColorDark \"#F6F1E7\" && npx cap sync",
+    "sync": "node tools/pack.js && npx cap sync"
   },
   "devDependencies": {
     "@capacitor/android": "^8.5.2",

@@ -6,7 +6,7 @@
   let resizeTimer = 0;
 
   Canvas.init = function (el) {
-    Canvas.el = el; Canvas.ctx = el.getContext('2d');
+    Canvas.el = el; Canvas.ctx = el.getContext('2d', { alpha: false });   // opaque: no compositor blend over the page
     Canvas.resize();
     const onR = () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(Canvas.resize, 100); };
     window.addEventListener('resize', onR);
@@ -17,9 +17,11 @@
     const cssW = window.innerWidth || 540, cssH = window.innerHeight || 960;
     let dpr = Math.min(window.devicePixelRatio || 1, C.DPR_CAP);
     if (cssW * dpr > C.DPR_WIDE_PX) dpr = Math.min(dpr, C.DPR_CAP_WIDE);
+    if (G.S && G.S.settings && G.S.settings.lowFx) dpr = Math.min(dpr, C.DPR_CAP_LOWFX);     // low effects: fewer pixels on every pass
     let scale, H, offX, offY;
-    if (cssH / cssW >= 16 / 9) {
-      scale = cssW / 540; H = U.clamp(Math.round(cssH / scale), 960, 1200); offX = 0; offY = Math.round((cssH - H * scale) / 2);
+    // any portrait viewport fits by width (a browser tab with toolbars is shorter than 16:9 but must not shrink the game to a column)
+    if (cssW < cssH || cssH / cssW >= 16 / 9) {
+      scale = cssW / 540; H = U.clamp(Math.round(cssH / scale), 800, 1200); offX = 0; offY = Math.round((cssH - H * scale) / 2);
     } else {
       scale = cssH / 960; H = 960; offX = Math.round((cssW - 540 * scale) / 2); offY = 0;
     }

@@ -6,9 +6,9 @@
   // label / blurb are what the step shows when Kit is near (the name, and one line of what the koban buy); labels[] / blurbs[] vary per level
   G.DATA.LANTERNS = [
     { id: 'cedar',  label: 'Cedar Bath',   x: 420, y: 1965, costs: [20],                              requires: [],                             effect: 'build:cedar,boiler,woodpile', blurb: 'A hot bath, with a boiler to keep it hot' },
-    { id: 'trail',  label: 'Trail Rope',   x: 50,  y: 1990, costs: [35, 200, 700],                    requires: ['cedar'],                      effect: 'trailCap:5,8,12', blurbs: ['Lead 5 guests at once', 'Lead 8 guests at once', 'Lead 12 guests at once'] },
+    { id: 'trail',  label: 'Longer Line',  x: 50,  y: 1990, costs: [35, 200, 700],                    requires: ['cedar'],                      effect: 'trailCap:5,8,12', blurbs: ['Lead 5 guests at once', 'Lead 8 guests at once', 'Lead 12 guests at once'] },
     { id: 'grove',  label: 'Yuzu Grove',   x: 120, y: 1745, costs: [60],                              requires: ['cedar'],                      effect: 'build:grove', blurb: 'Yuzu: drop one in a bath for x2 pay' },
-    { id: 'car',    label: 'Cable Car',    x: 490, y: 2000, costs: [70, 250, 600],                    requires: ['trail'],                      effect: 'carLevel:1,2,3', blurbs: ['5 guests per car, ducks too', '7 guests per car', '9 guests per car'] },
+    { id: 'car',    label: 'Bigger Car',   x: 490, y: 2000, costs: [70, 250, 600],                    requires: ['trail'],                      effect: 'carLevel:1,2,3', blurbs: ['5 guests per car, ducks too', '7 guests per car', '9 guests per car'] },
     { id: 'pon',    label: 'Hire Pon',     x: 405, y: 1735, costs: [80],                              requires: ['cedar'],                      effect: 'hire:pon', blurb: 'Pon stokes the boiler for you' },
     { id: 'stall',  label: 'Snack Stall',  x: 430, y: 1585, costs: [120],                             requires: ['grove'],                      effect: 'build:stall', blurb: 'Mochi for hungry guests: more koban' },
     { id: 'kero',   label: 'Hire Kero',    x: 350, y: 1450, costs: [150],                             requires: ['stall'],                      effect: 'hire:kero', blurb: 'Kero picks yuzu for the stall' },

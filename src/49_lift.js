@@ -23,9 +23,11 @@
   function arrive(S) {
     const c = S.lift, plat = LIFT.platform;
     c.index++; c.carId = ID_BASE + c.index;
-    let n = Math.max(0, Math.min(LIFT.guests, plat.cap - G.Guests.countWaiting(S, 'ridge')));
+    // double first, then fit what the lift platform itself has room for (plunge-waiters by the sauna do not count: they mill elsewhere)
+    let n = LIFT.guests;
     c.golden = LIFT.goldenEvery > 0 && c.index % LIFT.goldenEvery === 0;
-    if (c.golden) n = Math.min(n * C.GOLDEN_GUESTS, plat.cap);
+    if (c.golden) n *= C.GOLDEN_GUESTS;
+    n = Math.max(0, Math.min(n, plat.cap - G.Guests.countWaiting(S, 'ridge', plat.mill)));
     // Momo: once per Lantern Night, once the sauna exists, he steps off last
     c.vip = !!(S.night.active && !S.night.momo && S.built.sauna && DATA.GUESTS.momo);
     if (c.vip) { n += 1; S.night.momo = true; }

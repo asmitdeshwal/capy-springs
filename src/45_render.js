@@ -2,14 +2,16 @@
 (function (G) {
   'use strict';
   const C = G.C, U = G.U, PAL = G.PAL, DATA = G.DATA, MAP = DATA.MAP;
-  const Render = G.Render = { list: [], textList: [], staticCanvas: null, staticDirty: true, sdpr: 1, haloSprite: null, sctx: null };
-  const byY = (a, b) => a.sortY - b.sortY;
+  const Render = G.Render = { list: [], textList: [], tiles: [], staticDirty: true, sdpr: 1, haloSprite: null };
+  const byY = (a, b) => (a.sortY < b.sortY ? -1 : a.sortY > b.sortY ? 1 : 0);     // small ints: no boxed doubles per comparison
+  // the static world is cached in horizontal TILES (built lazily when the camera nears them, released when far away): no canvas is ever
+  // taller than TILE_H * sdpr device px (cheap GPUs fall back to software above 4096), and memory stays ~4 tiles whatever the world height
+  const TILE_H = 640, SEAM = 2;
   const P = { x: 0, y: 0 };
-  const STATIC_H = MAP.H - MAP.STATIC_Y0;
 
   Render.markStaticDirty = function () { Render.staticDirty = true; };
   Render.init = function (S) {
-    if (!Render.staticCanvas) Render.staticCanvas = document.createElement('canvas');
+    if (!Render.tiles.length) for (let y = MAP.STATIC_Y0; y < MAP.H; y += TILE_H) Render.tiles.push({ cv: null, y0: y, h: Math.min(TILE_H, MAP.H - y), dirty: true });
     Render.onResize();
     if (!Render.haloSprite) buildHalo();
     Render.staticDirty = true;
@@ -31,11 +33,9 @@
     c.fillStyle = g; c.fillRect(0, 0, size, size);
     Render.haloSprite = cv;
   }
-  Render.rebuildStatic = function (S) {
-    const cv = Render.staticCanvas, s = Render.sdpr, W = G.Art.W;
-    cv.width = Math.round(MAP.W * s); cv.height = Math.round(STATIC_H * s);
-    const c = Render.sctx = cv.getContext('2d');
-    c.setTransform(s, 0, 0, s, 0, -MAP.STATIC_Y0 * s);
+  // the whole static draw list, in world coordinates (each tile runs it under its own transform; the canvas bounds clip the rest)
+  function drawStatic(c, S) {
+    const W = G.Art.W;
     W.terrain(c, MAP.STATIC_Y0, MAP.H); W.valley(c); W.lane(c); W.rocks(c); W.pines(c); W.stoneLanterns(c, false); W.platform(c); W.cable(c); W.bridge(c);
     if (MAP.RIDGE && W.ridgeDecor) W.ridgeDecor(c);
     for (let i = 0; i < DATA.BATHS.length; i++) { const d = DATA.BATHS[i]; if (S.built[d.id]) W.deckPlate(c, d); }
@@ -43,17 +43,33 @@
     if (S.built.stall) W.stallBody(c, DATA.STATIONS.stall.x, DATA.STATIONS.stall.y);
     if (S.built.grove) { const n = Math.min(G.Upgrades.treeCount(S), S.grove.trees.length); for (let i = 0; i < n; i++) W.treeBody(c, S.grove.trees[i].x, S.grove.trees[i].y); }
     if (S.built.boiler) W.boilerBody(c, DATA.STATIONS.boiler.x, DATA.STATIONS.boiler.y);
-    Render.staticDirty = false;
-  };
+  }
+  function buildTile(S, t) {
+    const s = Render.sdpr, w = Math.round(MAP.W * s), h = Math.round((t.h + SEAM) * s);
+    if (!t.cv) t.cv = document.createElement('canvas');
+    if (t.cv.width !== w || t.cv.height !== h) { t.cv.width = w; t.cv.height = h; }
+    const c = t.cv.getContext('2d', { alpha: false });
+    c.setTransform(s, 0, 0, s, 0, -t.y0 * s);
+    drawStatic(c, S);
+    t.dirty = false;
+  }
+  Render.rebuildStatic = function (S) { Render.staticDirty = true; };      // tiles rebuild lazily, only where the camera is
 
   Render.frame = function (S, ctx) {
-    if (Render.staticDirty) Render.rebuildStatic(S);
     const Cv = G.Canvas, Cam = G.Camera, H = Cv.H, s = Render.sdpr, list = Render.list, tl = Render.textList;
     Cv.begin(ctx);
     Cam.apply(ctx);
-    // 1. static slice, 1:1 blit
-    const sy = Math.max(0, (Cam.y - MAP.STATIC_Y0) * s), sh = Math.min(H * s, Render.staticCanvas.height - sy);
-    if (sh > 0) ctx.drawImage(Render.staticCanvas, 0, sy, MAP.W * s, sh, 0, Cam.y + (sy / s - (Cam.y - MAP.STATIC_Y0)), MAP.W, sh / s);
+    // 1. static tiles: the ones the camera sees (each overlaps the next by SEAM px, so no hairline between them)
+    {
+      const T = Render.tiles, top = Cam.y - 60, bot = Cam.y + H + 60;
+      if (Render.staticDirty) { for (let i = 0; i < T.length; i++) T[i].dirty = true; Render.staticDirty = false; }
+      for (let i = 0; i < T.length; i++) {
+        const t = T[i];
+        if (t.y0 + t.h < top || t.y0 > bot) { if (t.cv && t.cv.width && (t.y0 + t.h < top - TILE_H || t.y0 > bot + TILE_H)) { t.cv.width = 0; t.cv.height = 0; t.dirty = true; } continue; }
+        if (t.dirty || !t.cv || !t.cv.width) buildTile(S, t);
+        ctx.drawImage(t.cv, 0, t.y0, MAP.W, t.h + SEAM);
+      }
+    }
     // 2. ground pass
     G.Lanterns.drawGround(ctx, S); G.Heat.drawGround(ctx, S); G.Baths.drawGround(ctx, S); G.Snow.drawGround(ctx, S); G.Coins.drawGround(ctx, S); G.FX.drawGround(ctx, S);
     // 3. sorted pass
@@ -70,7 +86,10 @@
     G.Snow.drawWeather(ctx, Cam.y, H, S.t, low);                                                 // a squall's flakes and cool tint
     // 5. night tint + halos (lit lanterns keep a faint glow by day)
     const fade = S.night.fade;
-    if (fade > 0) { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = PAL.rgba(PAL.skyNight, (low ? C.NIGHT_TINT_LOW : C.NIGHT_TINT) * fade); ctx.fillRect(0, Cam.y, MAP.W, H); ctx.globalCompositeOperation = 'source-over'; }
+    if (fade > 0) {
+      if (low) { ctx.fillStyle = PAL.rgba(PAL.skyNight, 0.36 * fade); ctx.fillRect(0, Cam.y, MAP.W, H); }      // one ordinary blended quad on weak GPUs
+      else { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = PAL.rgba(PAL.skyNight, C.NIGHT_TINT * fade); ctx.fillRect(0, Cam.y, MAP.W, H); ctx.globalCompositeOperation = 'source-over'; }
+    }
     if (fade > 0 && G.Art.W.nightExtra) G.Art.W.nightExtra(ctx, Cam.y, H, fade, S.t, low);     // a season's moon / drifting leaves
     {
       ctx.globalCompositeOperation = 'lighter';

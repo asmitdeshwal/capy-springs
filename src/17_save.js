@@ -6,6 +6,23 @@
   const OFF = { away: 0, cars: 0, coins: 0, floorCoins: 0, show: false };
   let storageWarned = false;
 
+  // ---- storage: localStorage, mirrored into Capacitor Preferences in the native apps (the OS may clear WebView storage under pressure;
+  // Preferences lives in the app's own container and survives). restore() runs once at boot, before the save is read.
+  function prefs() { try { const c = window.Capacitor; return (c && c.isNativePlatform && c.isNativePlatform() && c.Plugins && c.Plugins.Preferences) ? c.Plugins.Preferences : null; } catch (e) { return null; } }
+  Save.store = {
+    get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: (k, v) => { let ok = false; try { localStorage.setItem(k, v); ok = true; } catch (e) { ok = false; } const P = prefs(); if (P) { try { P.set({ key: k, value: v }).catch(() => {}); } catch (e) { /* ignore */ } } return ok; },
+    remove: k => { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } const P = prefs(); if (P) { try { P.remove({ key: k }).catch(() => {}); } catch (e) { /* ignore */ } } },
+    restore: function () {
+      const P = prefs(); if (!P) return Promise.resolve(false);
+      return P.keys().then(r => Promise.all(((r && r.keys) || []).filter(k => k.indexOf('capysprings') === 0).map(k => {
+        let have = null; try { have = localStorage.getItem(k); } catch (e) { have = null; }
+        if (have) return null;
+        return P.get({ key: k }).then(v => { if (v && v.value) { try { localStorage.setItem(k, v.value); } catch (e) { /* ignore */ } } });
+      }))).then(() => true).catch(() => false);
+    }
+  };
+
   Save.serialize = function (S) {
     const lanterns = {}; for (const id in S.lanterns) lanterns[id] = { sunk: S.lanterns[id].sunk, level: S.lanterns[id].level };
     const levels = {}; for (const id in S.levels) levels[id] = { speed: S.levels[id].speed, slots: S.levels[id].slots, pay: S.levels[id].pay };
@@ -79,10 +96,12 @@
     const pending = (S.ui && S.ui.card && S.ui.card.kind === 'offline' && !(S.ui.card.closing > 0)) || !!(G.Title && G.Title.pending && G.Title.pending.show);   // ...or still waiting behind the title's PLAY
     if (!pending) S.savedAt = Date.now();
     G.Seasons.recordProgress(S);
-    try { localStorage.setItem(Save.KEY, JSON.stringify(Save.serialize(S))); return true; }
-    catch (e) { if (!storageWarned) { storageWarned = true; U.warnOnce('save', 'localStorage write failed: ' + (e && e.message)); } return false; }
+    let raw = null; try { raw = JSON.stringify(Save.serialize(S)); } catch (e) { raw = null; }
+    if (raw && Save.store.set(Save.KEY, raw)) return true;
+    if (!storageWarned) { storageWarned = true; U.warnOnce('save', 'save write failed'); if (G.HUD && G.HUD.banner && !G.Game.headless) G.HUD.banner(S, 'SAVE FAILED'); }   // once: private mode, storage full
+    return false;
   };
-  Save.clear = function () { try { localStorage.removeItem(Save.KEY); } catch (e) { /* ignore */ } };
+  Save.clear = function () { Save.store.remove(Save.KEY); };
   Save.tick = function (S, dt) { S.saveT += dt; if (S.saveT >= C.SAVE_EVERY) { S.saveT = 0; Save.write(S); } };
   Save.rate = function (income) { return Math.min(C.RATE_CAP_PER_S, U.median(income.buckets) / C.INCOME_BUCKET); };
   function offlineCalc(income, lanterns, savedAt, nowMs, floorCoins) {

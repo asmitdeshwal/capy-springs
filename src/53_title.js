@@ -15,6 +15,7 @@
     let y = 0.58 * H + 90;
     if (many) { BTN.push({ id: 'seasons', x: 120, y, w: 300, h: 56 }); y += 72; }
     BTN.push({ id: 'goals', x: 120, y, w: 300, h: 56 }); y += 72;
+    BTN.push({ id: 'help', x: 120, y, w: 300, h: 56 }); y += 72;
     BTN.push({ id: 'settings', x: 120, y, w: 300, h: 56 });
     if (G.Dev.on) BTN.push({ id: 'dev', x: 390, y: H - (G.Canvas.sb || 0) - 56, w: 130, h: 40 });
   }
@@ -27,8 +28,14 @@
   };
   // PLAY: the Welcome-back card that boot held back shows now; otherwise the usual intro fade
   Title.play = function (S) {
-    const info = Title.pending; Title.pending = null;
     G.Bus.emit('ui:pip', EV);
+    G.Input.lastStickT = -1;                             // fiddling on the title is not the first drag
+    // a brand-new inn reads the How-to-play pages first (three taps), then the intro
+    if (!Title.hasProgress(S) && !S.tutorial.HELP) { S.tutorial.HELP = 1; S.mode = 'play'; G.Cards.showHelp(S, Title.begin); return; }
+    Title.begin(S);
+  };
+  Title.begin = function (S) {
+    const info = Title.pending; Title.pending = null;
     if (info && info.show) { S.mode = 'play'; G.Cards.showOffline(S, info); return; }
     S.mode = 'intro'; S.introT = 0;
   };
@@ -40,6 +47,7 @@
       if (b.id === 'play') Title.play(S);
       else if (b.id === 'seasons') G.Cards.showSeasons(S);
       else if (b.id === 'goals') G.Cards.showGoals(S);
+      else if (b.id === 'help') G.Cards.showHelp(S, null);
       else if (b.id === 'settings') G.Cards.toggleSettings(S);
       else if (b.id === 'dev') G.Cards.showDev(S);
       return true;
@@ -57,6 +65,7 @@
     ctx.globalAlpha = 1;
     A.text(ctx, 'CAPY', 270, R.logoY - 20, 78, PAL.cta, LOGO); A.text(ctx, 'SPRINGS', 270, R.logoY + 50, 64, PAL.amber, LOGO);
     if (G.Seasons.list.length > 1 || season.id !== 1) A.pill(ctx, 270, R.logoY + 104, 300, 30, 'Season ' + season.id + '  ·  ' + season.name, 16, PAL.rgba(PAL.cream, 0.92), PAL.ink, null);
+    else A.pill(ctx, 270, R.logoY + 104, 360, 30, season.teaser || 'Lead capybaras into steaming baths.', 15, PAL.rgba(PAL.cream, 0.92), PAL.ink, null);   // what the game is, in one line
     // Kit waving and a capy in a yuzu hat, bobbing
     const p = Ch.resetPose(Ch.POSE);
     p.x = 215; p.y = R.heroY + Math.sin(t * 2) * 3; p.face = 1; p.t = t; p.pose = 'wave'; p.poseT = t % 1; Ch.kit(ctx, p, S);
@@ -68,7 +77,7 @@
       ctx.save(); ctx.translate(b.x + b.w / 2, b.y + b.h / 2); ctx.scale(pulse, pulse);
       A.fillRRect(ctx, -b.w / 2, -b.h / 2 + 4, b.w, b.h, b.h / 2, PAL.rgba(PAL.ink, 0.3));
       A.fillRRect(ctx, -b.w / 2, -b.h / 2, b.w, b.h, b.h / 2, main ? PAL.cta : dev ? PAL.ink : PAL.cream);
-      const label = main ? (Title.hasProgress(S) ? 'CONTINUE' : 'PLAY') : dev ? 'DEV MENU' : b.id === 'seasons' ? 'SEASONS' : b.id === 'goals' ? 'GUESTBOOK  ' + G.Goals.doneCount(S) + '/3' : 'SETTINGS';
+      const label = main ? (Title.hasProgress(S) ? 'CONTINUE' : 'PLAY') : dev ? 'DEV MENU' : b.id === 'seasons' ? 'SEASONS' : b.id === 'goals' ? 'GUESTBOOK  ' + G.Goals.doneCount(S) + '/3' : b.id === 'help' ? 'HOW TO PLAY' : 'SETTINGS';
       A.text(ctx, label, 0, 1, main ? 30 : dev ? 16 : 22, main || dev ? PAL.cream : PAL.ink);
       ctx.restore();
     }

@@ -10,9 +10,13 @@
   const S = Art.S = {};
   const TAU = Math.PI * 2;
 
+  // ctx.roundRect (Chrome 99+, Safari 16.4+) is an analytic rounded rect for the rasteriser: batched, no per-fill tessellation; older WebViews keep the arcTo path
+  const HAS_RR = typeof CanvasRenderingContext2D !== 'undefined' && CanvasRenderingContext2D.prototype && 'roundRect' in CanvasRenderingContext2D.prototype;
   S.rrect = function (ctx, x, y, w, h, r) {
     if (r > w / 2) r = w / 2; if (r > h / 2) r = h / 2; if (r < 0) r = 0;
-    ctx.beginPath(); ctx.moveTo(x + r, y);
+    ctx.beginPath();
+    if (HAS_RR) { ctx.roundRect(x, y, w, h, r); return; }
+    ctx.moveTo(x + r, y);
     ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r);
     ctx.closePath();
   };
@@ -47,8 +51,9 @@
     ctx.textBaseline = (opts && opts.base) || 'middle';
     const a = opts && opts.alpha !== undefined ? opts.alpha : 1;
     const prev = ctx.globalAlpha; if (a !== 1) ctx.globalAlpha = prev * a;
-    if (opts && opts.stroke) { ctx.lineJoin = 'round'; ctx.strokeStyle = opts.stroke; ctx.lineWidth = opts.lw || 3; ctx.strokeText(str, x, y); }
-    ctx.fillStyle = color; ctx.fillText(str, x, y);
+    const mw = opts && opts.maxW;      // card body copy: squeeze rather than spill past the card edge
+    if (opts && opts.stroke) { ctx.lineJoin = 'round'; ctx.strokeStyle = opts.stroke; ctx.lineWidth = opts.lw || 3; if (mw) ctx.strokeText(str, x, y, mw); else ctx.strokeText(str, x, y); }
+    ctx.fillStyle = color; if (mw) ctx.fillText(str, x, y, mw); else ctx.fillText(str, x, y);
     if (a !== 1) ctx.globalAlpha = prev;
   };
   // cream pill centred at (x, y) with unstroked text and an optional icon on the left: the only way labels, costs and level pills are drawn
@@ -69,7 +74,7 @@
     S.rrect(ctx, x0, y0, w, h, r); ctx.fillStyle = PAL.cream; ctx.fill();
     if (tail !== false) S.tri(ctx, x0 + 10, y0 + h - 1, x0 + 22, y0 + h - 1, x0 + 12, y0 + h + 8, PAL.cream);
   };
-  S.fmtCoins = function (n) { n = Math.round(n); if (n >= 10000) { const k = n / 1000; return (k >= 100 ? Math.round(k) : (Math.round(k * 10) / 10)) + 'k'; } return String(n); };
+  S.fmtCoins = function (n) { n = Math.round(n); if (n >= 1e6) { const m = n / 1e6; return (m >= 100 ? Math.round(m) : (Math.round(m * 10) / 10)) + 'M'; } if (n >= 10000) { const k = n / 1000; return (k >= 100 ? Math.round(k) : (Math.round(k * 10) / 10)) + 'k'; } return String(n); };
 
   // ---- icons: drawn centred at (x, y), `size` = bounding box ----
   S.icon = function (ctx, name, x, y, size) {
@@ -102,6 +107,8 @@
       case 'flame': ctx.fillStyle = PAL.amberDeep; ctx.beginPath(); ctx.moveTo(0, -11); ctx.quadraticCurveTo(10, 0, 0, 10); ctx.quadraticCurveTo(-10, 0, 0, -11); ctx.fill(); ctx.fillStyle = PAL.amber; ctx.beginPath(); ctx.moveTo(0, -3); ctx.quadraticCurveTo(5, 3, 0, 8); ctx.quadraticCurveTo(-5, 3, 0, -3); ctx.fill(); break;
       case 'wisp': ctx.strokeStyle = PAL.cream; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-5, 9); ctx.quadraticCurveTo(-9, 2, -4, -3); ctx.quadraticCurveTo(1, -8, -3, -11); ctx.moveTo(4, 9); ctx.quadraticCurveTo(0, 2, 5, -3); ctx.quadraticCurveTo(9, -8, 6, -11); ctx.stroke(); ctx.lineCap = 'butt'; break;
       case 'chevron': ctx.strokeStyle = PAL.cta; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(-9, 4); ctx.lineTo(0, -5); ctx.lineTo(9, 4); ctx.stroke(); ctx.lineCap = 'butt'; break;
+      case 'momo': S.circle(ctx, 0, 1, 10, '#D8D3CB'); S.ellipse(ctx, 0, 3, 6.5, 5.5, '#E36B6B'); S.circle(ctx, -2.5, 1, 1.4, PAL.ink); S.circle(ctx, 2.5, 1, 1.4, PAL.ink);
+        S.tri(ctx, -8, -6, -4, -14, 0, -6, PAL.coin); S.tri(ctx, -3, -6, 0, -15, 3, -6, PAL.coin); S.tri(ctx, 0, -6, 4, -14, 8, -6, PAL.coin); S.fillRRect(ctx, -8, -8, 16, 4, 1.5, PAL.coin); break;
       case 'lantern': S.fillRRect(ctx, -6, -8, 12, 16, 4, PAL.amber); S.fillRRect(ctx, -8, -11, 16, 4, 1, PAL.post); S.fillRRect(ctx, -2, 8, 4, 4, 1, PAL.post); break;
       case 'pon': S.circle(ctx, 0, 2, 8, PAL.tanuki); S.ellipse(ctx, 0, -5, 11, 3, PAL.straw); S.fillRRect(ctx, -6, -2, 12, 3, 1, PAL.tanukiMask); break;
       case 'kero': S.circle(ctx, 0, 3, 8, PAL.frog); S.circle(ctx, -4, -5, 3.5, PAL.cream); S.circle(ctx, 4, -5, 3.5, PAL.cream); S.circle(ctx, -4, -5, 1.6, PAL.ink); S.circle(ctx, 4, -5, 1.6, PAL.ink); break;

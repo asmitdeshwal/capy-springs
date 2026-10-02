@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Capy Springs - deploy: bump the patch version, rebuild icons / service worker / dist, commit everything and push to GitHub.
+// Capy Springs - deploy: bump the patch version (web + native projects), rebuild icons / service worker / dist, commit everything and push to GitHub.
 // GitHub Pages rebuilds the site in about a minute; installed copies pick the new version up the next time they open online.
 // Usage: npm run deploy   (or node tools/deploy.js)
 'use strict';
@@ -17,6 +17,24 @@ const next = minor ? m[1] + '.' + (Number(m[2]) + 1) + '.0' : m[1] + '.' + m[2] 
 fs.writeFileSync(cfg, s.replace(m[0], "G.VERSION = '" + next + "'"));
 const pj = path.join(root, 'package.json'), p = JSON.parse(fs.readFileSync(pj, 'utf8')); p.version = next; fs.writeFileSync(pj, JSON.stringify(p, null, 2) + '\n');
 console.log('version ' + m[1] + '.' + m[2] + '.' + m[3] + ' -> ' + next);
+
+// 1b. keep the native projects in step, so a store build after a deploy already carries the right numbers:
+//   android/app/build.gradle            versionName "X.Y.Z"  +  versionCode N
+//   ios/App/App.xcodeproj/project.pbxproj  MARKETING_VERSION = X.Y.Z  +  CURRENT_PROJECT_VERSION = N   (every occurrence: Debug + Release)
+// Both stores need the integer to grow on every upload, so N is derived from the version: major*10000 + minor*100 + patch (1.10.0 -> 11000).
+// The regexes tolerate `versionCode 1` / `versionCode = 1`, quoted or unquoted pbxproj values, and leave the rest of the formatting alone.
+syncNativeVersions(next);
+function syncNativeVersions(ver) {
+  const [maj, min, pat] = ver.split('.').map(Number), code = maj * 10000 + min * 100 + pat;
+  const gradle = path.join(root, 'android/app/build.gradle'), pbx = path.join(root, 'ios/App/App.xcodeproj/project.pbxproj');
+  if (fs.existsSync(gradle)) fs.writeFileSync(gradle, fs.readFileSync(gradle, 'utf8')
+    .replace(/(\bversionCode\s*=?\s*)\d+/g, '$1' + code)
+    .replace(/(\bversionName\s*=?\s*)"[^"]*"/g, '$1"' + ver + '"'));
+  if (fs.existsSync(pbx)) fs.writeFileSync(pbx, fs.readFileSync(pbx, 'utf8')
+    .replace(/(\bMARKETING_VERSION\s*=\s*)"?[^;"]*"?;/g, '$1' + ver + ';')
+    .replace(/(\bCURRENT_PROJECT_VERSION\s*=\s*)"?[^;"]*"?;/g, '$1' + code + ';'));
+  console.log('native: versionName / MARKETING_VERSION ' + ver + ', versionCode / CURRENT_PROJECT_VERSION ' + code);
+}
 
 // 2. rebuild, 3. commit, 4. push
 run('node tools/pack.js');

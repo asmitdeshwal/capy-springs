@@ -76,7 +76,7 @@
     evYuzu.bath = bath; G.Bus.emit('yuzu:apply', evYuzu);
     return true;
   };
-  Baths.notGoldenCount = function (S) { let n = 0; for (let i = 0; i < DATA.BATHS.length; i++) { const b = S.baths[DATA.BATHS[i].id]; if (S.built[b.id] && b.yuzuT <= 0) n++; } return n; };
+  Baths.notGoldenCount = function (S) { let n = 0; for (let i = 0; i < DATA.BATHS.length; i++) { const b = S.baths[DATA.BATHS[i].id]; if (S.built[b.id] && !b.def.plungeOnly && b.yuzuT <= 0) n++; } return n; };
   Baths.occupiedHeated = function (S) { for (let i = 0; i < DATA.BATHS.length; i++) { const b = S.baths[DATA.BATHS[i].id]; if (S.built[b.id] && b.def.heated && b.occupied) return true; } return false; };
 
   Baths.update = function (S, dt) {
@@ -92,7 +92,7 @@
             bath.coldOnce = false;
             const slot = Baths.freeSlot(S, bath);
             if (slot >= 0 && S.t - bath.lastPlop >= C.PLOP_GAP) {
-              const node = Trail.takeFirstGuest(S, g => Baths.accepts(S, bath, g));
+              const node = Trail.takeFirstGuest(S, bath.def.plungeOnly ? wantsPlunge : wantsBath);   // no closure per frame
               if (node) { Baths.plop(S, bath, node.ref, slot); bath.lastPlop = S.t; }
               else if (!bath.refusedOnce) { bath.refusedOnce = true; evCold.bath = bath; G.Bus.emit('ui:cold-refusal', evCold); }   // nobody in the line belongs here
             }

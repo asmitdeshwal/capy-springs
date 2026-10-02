@@ -34,7 +34,7 @@
   Snow.update = function (S, dt) {
     if (!SNOW) return;
     const sn = S.snow;
-    if (sn.next === 0) sn.next = S.t + SNOW.first;
+    if (sn.next === 0 || !S.built.ridge) sn.next = S.t + SNOW.first;     // the clock starts when the Ridge opens, never during its opening
     if (!sn.active && S.built.ridge && S.t >= sn.next) { sn.active = true; sn.t = 0; sn.count++; sn.dropT = 0; S.stats.squalls++; G.Bus.emit('snow:start', evNone); }
     if (sn.active) {
       sn.t += dt; sn.dropT += dt;
@@ -61,7 +61,8 @@
   };
   Snow.drawWeather = function (ctx, camY, H, t, low) {
     if (!SNOW || fade <= 0.01) return;
-    ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = PAL.rgba('#A9BCCB', 0.16 * fade); ctx.fillRect(0, camY, MAP.W, H); ctx.globalCompositeOperation = 'source-over';
+    if (low) { ctx.fillStyle = PAL.rgba('#A9BCCB', 0.10 * fade); ctx.fillRect(0, camY, MAP.W, H); }
+    else { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = PAL.rgba('#A9BCCB', 0.16 * fade); ctx.fillRect(0, camY, MAP.W, H); ctx.globalCompositeOperation = 'source-over'; }
     const n = low ? 24 : 48; ctx.fillStyle = '#FFFFFF';
     for (let i = 0; i < n; i++) {
       const sp = 40 + U.hash(i, 71) * 40, x = ((U.hash(i, 72) * 600) - t * (20 + U.hash(i, 73) * 25) + Math.sin(t * 1.5 + i) * 10 + 6000) % 600 - 30, y = camY + (((U.hash(i, 74) * H) + t * sp) % (H + 30)) - 15;

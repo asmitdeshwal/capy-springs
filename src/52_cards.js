@@ -5,11 +5,11 @@
   const Cards = G.Cards = {};
   const CARD = { kind: null, info: null, t: 0, closing: 0 };
   const evNone = {};
-  const SET = { x: 270, y: 0, w: 260, h: 348, rows: ['Sound', 'Haptics', 'Shake & flash', 'Low effects'], buttons: [] };
+  const SET = { x: 270, y: 0, w: 260, h: 348, rows: ['Sound', 'Vibration', 'Shake & flash', 'Low effects'], buttons: [] };
   const ROW_H = 74, ROWS_MAX = 3, MISSING = [];
   let pendingTravel = 0, pendingT = 0, versionTaps = 0, versionTapT = 0;
   // the popover's buttons under the toggles (Developer only in dev mode); height follows
-  function settingsButtons() { const b = SET.buttons; b.length = 0; b.push('Guestbook'); if (G.Seasons.list.length > 1) b.push('Seasons'); b.push('Main menu'); if (G.Dev.on) b.push('Developer'); b.push('Reset save'); SET.h = 8 + 4 * 56 + 12 + b.length * 48 + 16; return b; }
+  function settingsButtons() { const b = SET.buttons; b.length = 0; b.push('How to play'); b.push('Guestbook'); if (G.Seasons.list.length > 1) b.push('Seasons'); b.push('About'); b.push('Main menu'); if (G.Dev.on) b.push('Developer'); b.push('Reset save'); SET.h = 8 + 4 * 56 + 12 + b.length * 48 + 16; return b; }
 
   Cards.init = function (S) {
     pendingTravel = 0; pendingT = 0;
@@ -25,18 +25,21 @@
   Cards.showSeasons = function (S) { CARD.kind = 'seasons'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
   Cards.showDev = function (S) { if (!G.Dev.on) return; S.ui.settings = false; CARD.kind = 'dev'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
   Cards.showGoals = function (S) { S.ui.settings = false; CARD.kind = 'goals'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
+  // the How-to-play pages and the About card live in 56_help.js; `then` runs when the help closes (the first PLAY starts the intro after it)
+  Cards.showHelp = function (S, then) { S.ui.settings = false; CARD.kind = 'help'; CARD.info = { then: then || null }; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Help.open(S); G.Game.syncMode(S); };
+  Cards.showAbout = function (S) { S.ui.settings = false; CARD.kind = 'about'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
+  Cards.kind = () => (CARD.closing > 0 ? null : CARD.kind);
   Cards.close = function (S) { if (S.ui.card && !(CARD.closing > 0)) CARD.closing = 0.001; };
   // shared by the settings popover and the title screen: 7 taps on a version label within 3 s toggle developer mode; the pips count up
   Cards.versionTap = function (S) {
     if (!G.Dev.allowed) return;                          // store builds: the version label is just a label
     versionTaps++; versionTapT = 3; G.Bus.emit('ui:pip', evNone);
-    if (versionTaps >= 7) { versionTaps = 0; G.Dev.toggle(S); }
-    else if (versionTaps >= 4) G.HUD.banner(S, (7 - versionTaps) + ' MORE TAP' + (7 - versionTaps === 1 ? '' : 'S'));
+    if (versionTaps >= 7) { versionTaps = 0; G.Dev.toggle(S); }       // no countdown banner: the secret stays a secret
   };
   Cards.toggleSettings = function (S) { S.ui.settings = !S.ui.settings; G.Game.syncMode(S); };
   Cards.update = function (S, dt) {
     if (versionTapT > 0) { versionTapT -= dt; if (versionTapT <= 0) versionTaps = 0; }
-    if (S.ui.card) { CARD.t += dt; if (CARD.closing > 0) { CARD.closing += dt; if (CARD.closing > 0.3) { S.ui.card = null; G.Game.syncMode(S); } } }
+    if (S.ui.card) { CARD.t += dt; if (CARD.closing > 0) { CARD.closing += dt; if (CARD.closing > 0.3) { const then = CARD.kind === 'help' && CARD.info && CARD.info.then; S.ui.card = null; G.Game.syncMode(S); if (then) then(S); } } }
     else if (pendingTravel) { pendingT -= dt; if (pendingT <= 0 && S.mode === 'play') { const id = pendingTravel; pendingTravel = 0; Cards.showTravel(S, id); } }
   };
   function settingsRect() { const st = G.Canvas.st || 0; settingsButtons(); SET.x = 270 - SET.w / 2 + 130; SET.y = st + 166; return SET; }
@@ -48,7 +51,7 @@
 
   Cards.tap = function (S, x, y) {
     if (S.ui.card) {
-      if (CARD.closing > 0) return true;
+      if (CARD.closing > 0 || CARD.t < 0.35) return true;     // closing, or still sliding in: a double-tap must never hit a button underneath
       cardRect(CR); const cy = (CR.y0 + CR.y1) / 2;
       if (CARD.kind === 'offline') { if (x >= 160 && x <= 380 && y >= cy + 76 && y <= cy + 140) { const v = CARD.info.coins + CARD.info.floorCoins; G.Coins.add(S, v, 'offline'); G.HUD.offlineRain(S, v); CARD.closing = 0.001; } return true; }
       if (CARD.kind === 'reset') {
@@ -67,6 +70,8 @@
       }
       if (CARD.kind === 'dev') return G.Dev.tap(S, x, y);
       if (CARD.kind === 'goals') return G.Goals.tap(S, x, y);
+      if (CARD.kind === 'help') return G.Help.tap(S, x, y);
+      if (CARD.kind === 'about') return G.Help.tapAbout(S, x, y);
       if (CARD.kind === 'seasons') {
         if (x < CR.x0 || x > CR.x1 || y < CR.y0 || y > CR.y1) { CARD.closing = 0.001; return true; }
         const L = G.Seasons.list, i0 = seasonRows();
@@ -83,7 +88,7 @@
       if (!Cards.settingsHas(x, y)) { S.ui.settings = false; G.Game.syncMode(S); return true; }
       const row = Math.floor((y - r.y - 8) / 56);
       // the version strip along the popover's bottom edge: seven taps within three seconds toggle developer mode (a thumb-sized target)
-      if (y >= r.y + r.h - 34) { Cards.versionTap(S); return true; }
+      if (y >= r.y + r.h - 22) { Cards.versionTap(S); return true; }     // only the strip under the last button
       if (row === 0) { S.settings.sound = !S.settings.sound; G.Audio.setEnabled(S, S.settings.sound); }
       else if (row === 1) { S.settings.haptics = S.settings.haptics === false ? true : false; }
       else if (row === 2) { S.settings.shakeFlash = !S.settings.shakeFlash; }
@@ -91,6 +96,8 @@
       else if (y >= r.y + 244) {
         const b = SET.buttons[Math.floor((y - (r.y + 244)) / 48)];
         if (b === 'Guestbook') { Cards.showGoals(S); }
+        else if (b === 'How to play') { Cards.showHelp(S, null); }
+        else if (b === 'About') { Cards.showAbout(S); }
         else if (b === 'Seasons') { S.ui.settings = false; Cards.showSeasons(S); }
         else if (b === 'Main menu') { S.ui.settings = false; G.Game.syncMode(S); G.Title.show(S); }
         else if (b === 'Developer') { Cards.showDev(S); }
@@ -128,6 +135,8 @@
       ctx.save(); ctx.translate(0, k * H);
       if (CARD.kind === 'dev') { G.Dev.draw(ctx, S, k); ctx.restore(); return; }
       if (CARD.kind === 'goals') { G.Goals.draw(ctx, S, k); ctx.restore(); return; }
+      if (CARD.kind === 'help') { G.Help.draw(ctx, S, k); ctx.restore(); return; }
+      if (CARD.kind === 'about') { G.Help.drawAbout(ctx, S, k); ctx.restore(); return; }
       A.fillRRect(ctx, CR.x0, CR.y0 + 6, 440, 320, 24, PAL.rgba(PAL.ink, 0.3)); A.fillRRect(ctx, CR.x0, CR.y0, 440, 320, 24, PAL.cream);
       if (CARD.kind === 'offline') {
         const info = CARD.info, Ch = G.Art.Ch, p = Ch.resetPose(Ch.POSE), veh = T('vehicle', 'cable car');
@@ -148,7 +157,7 @@
         A.text(ctx, 'Season ' + d.id + ' is open!', cx, CR.y0 + 42, 26, PAL.ink);
         A.text(ctx, d.name, cx, CR.y0 + 98, 36, PAL.cta);
         A.text(ctx, d.subtitle || '', cx, CR.y0 + 138, 18, PAL.stoneDark);
-        A.text(ctx, d.teaser || '', cx, CR.y0 + 166, 15, PAL.ink);
+        A.text(ctx, d.teaser || '', cx, CR.y0 + 166, 15, PAL.ink, BODY);
         A.text(ctx, 'The Deck keeps earning while you are away.', cx, CR.y0 + 192, 13, PAL.stoneDark);
         A.fillRRect(ctx, 70, cy + 60, 190, 64, 32, PAL.rgba(PAL.ink, 0.12)); A.text(ctx, 'LATER', 165, cy + 93, 24, PAL.ink);
         A.fillRRect(ctx, 280, cy + 60, 190, 64, 32, PAL.cta); A.text(ctx, 'GO', 375, cy + 93, 26, PAL.cream);
@@ -188,5 +197,5 @@
     if (a <= 0) return;
     ctx.globalAlpha = a; ctx.fillStyle = PAL.cream; ctx.fillRect(0, 0, 540, G.Canvas.H); ctx.globalAlpha = 1;
   };
-  const LEFT = { align: 'left' }, RIGHT = { align: 'right' };
+  const LEFT = { align: 'left' }, RIGHT = { align: 'right' }, BODY = { maxW: 408 };
 })(window.G);

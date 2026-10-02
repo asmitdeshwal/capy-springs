@@ -97,8 +97,10 @@
     if (h) {
       if (h.rule !== S.ui.lastRule) {
         S.ui.lastRule = h.rule;
-        if (h.word && S.tutorial[h.word] < 2) { S.tutorial[h.word]++; obj.showWord = true; } else obj.showWord = false;
+        if (h.word && S.tutorial[h.word] < 2) { obj.showWord = true; obj.wordT = 0; obj.wordCounted = false; } else obj.showWord = false;
       }
+      // a showing only counts once the word has been visible for a second (not while a banner hides it)
+      if (obj.showWord && !obj.wordCounted && !S.ui.banner) { obj.wordT += dt; if (obj.wordT >= 1) { obj.wordCounted = true; S.tutorial[h.word]++; } }
       obj.idle = S.kit.idleT >= C.ARROW_IDLE;
       S.ui.arrow = obj;
     } else { S.ui.arrow = null; S.ui.lastRule = 0; }

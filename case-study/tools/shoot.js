@@ -2,17 +2,29 @@
 // Screenshot driver for the Capy Springs capture rig.
 //
 //   1. node tools/serve.js 5199          (from the project root, in another terminal)
-//   2. node case-study/tools/shoot.js case-study/assets/screens 5199
+//   2. node case-study/tools/shoot.js [--profile=apple|play] [out-dir] [port]
+//        node case-study/tools/shoot.js                      -> case-study/assets/screens/       (App Store, 1290 x 2796)
+//        node case-study/tools/shoot.js --profile=play       -> case-study/assets/screens-play/  (Google Play, 1080 x 1920)
 //
-// Drives headless Chrome over the DevTools Protocol so every shot is an exact
-// 430 x 932 CSS phone viewport at 3x (1290 x 2796 px). Needs Node >= 22 for the
-// built-in WebSocket and fetch. No npm packages.
+// Drives headless Chrome over the DevTools Protocol so every shot is an exact phone
+// viewport. Profiles are CSS size x deviceScaleFactor:
+//   apple  430 x 932 @3x = 1290 x 2796 px, the 6.9" iPhone size App Store Connect asks for
+//   play   360 x 640 @3x = 1080 x 1920 px, a 9:16 phone shot for the Play Console
+// Needs Node >= 22 for the built-in WebSocket and fetch. No npm packages.
 'use strict';
 const fs = require('fs'), path = require('path'), { spawn } = require('child_process');
 
+const PROFILES = {
+  apple: { width: 430, height: 932, dpr: 3, dir: 'case-study/assets/screens' },
+  play:  { width: 360, height: 640, dpr: 3, dir: 'case-study/assets/screens-play' },
+};
+const args = process.argv.slice(2), flag = args.find(a => a.startsWith('--profile=')), pos = args.filter(a => !a.startsWith('--'));
+const profile = PROFILES[flag ? flag.slice('--profile='.length) : 'apple'];
+if (!profile) { console.error('unknown profile; use --profile=' + Object.keys(PROFILES).join(' | ')); process.exit(1); }
+
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const outDir = path.resolve(process.argv[2] || 'case-study/assets/screens');
-const srvPort = process.argv[3] || '5199';
+const outDir = path.resolve(pos[0] || profile.dir);
+const srvPort = pos[1] || '5199';
 const DP = 9333;
 fs.mkdirSync(outDir, { recursive: true });
 
@@ -61,8 +73,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   await send('Page.enable'); await send('Runtime.enable');
   await send('Emulation.setDeviceMetricsOverride', {
-    width: 430, height: 932, deviceScaleFactor: 3, mobile: true, screenWidth: 430, screenHeight: 932
+    width: profile.width, height: profile.height, deviceScaleFactor: profile.dpr, mobile: true,
+    screenWidth: profile.width, screenHeight: profile.height
   });
+  console.log(`profile ${flag ? flag.slice('--profile='.length) : 'apple'}: ${profile.width * profile.dpr} x ${profile.height * profile.dpr} px -> ${outDir}`);
 
   for (const s of SHOTS) {
     await send('Page.navigate', { url: `http://127.0.0.1:${srvPort}/case-study/tools/capture.html?${s.q}` });
