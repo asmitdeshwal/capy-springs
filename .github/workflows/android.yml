@@ -6,6 +6,11 @@ name: Android build
 
 on:
   workflow_dispatch:
+    inputs:
+      test_signing:
+        description: 'No upload key yet? Check the Play bundle signing with a throwaway key'
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths:
@@ -100,6 +105,18 @@ jobs:
           path: android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
           retention-days: 30
+
+      - name: Signing self-test with a throwaway key (proves the release build before the real key exists)
+        if: env.HAS_KEY != 'true' && github.event_name == 'workflow_dispatch' && inputs.test_signing
+        run: |
+          node tools/pack.js
+          npx cap copy android
+          keytool -genkeypair -storetype PKCS12 -keystore "$RUNNER_TEMP/throwaway.p12" -alias upload -keyalg RSA -keysize 2048 -validity 2             -storepass throwaway -keypass throwaway -dname "CN=Capy Springs throwaway test key"
+          export CAPY_KEYSTORE="$RUNNER_TEMP/throwaway.p12" CAPY_KEYSTORE_PASSWORD=throwaway CAPY_KEY_ALIAS=upload CAPY_KEY_PASSWORD=throwaway
+          cd android && ./gradlew bundleRelease --no-daemon --stacktrace
+          jarsigner -verify -verbose -certs app/build/outputs/bundle/release/app-release.aab | grep -m 3 -i -E "verified|CN=" || true
+          jarsigner -verify app/build/outputs/bundle/release/app-release.aab | grep -q "jar verified" && echo "Signed bundle verified (throwaway key; nothing was uploaded)."
+          rm -f "$RUNNER_TEMP/throwaway.p12"
 
       - name: Summary
         run: |

@@ -4,7 +4,7 @@ The game is a plain web app; Capacitor 8 wraps the packed copy in `dist/` into n
 
 | workflow | runs when | gives you |
 |---|---|---|
-| `.github/workflows/android.yml` (Ubuntu) | every push to `main` that touches the game (so every `npm run deploy`), or by hand | `capy-springs-debug-apk`: an APK to install on any Android phone (always Google's test ads). With the upload-key secrets: `capy-springs-play-bundle`, the signed `.aab` for Google Play |
+| `.github/workflows/android.yml` (Ubuntu) | every push to `main` that touches the game (so every `npm run deploy`), or by hand | `capy-springs-debug-apk`: an APK to install on any Android phone (always Google's test ads). With the upload-key secrets: `capy-springs-play-bundle`, the signed `.aab` for Google Play. Run by hand with *test_signing* ticked, it proves the release signing with a throwaway key before the real one exists |
 | `.github/workflows/ios.yml` (macOS) | pushes that touch `ios/`, or by hand | a compile check; run by hand with the App Store Connect secrets set, it signs the app in the cloud and uploads it to TestFlight |
 
 Find runs at **GitHub > asmitdeshwal/capy-springs > Actions**. Each run's page has the downloads (*Artifacts*) and a short summary. To run one by hand: open the workflow on the left, **Run workflow**.
