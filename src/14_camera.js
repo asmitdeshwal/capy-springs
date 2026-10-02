@@ -18,7 +18,19 @@
   function target(S) { return S.kit.y - C.CAM_KIT_FRAC * G.Canvas.H + Camera.look; }
 
   Camera.init = function (S) { Camera.look = 0; Camera.y = clampY(S, target(S)); Camera.shakeX = Camera.shakeY = 0; Camera.shakeMag = 0; Camera.shakeT = 0; Camera.z = 1; Camera.punchT = 0; Camera.punchMag = 0; };
+  // a stage reveal (the Ridge or the Summit opening): sweep up to the new stage, hold, come back to Kit; the sim waits (90_main.js), a tap skips
+  Camera.script = null;
+  Camera.reveal = function (S, yTop) { Camera.script = { t: 0, y0: Camera.y, y1: Math.max(Camera.minY(S), yTop), up: 1.7, hold: 1.5, down: 1.3 }; };
   Camera.update = function (S, dt) {
+    const sc = Camera.script;
+    if (sc) {
+      sc.t += dt; const e = u => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u));
+      if (sc.t < sc.up) Camera.y = U.lerp(sc.y0, sc.y1, e(sc.t / sc.up));
+      else if (sc.t < sc.up + sc.hold) Camera.y = sc.y1;
+      else if (sc.t < sc.up + sc.hold + sc.down) Camera.y = U.lerp(sc.y1, clampY(S, target(S)), e((sc.t - sc.up - sc.hold) / sc.down));
+      else Camera.script = null;
+      Camera.tickShake(dt); return;
+    }
     const lookTarget = S.kit.moving ? U.sign(S.kit.vy) * C.CAM_LOOK : 0;
     Camera.look += (lookTarget - Camera.look) * (1 - Math.exp(-4 * dt));
     Camera.y += (target(S) - Camera.y) * (1 - Math.exp(-C.CAM_FOLLOW * dt));

@@ -9,6 +9,8 @@
     Game.S = S; G.S = S;
     G.Player.init(S); G.Trail.init(S); G.CableCar.init(S); G.Guests.init(S); G.Baths.init(S); G.Heat.init(S); G.Grove.init(S); G.Stall.init(S);
     G.Coins.init(S); G.Lanterns.init(S); G.Helpers.init(S); G.Events.init(S); G.Kaa.init(S); G.Snow.init(S); G.Lift.init(S); G.Troupe.init(S); G.FX.init(S); G.Camera.init(S);
+    G.Camera.script = null;
+    if (!Game.revealSubscribed && !Game.headless) { Game.revealSubscribed = true; G.Bus.on('ridge:open', () => G.Camera.reveal(Game.S, G.DATA.MAP.RIDGE.camMinY)); G.Bus.on('summit:open', () => G.Camera.reveal(Game.S, G.DATA.MAP.SUMMIT.camMinY)); }
     G.HUD.init(S); G.Sheet.init(S); G.Cards.init(S); G.Goals.init(S); G.Story.init(S); G.Golden.init(S); G.Render.init(S);
     G.Render.rebuildStatic(S);
     if (G.Audio.setEnabled) G.Audio.setEnabled(S, S.settings.sound);
@@ -92,6 +94,7 @@
   Game.onTap = function (S, tap) {
     const x = tap.x, y = tap.y;
     if (S.mode === 'finale') { G.Finale.tap(S, x, y); return; }                     // the ending owns every tap
+    if (G.Camera.script) { G.Camera.script = null; return; }                         // a tap skips a stage reveal
     if (S.mode === 'intro') { S.mode = 'play'; S.introT = C.INTRO_T; Game.syncMode(S); }
     if (G.Cards.tap(S, x, y)) return;
     if (S.mode === 'play' && G.Story.tap(S, x, y)) return;
@@ -128,6 +131,7 @@
     const Loop = G.Loop;
     if (S.mode === 'title') { G.Title.update(S, dt); G.Cards.update(S, dt); G.FX.update(S, dt); G.HUD.update(S, dt); return; }
     if (S.mode === 'finale') { G.Finale.update(S, dt); G.FX.update(S, dt); return; }       // the ending: the sim waits, the scene plays
+    if (G.Camera.script) { G.Camera.update(S, dt); G.FX.update(S, dt); G.HUD.update(S, dt); G.Cards.update(S, dt); return; }   // a stage reveal: the sim waits for the camera
     if (Loop.hitstop > 0) { Loop.hitstop -= dt; G.FX.update(S, dt); G.HUD.update(S, dt); G.Camera.update(S, dt); return; }
     // cards, the settings popover and a hidden tab pause the simulation (the upgrade sheet does not: you steer with it open)
     if (S.mode === 'card' || S.mode === 'paused' || S.mode === 'settings') { G.Cards.update(S, dt); G.HUD.update(S, dt); G.FX.update(S, dt); return; }

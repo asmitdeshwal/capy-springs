@@ -1,5 +1,5 @@
 // Capy Springs - tuning constants (ARCHITECTURE.md section 8). Every number that appears in a GDD table lives here or in 02_data_*.js.
-window.G = window.G || {}; G.VERSION = '1.11.0'; G.HEADLESS = G.HEADLESS || false;
+window.G = window.G || {}; G.VERSION = '1.12.0'; G.HEADLESS = G.HEADLESS || false;
 G.C = {
   // Kit (GDD 5.1, 6)
   KIT_SPEED: 280, KIT_SPRINT: 1.25, KIT_ACCEL_T: 0.12, KIT_RADIUS: 12, KIT_DUST_EVERY: 0.12, KIT_IDLE_STRETCH: 6, KIT_PUMP_T: 0.4,

@@ -31,7 +31,7 @@
     // the Summit (GDD 20): the stairs open the third stage; Wake the Source is the story's ending (level 1) and then endless Source Stars
     { id: 'stairs',  label: 'Pilgrim Stairs',   x: 340, y: 30,    costs: [6000],                         requires: ['pavilion'],                   effect: 'open:summit', blurb: 'Opens the Summit above the clouds' },
     { id: 'source',  label: 'The Source',       x: 480, y: -790,  costs: [10000],                        requires: ['stairs'],                     effect: 'build:source', blurb: 'The spring itself: x3 pay, and snow monkeys come' },
-    { id: 'shrine',  label: "Grandma's Shrine", x: 120, y: -790,  costs: [9000],                         requires: ['source'],                     effect: 'build:shrine', blurb: 'Kaa keeps watch: tap him on a tray for koban' },
+    { id: 'shrine',  label: "Grandma's Shrine", x: 205, y: -796,  costs: [9000],                         requires: ['source'],                     effect: 'build:shrine', blurb: 'Kaa keeps watch: tap him on a tray for koban' },
     { id: 'snowroll', label: 'Snow Roll',       x: 50,  y: -470,  costs: [15000],                        requires: ['source'],                     effect: 'build:snowroll', blurb: 'Hot monkeys want the snow: HOT-COLD x2 again' },
     { id: 'wake',    label: 'Wake the Source',  x: 330, y: -1080, costs: WAKE.costs,                     requires: ['snowroll', 'shrine', 'bridge:5', 'trail:3', 'car:3'], effect: 'wake', endless: true,
       labels: WAKE.labels, blurbs: WAKE.blurbs }

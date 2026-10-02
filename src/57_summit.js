@@ -85,7 +85,7 @@
   function drawGrandma(ctx, o, S) {
     const Ch = G.Art.Ch; if (!Ch.grandma) return;
     const p = Ch.resetPose(Ch.POSE), s = SU.hut.seat, near = U.dist2(S.kit.x, S.kit.y, s.x, s.y) < 130 * 130;
-    p.x = s.x; p.y = s.y; p.face = 1; p.t = S.t; p.pose = near ? 'wave' : 'sit'; p.poseT = (S.t * 0.8) % 1;
+    p.x = s.x; p.y = s.y; p.face = 1; p.t = S.t; p.pose = near ? 'sitwave' : 'sit'; p.poseT = (S.t * 0.8) % 1;
     Ch.grandma(ctx, p);
   }
 })(window.G);
