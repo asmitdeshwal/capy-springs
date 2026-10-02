@@ -20,7 +20,7 @@
   Stall.queued = function (S) { let n = 0; for (let i = 0; i < S.stall.queue.length; i++) if (S.stall.queue[i]) n++; return n; };
   Stall.serve = function (S, g) {
     S.stall.stock--;
-    const pay = Math.round(G.Upgrades.mochiPay(S) * G.Events.nightPay(S) * G.Upgrades.famousMult(S) * G.Upgrades.starMult(S));
+    const pay = Math.round(G.Upgrades.mochiPay(S) * G.Events.nightPay(S) * G.Upgrades.famousMult(S) * G.Upgrades.starMult(S) * (G.Offers ? G.Offers.mult(S) : 1));
     G.Coins.burst(S, pay, g.x, g.y, 'stall');
     S.stats.mochi++;
     evMochi.g = g; evMochi.value = pay; G.Bus.emit('guest:mochi', evMochi);

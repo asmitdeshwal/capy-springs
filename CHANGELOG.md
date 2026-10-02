@@ -1,5 +1,19 @@
 # Capy Springs — changelog
 
+## 1.13.0 — ads that pay for the game, store builds in the cloud (2026-10-02)
+
+The store apps (Android and iOS) now earn from Google AdMob, built to earn well without spoiling a cosy game; the web version stays ad-free. Both store builds run on GitHub Actions, so no Mac or Android Studio is needed. Guides: `docs/MONETIZATION.md`, `docs/NATIVE_BUILD.md`.
+
+- **Five optional videos**: double the Welcome-back koban; **2x KOBAN** for 3 minutes (a chip under the koban counter); a **gift lantern** that drifts up the screen every few minutes; **LIGHT IT NOW** for the last 40% of a lantern step; **FREE** in place of the price of an upgrade you already have half the koban for. Each is marked with a play icon and has its own cooldown.
+- **Short ads only at natural breaks**: at most one per 5 minutes of play, never in a player's first 15 minutes, never within 2 minutes of a chosen video, only just after the upgrade sheet or a card closes or a lantern's celebration ends, never while steering, never during the ending. If an ad never reports back, a tap brings the game back.
+- **A neutral age question** at first launch in the store apps (a decade, then a year). Under 13: child-directed, non-personalised, general-audience ads, no consent or tracking prompts, and no short ads at all. Under 16: no personalised ads in Europe and no tracking prompt. This is what lets a cute-animal game with ads meet Google Play's Families policy.
+- **Consent and tracking**: Google's consent message (Europe, the UK, Switzerland, US states) before any ad loads, *Settings › Privacy choices* when required, Apple's tracking question on iPhone for players 16 and over. Ads are capped at PG.
+- **Reminders** (store apps, opt-in, asked once after the first Welcome-back): at most two local notifications while away (the inn's coffers are full; new Guestbook goals next morning), cancelled when the game opens. A Reminders switch in Settings.
+- **Cloud builds**: `.github/workflows/android.yml` makes an installable debug APK on every deploy (always Google's test ads) and, with the upload key, the signed Play bundle. `.github/workflows/ios.yml` compile-checks iOS and, run by hand, signs in the cloud through the App Store Connect API (`tools/asc.js`) and uploads to TestFlight.
+- **One-command setup**: `npm run store-keys -- android | ios <key.p8> <issuer>` makes the signing keys outside the project and stores them as GitHub secrets; `npm run ad-ids -- ...` writes your AdMob ids into the three files that hold them and switches real ads on.
+- **Store rules**: the exact-alarm permission the reminders plugin asks for is removed (Play restricts it); a white koban notification icon; SKAdNetwork ids and the tracking text in Info.plist; privacy policy rewritten for AdMob, the age question and reminders; terms say koban have no money value; the store listing kit has the new Data safety and App Privacy answers and the mixed-audience target.
+- Developer mode: *Test ads on/off* plays a 3-second stand-in ad on the web for every flow; *Gift lantern now*; *Age question*.
+
 ## 1.12.0 — the Summit, Grandma Yuzu, the ending and the Golden Age (2026-10-02)
 
 The mountain gets its top, its story and its ending, and the game goes on after it. Design: `docs/plans/summit_and_ending.md` (a three-designer panel and a judge).

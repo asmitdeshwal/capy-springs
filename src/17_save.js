@@ -8,7 +8,7 @@
 
   // ---- storage: localStorage, mirrored into Capacitor Preferences in the native apps (the OS may clear WebView storage under pressure;
   // Preferences lives in the app's own container and survives). restore() runs once at boot, before the save is read.
-  function prefs() { try { const c = window.Capacitor; return (c && c.isNativePlatform && c.isNativePlatform() && c.Plugins && c.Plugins.Preferences) ? c.Plugins.Preferences : null; } catch (e) { return null; } }
+  function prefs() { return G.Native ? G.Native.plugin('Preferences') : null; }       // G.Native lives in 61_ads.js (loaded later; called at run time)
   Save.store = {
     get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set: (k, v) => { let ok = false; try { localStorage.setItem(k, v); ok = true; } catch (e) { ok = false; } const P = prefs(); if (P) { try { P.set({ key: k, value: v }).catch(() => {}); } catch (e) { /* ignore */ } } return ok; },

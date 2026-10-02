@@ -4,12 +4,15 @@
   const C = G.C, U = G.U, PAL = G.PAL;
   const Cards = G.Cards = {};
   const CARD = { kind: null, info: null, t: 0, closing: 0 };
-  const evNone = {};
-  const SET = { x: 270, y: 0, w: 260, h: 348, rows: ['Sound', 'Vibration', 'Shake & flash', 'Low effects'], buttons: [] };
+  const evNone = {}, evClose = { kind: null };
+  const SET = { x: 270, y: 0, w: 260, h: 348, rows: [], buttons: [] }, LAY = { row: 56, btn0: 244, bh: 48 };
+  // the switches (Reminders only in the store apps, where they exist)
+  function settingsRows() { const r = SET.rows; r.length = 0; r.push('Sound', 'Vibration', 'Shake & flash', 'Low effects'); if (G.Reminders && G.Reminders.available()) r.push('Reminders'); return r; }
   const ROW_H = 74, ROWS_MAX = 3, MISSING = [];
   let pendingTravel = 0, pendingT = 0, versionTaps = 0, versionTapT = 0;
   // the popover's buttons under the toggles (Developer only in dev mode); height follows
-  function settingsButtons() { const b = SET.buttons; b.length = 0; b.push('How to play'); b.push('Guestbook'); if (G.Game.S && G.Game.S.ending.seen) b.push('Watch the ending'); if (G.Seasons.list.length > 1) b.push('Seasons'); b.push('About'); b.push('Main menu'); if (G.Dev.on) b.push('Developer'); b.push('Reset save'); SET.h = 8 + 4 * 56 + 12 + b.length * 48 + 16; return b; }
+  function settingsButtons() { const b = SET.buttons; b.length = 0; b.push('How to play'); b.push('Guestbook'); if (G.Game.S && G.Game.S.ending.seen) b.push('Watch the ending'); if (G.Seasons.list.length > 1) b.push('Seasons'); b.push('About'); b.push('Main menu'); if (G.Dev.on) b.push('Developer'); if (G.Ads && G.Ads.privacyRequired) b.push('Privacy choices'); b.push('Reset save');
+    const n = settingsRows().length; LAY.row = n > 4 ? 52 : 56; LAY.btn0 = 8 + n * LAY.row + 12; LAY.bh = b.length >= 7 ? 44 : 48; SET.h = LAY.btn0 + b.length * LAY.bh + 16; return b; }
 
   Cards.init = function (S) {
     pendingTravel = 0; pendingT = 0;
@@ -23,7 +26,13 @@
   Cards.showReset = function (S) { CARD.kind = 'reset'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
   Cards.showTravel = function (S, id) { const d = G.Seasons.byId[id]; if (!d) return; CARD.kind = 'travel'; CARD.info = d; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
   Cards.showSeasons = function (S) { CARD.kind = 'seasons'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
+  Cards.showAge = function (S) { S.ui.settings = false; G.Age.open(); CARD.kind = 'age'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
   Cards.showDev = function (S) { if (!G.Dev.on) return; S.ui.settings = false; CARD.kind = 'dev'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
+  Cards.showGift = function (S, amount) { CARD.kind = 'gift'; CARD.info = { amount }; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
+  Cards.showRemind = function (S) { CARD.kind = 'remind'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
+  // a player who comes back is the right one to offer reminders to: once, after their first Welcome-back card (store apps only)
+  let remindPending = false;
+  function askRemind(S) { if (G.Reminders && G.Reminders.available() && S.settings.reminders === null) remindPending = true; }
   Cards.showGoals = function (S) { S.ui.settings = false; CARD.kind = 'goals'; CARD.info = null; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Game.syncMode(S); };
   // the How-to-play pages and the About card live in 56_help.js; `then` runs when the help closes (the first PLAY starts the intro after it)
   Cards.showHelp = function (S, then) { S.ui.settings = false; CARD.kind = 'help'; CARD.info = { then: then || null }; CARD.t = 0; CARD.closing = 0; S.ui.card = CARD; G.Help.open(S); G.Game.syncMode(S); };
@@ -39,7 +48,9 @@
   Cards.toggleSettings = function (S) { S.ui.settings = !S.ui.settings; G.Game.syncMode(S); };
   Cards.update = function (S, dt) {
     if (versionTapT > 0) { versionTapT -= dt; if (versionTapT <= 0) versionTaps = 0; }
-    if (S.ui.card) { CARD.t += dt; if (CARD.closing > 0) { CARD.closing += dt; if (CARD.closing > 0.3) { const then = CARD.kind === 'help' && CARD.info && CARD.info.then; S.ui.card = null; G.Game.syncMode(S); if (then) then(S); } } }
+    if (S.ui.card) { CARD.t += dt; if (CARD.closing > 0) { CARD.closing += dt; if (CARD.closing > 0.3) { const then = CARD.kind === 'help' && CARD.info && CARD.info.then; evClose.kind = CARD.kind; S.ui.card = null; G.Game.syncMode(S); G.Bus.emit('ui:card:close', evClose); if (then) then(S); } } }
+    else if (G.Age.needed() && (S.mode === 'title' || S.mode === 'play')) Cards.showAge(S);   // store apps: the age question comes before anything else
+    else if (remindPending && S.mode === 'play') { remindPending = false; Cards.showRemind(S); }
     else if (pendingTravel) { pendingT -= dt; if (pendingT <= 0 && S.mode === 'play') { const id = pendingTravel; pendingTravel = 0; Cards.showTravel(S, id); } }
   };
   function settingsRect() { const st = G.Canvas.st || 0; settingsButtons(); SET.x = 270 - SET.w / 2 + 130; SET.y = st + 166; return SET; }
@@ -53,7 +64,31 @@
     if (S.ui.card) {
       if (CARD.closing > 0 || CARD.t < 0.35) return true;     // closing, or still sliding in: a double-tap must never hit a button underneath
       cardRect(CR); const cy = (CR.y0 + CR.y1) / 2;
-      if (CARD.kind === 'offline') { if (x >= 160 && x <= 380 && y >= cy + 76 && y <= cy + 140) { const v = CARD.info.coins + CARD.info.floorCoins; G.Coins.add(S, v, 'offline'); G.HUD.offlineRain(S, v); CARD.closing = 0.001; } return true; }
+      if (CARD.kind === 'offline') {
+        if (y < cy + 76 || y > cy + 140) return true;
+        const v = CARD.info.coins + CARD.info.floorCoins, two = G.Offers && G.Offers.canDouble(S);
+        if (two ? (x >= 60 && x <= 254) : (x >= 160 && x <= 380)) { G.Coins.add(S, v, 'offline'); G.HUD.offlineRain(S, v); CARD.closing = 0.001; askRemind(S); }
+        else if (two && x >= 270 && x <= 480) {
+          G.Coins.add(S, v, 'offline'); G.HUD.offlineRain(S, v); CARD.closing = 0.001; askRemind(S);   // the base is theirs either way; the video adds the same again
+          const extra = v * (G.DATA.ADS.rules.offlineMult - 1);
+          G.Ads.rewarded(S, 'offline', S2 => { G.Coins.add(S2, extra, 'offline'); G.HUD.offlineRain(S2, extra); G.HUD.banner(S2, 'DOUBLED!', '+' + G.Art.S.fmtCoins(extra) + ' koban'); });
+        }
+        return true;
+      }
+      if (CARD.kind === 'gift') {
+        if (y >= cy + 60 && y <= cy + 124) {
+          if (x >= 70 && x <= 260) CARD.closing = 0.001;
+          else if (x >= 280 && x <= 470) { const amt = CARD.info.amount; CARD.closing = 0.001; G.Ads.rewarded(S, 'gift', S2 => { G.Coins.rain(S2, amt, S2.kit.x, S2.kit.y, 'gift'); G.HUD.banner(S2, 'A GIFT FROM THE MOUNTAIN', '+' + G.Art.S.fmtCoins(amt) + ' koban'); }); }
+        }
+        return true;
+      }
+      if (CARD.kind === 'remind') {
+        if (y >= cy + 60 && y <= cy + 124) {
+          if (x >= 70 && x <= 260) { S.settings.reminders = false; G.Save.write(S); CARD.closing = 0.001; }
+          else if (x >= 280 && x <= 470) { CARD.closing = 0.001; G.Reminders.ask(S); }
+        }
+        return true;
+      }
       if (CARD.kind === 'reset') {
         if (y >= cy + 60 && y <= cy + 124) {
           if (x >= 70 && x <= 260) { CARD.closing = 0.001; }
@@ -68,6 +103,7 @@
         }
         return true;
       }
+      if (CARD.kind === 'age') return G.Age.tap(S, x, y);
       if (CARD.kind === 'dev') return G.Dev.tap(S, x, y);
       if (CARD.kind === 'goals') return G.Goals.tap(S, x, y);
       if (CARD.kind === 'help') return G.Help.tap(S, x, y);
@@ -86,15 +122,16 @@
     if (S.ui.settings) {
       const r = settingsRect();
       if (!Cards.settingsHas(x, y)) { S.ui.settings = false; G.Game.syncMode(S); return true; }
-      const row = Math.floor((y - r.y - 8) / 56);
+      const row = Math.floor((y - r.y - 8) / LAY.row);
       // the version strip along the popover's bottom edge: seven taps within three seconds toggle developer mode (a thumb-sized target)
       if (y >= r.y + r.h - 22) { Cards.versionTap(S); return true; }     // only the strip under the last button
       if (row === 0) { S.settings.sound = !S.settings.sound; G.Audio.setEnabled(S, S.settings.sound); }
       else if (row === 1) { S.settings.haptics = S.settings.haptics === false ? true : false; }
       else if (row === 2) { S.settings.shakeFlash = !S.settings.shakeFlash; }
       else if (row === 3) { S.settings.lowFx = !S.settings.lowFx; G.Canvas.resize(); G.Render.markStaticDirty(); }   // the pixel ratio cap changes with it
-      else if (y >= r.y + 244) {
-        const b = SET.buttons[Math.floor((y - (r.y + 244)) / 48)];
+      else if (row === 4 && SET.rows.length > 4) { if (S.settings.reminders === true) S.settings.reminders = false; else G.Reminders.ask(S); }
+      else if (y >= r.y + LAY.btn0) {
+        const b = SET.buttons[Math.floor((y - (r.y + LAY.btn0)) / LAY.bh)];
         if (b === 'Guestbook') { Cards.showGoals(S); }
         else if (b === 'How to play') { Cards.showHelp(S, null); }
         else if (b === 'About') { Cards.showAbout(S); }
@@ -102,6 +139,7 @@
         else if (b === 'Seasons') { S.ui.settings = false; Cards.showSeasons(S); }
         else if (b === 'Main menu') { S.ui.settings = false; G.Game.syncMode(S); G.Title.show(S); }
         else if (b === 'Developer') { Cards.showDev(S); }
+        else if (b === 'Privacy choices') { S.ui.settings = false; G.Game.syncMode(S); G.Ads.privacyOptions(); }
         else if (b === 'Reset save') { S.ui.settings = false; Cards.showReset(S); }
         return true;
       }
@@ -117,16 +155,16 @@
     if (S.ui.settings) {
       const r = settingsRect();
       A.fillRRect(ctx, r.x, r.y + 4, r.w, r.h, 18, PAL.rgba(PAL.ink, 0.25)); A.fillRRect(ctx, r.x, r.y, r.w, r.h, 18, PAL.cream);
-      const vals = [S.settings.sound, S.settings.haptics !== false, S.settings.shakeFlash, S.settings.lowFx];
-      for (let i = 0; i < 4; i++) {
-        const y = r.y + 8 + i * 56 + 28;
+      const vals = [S.settings.sound, S.settings.haptics !== false, S.settings.shakeFlash, S.settings.lowFx, S.settings.reminders === true];
+      for (let i = 0; i < SET.rows.length; i++) {
+        const y = r.y + 8 + i * LAY.row + LAY.row / 2;
         A.text(ctx, SET.rows[i], r.x + 18, y, 18, PAL.ink, LEFT);
         A.fillRRect(ctx, r.x + r.w - 74, y - 14, 56, 28, 14, vals[i] ? PAL.pine : PAL.rgba(PAL.ink, 0.2)); A.circle(ctx, r.x + r.w - 74 + (vals[i] ? 42 : 14), y, 11, PAL.cream);
       }
       for (let i = 0; i < SET.buttons.length; i++) {
-        const b = SET.buttons[i], by = r.y + 244 + i * 48, red = b === 'Reset save', dev = b === 'Developer';
-        A.fillRRect(ctx, r.x + 18, by, r.w - 36, 40, 12, red ? PAL.rgba(PAL.red, 0.12) : dev ? PAL.rgba(PAL.amber, 0.35) : PAL.rgba(PAL.cta, 0.12));
-        A.text(ctx, b === 'Seasons' ? 'Seasons  ' + Math.round(G.Seasons.progress(S) * 100) + '%' : b === 'Guestbook' ? 'Guestbook  ' + G.Goals.doneCount(S) + '/3' : b, r.x + r.w / 2, by + 21, 18, red ? PAL.red : dev ? PAL.ink : PAL.cta);
+        const b = SET.buttons[i], by = r.y + LAY.btn0 + i * LAY.bh, red = b === 'Reset save', dev = b === 'Developer';
+        A.fillRRect(ctx, r.x + 18, by, r.w - 36, LAY.bh - 8, 12, red ? PAL.rgba(PAL.red, 0.12) : dev ? PAL.rgba(PAL.amber, 0.35) : PAL.rgba(PAL.cta, 0.12));
+        A.text(ctx, b === 'Seasons' ? 'Seasons  ' + Math.round(G.Seasons.progress(S) * 100) + '%' : b === 'Guestbook' ? 'Guestbook  ' + G.Goals.doneCount(S) + '/3' : b, r.x + r.w / 2, by + (LAY.bh - 8) / 2 + 1, 18, red ? PAL.red : dev ? PAL.ink : PAL.cta);
       }
       A.text(ctx, 'v' + G.VERSION + (G.Dev.on ? ' · developer mode' : ''), r.x + r.w - 14, r.y + r.h - 12, 11, PAL.stoneDark, RIGHT);
     }
@@ -134,6 +172,7 @@
       cardRect(CR); const cx = 270, cy = (CR.y0 + CR.y1) / 2, k = CARD.closing > 0 ? U.easeInQuad(Math.min(1, CARD.closing / 0.3)) : 1 - U.easeOutBack(Math.min(1, CARD.t / 0.35));
       ctx.fillStyle = PAL.rgba(PAL.ink, 0.45 * (1 - k)); ctx.fillRect(0, 0, 540, H);
       ctx.save(); ctx.translate(0, k * H);
+      if (CARD.kind === 'age') { G.Age.draw(ctx, S, k); ctx.restore(); return; }
       if (CARD.kind === 'dev') { G.Dev.draw(ctx, S, k); ctx.restore(); return; }
       if (CARD.kind === 'goals') { G.Goals.draw(ctx, S, k); ctx.restore(); return; }
       if (CARD.kind === 'help') { G.Help.draw(ctx, S, k); ctx.restore(); return; }
@@ -147,7 +186,25 @@
         A.text(ctx, info.cars + ' ' + veh + (info.cars === 1 ? ' came by' : 's came by'), cx + 40, CR.y0 + 90, 20, PAL.ink);
         A.text(ctx, '+' + (info.coins + info.floorCoins), cx + 40, CR.y0 + 140, 40, PAL.coinRim);
         if (info.floorCoins > 0) A.text(ctx, (S.helpers.pon.hired ? T('ponTidied', 'Pon tidied up ') : 'left in the trays: ') + info.floorCoins, cx + 40, CR.y0 + 176, 14, PAL.stoneDark);
-        A.fillRRect(ctx, 160, cy + 76, 220, 64, 32, PAL.cta); A.text(ctx, 'COLLECT', 270, cy + 109, 26, PAL.cream);
+        if (G.Offers && G.Offers.canDouble(S)) {
+          A.fillRRect(ctx, 60, cy + 76, 194, 64, 32, PAL.rgba(PAL.ink, 0.12)); A.text(ctx, 'COLLECT', 157, cy + 109, 24, PAL.ink);
+          A.fillRRect(ctx, 270, cy + 76, 210, 64, 32, PAL.cta); A.text(ctx, 'x2', 392, cy + 109, 30, PAL.cream); G.Ads.glyph(ctx, 330, cy + 108, 30, PAL.cream, PAL.cta);
+          A.text(ctx, 'a short video doubles it', 375, cy + 60, 13, PAL.stoneDark);
+        } else { A.fillRRect(ctx, 160, cy + 76, 220, 64, 32, PAL.cta); A.text(ctx, 'COLLECT', 270, cy + 109, 26, PAL.cream); }
+      } else if (CARD.kind === 'gift') {
+        A.text(ctx, 'A gift from the mountain!', cx, CR.y0 + 42, 26, PAL.ink);
+        G.Offers.drawLantern(ctx, CR.x0 + 92, cy - 24, 1.1, S.t);
+        A.text(ctx, '+' + G.Art.S.fmtCoins(CARD.info.amount), cx + 50, CR.y0 + 112, 44, PAL.coinRim); A.text(ctx, 'koban', cx + 50, CR.y0 + 150, 18, PAL.stoneDark);
+        A.text(ctx, 'Watch a short video to open it.', cx + 40, CR.y0 + 184, 15, PAL.ink);
+        A.fillRRect(ctx, 70, cy + 60, 190, 64, 32, PAL.rgba(PAL.ink, 0.12)); A.text(ctx, 'NO THANKS', 165, cy + 93, 20, PAL.ink);
+        A.fillRRect(ctx, 280, cy + 60, 190, 64, 32, PAL.cta); A.text(ctx, 'OPEN', 400, cy + 93, 24, PAL.cream); G.Ads.glyph(ctx, 330, cy + 92, 28, PAL.cream, PAL.cta);
+      } else if (CARD.kind === 'remind') {
+        A.text(ctx, 'Want a little reminder?', cx, CR.y0 + 46, 26, PAL.ink);
+        A.text(ctx, (S.helpers.pon.hired ? 'Pon' : 'Kit') + ' can send you a note when the inn\'s', cx, CR.y0 + 104, 17, PAL.stoneDark);
+        A.text(ctx, 'coffers are full, and when new goals arrive.', cx, CR.y0 + 128, 17, PAL.stoneDark);
+        A.text(ctx, 'Two notes a day at most. Turn them off in Settings.', cx, CR.y0 + 168, 13, PAL.stoneDark);
+        A.fillRRect(ctx, 70, cy + 60, 190, 64, 32, PAL.rgba(PAL.ink, 0.12)); A.text(ctx, 'NO THANKS', 165, cy + 93, 20, PAL.ink);
+        A.fillRRect(ctx, 280, cy + 60, 190, 64, 32, PAL.cta); A.text(ctx, 'YES PLEASE', 375, cy + 93, 22, PAL.cream);
       } else if (CARD.kind === 'reset') {
         A.text(ctx, T('resetTitle', 'Start a new inn?'), cx, CR.y0 + 60, 28, PAL.ink);
         A.text(ctx, 'Every lantern, upgrade, koban and', cx, CR.y0 + 110, 18, PAL.stoneDark); A.text(ctx, 'Guestbook stamp will be gone for good.', cx, CR.y0 + 134, 18, PAL.stoneDark);

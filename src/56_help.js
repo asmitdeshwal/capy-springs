@@ -147,7 +147,7 @@
     A.text(ctx, 'Version ' + G.VERSION, 290, y0 + 76, 15, PAL.stoneDark);
     A.text(ctx, 'Made by ' + (G.C.CREDITS_BY || 'Asmit Deshwal'), 290, y0 + 110, 17, PAL.ink);
     A.text(ctx, 'Every picture is drawn and every sound is made in code.', 270, y0 + 152, 13, PAL.stoneDark, BODY);
-    A.text(ctx, 'No ads, no purchases, no account. Your inn stays on your phone.', 270, y0 + 172, 13, PAL.stoneDark, BODY);
+    A.text(ctx, G.Native.is() ? 'No purchases, no account. Optional videos give bonuses.' : 'No ads, no purchases, no account. Your inn stays on your phone.', 270, y0 + 172, 13, PAL.stoneDark, BODY);
     A.fillRRect(ctx, 120, y0 + 189, 300, 50, 16, PAL.rgba(PAL.cta, 0.12)); A.text(ctx, 'Privacy policy', 270, y0 + 215, 18, PAL.cta);
     A.fillRRect(ctx, 120, y0 + 247, 300, 50, 16, PAL.rgba(PAL.cta, 0.12)); A.text(ctx, 'Terms of use', 270, y0 + 273, 18, PAL.cta);
     A.text(ctx, 'Native apps built with Capacitor (MIT licence)', 270, y0 + 318, 12, PAL.stoneDark);

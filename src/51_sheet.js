@@ -53,6 +53,7 @@
       const ry = top + ROWS_Y + i * (RH + RGAP);
       if (x >= RX && x <= RX + RW && y >= ry && y <= ry + RH) {
         const key = KEYS[i]; sh.last = key;
+        if (x >= RX + 440 - 68 && y >= ry + 32 && y <= ry + 84 && G.Offers.freeOk(S, sh.id, key)) { G.Offers.free(S, sh.id, key); return true; }   // the FREE pill
         if (G.Upgrades.buy(S, sh.id, key)) { S.ui.squash[sh.id] = 1; sh.flash = 1; sh.flashKey = key; }
         else { sh.wiggle = 1; sh.wiggleKey = key; G.Bus.emit('ui:nope', evNone); }
         return true;
@@ -94,6 +95,7 @@
       if (!vis) A.pill(ctx, x + 440, y + 58, 118, 36, G.Seasons.text('ponHire', 'Hire Pon'), 14, PAL.rgba(PAL.ink, 0.12), PAL.stoneDark, 'lock');
       else if (maxed) A.pill(ctx, x + 440, y + 58, 118, 36, 'MAX', 18, PAL.rgba(PAL.pine, 0.2), PAL.pine, 'check');
       else if (can) A.pill(ctx, x + 440, y + 58, 124, 40, String(cost), 22, PAL.cta, PAL.cream, 'koban');
+      else if (G.Offers.freeOk(S, id, key)) { A.pill(ctx, x + 440, y + 58, 124, 40, '', 20, PAL.cta, PAL.cream, null); G.Ads.glyph(ctx, x + 408, y + 58, 22, PAL.cream, PAL.cta); A.text(ctx, 'FREE', x + 456, y + 59, 20, PAL.cream); }
       else A.pill(ctx, x + 440, y + 58, 124, 40, String(cost), 22, PAL.rgba(PAL.ink, 0.12), PAL.red, 'koban');
     }
   };

@@ -83,7 +83,7 @@
                   HELP: 0, X_GOLDEN: 0, X_VIP: 0, X_FULLCAR: 0, X_NIGHT: 0, X_RUSH: 0, X_SNOW: 0, X_COLD: 0, X_GAUGE: 0, X_LINE: 0, X_TROUPE: 0, ROLL: 0 },   // X_*: one-time banner explanations
       stats: { served: 0, ducks: 0, combos: [0, 0, 0, 0, 0, 0], rushes: 0, chains: 0, fullCars: 0, nights: 0, golden: 0, mochi: 0, lost: 0, vip: 0, laps: 0, kaa: 0, plunges: 0, hotCold: 0, massages: 0, fullHouses: 0, squalls: 0, cleared: 0, liftCars: 0, yuzu: 0,
                monkeys: 0, troupes: 0, momoTroupes: 0, geysers: 0, bursts: 0, notes: 0, finales: 0, festivals: 0, bests: 0, stars: 0, bestSplash: 0 },
-      settings: { sound: true, haptics: null, shakeFlash: true, lowFx: false },
+      settings: { sound: true, haptics: null, shakeFlash: true, lowFx: false, reminders: null },     // reminders: null = never asked
       fx: { steam: U.pool(C.STEAM_CAP, steamItem), ripples: U.pool(C.RIPPLE_CAP, rippleItem), parts: U.pool(C.PARTICLE_CAP, partItem), pops: U.pool(C.POP_CAP, popItem), flash: 0, wash: 0 },
       ui: { sheet: null, card: null, settings: false, banner: null, pill: null, pillT: 0, arrow: null, lastRule: 0, arrowFlash: null,
             coinBounce: 0, coinShown: 0, kettleSlide: 0, ribbon: 0, squash: {}, chevron: null, dragHint: false, debug: false, arrowObj: { rule: 0, kind: null, id: null, x: 0, y: 0, word: null, dim: false, showWord: false, idle: false, ref: null, hide: false } },

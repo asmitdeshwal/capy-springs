@@ -4,4 +4,6 @@
     <string name="title_activity_main">Capy Springs</string>
     <string name="package_name">com.asmitdeshwal.capysprings</string>
     <string name="custom_url_scheme">com.asmitdeshwal.capysprings</string>
+    <!-- AdMob app id: Google's SAMPLE id until "npm run ad-ids" writes your own (docs/MONETIZATION.md) -->
+    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
 </resources>

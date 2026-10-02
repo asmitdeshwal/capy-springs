@@ -790,3 +790,16 @@ Full design with every number: `docs/plans/summit_and_ending.md`. As built:
 **The Golden Age** (`60_golden.js`): Source Stars turn the season (spring, summer, autumn, winter: ground, foliage, ambient petals / fluff / leaves / snow, snow on every Deck pine in winter) and add +10 % pay (ten at most). Festival Nights: the night after the ending and after each Star, then every third night; 90 s, x1.5, fireworks, a live score under the coin pill, NEW BEST FESTIVAL.
 
 **Guestbook additions**: Serve snow monkeys (30), Catch geyser bursts (8), Welcome Momo's Troupe, Catch Kaa on a tray (3), Play a Festival Night, Beat your best festival.
+
+
+## 21. Ads, the age question and reminders (build 1.13.0)
+
+**Why ads, and which.** The game is free; the store apps pay for it with Google AdMob. An idle game earns most from **rewarded videos** the player chooses, and those don't hurt reviews, so almost every ad is one: the player always sees what a video gives before choosing it, and nothing is lost if it fails. Short full-screen ads (**interstitials**) fill the gaps, rarely and only at a pause. No banners (little money, a cluttered one-thumb screen). The web version on GitHub Pages never loads an ad network.
+
+**The five videos** (`62_offers.js`, numbers in `02_data_ads.js`): Welcome back x2 (the whole offline amount again); 2x KOBAN (every payout doubles for 3 minutes, outside the multiplier cap because the player paid for it with attention; back 2.5 minutes after it ends); the gift lantern (a paper sky lantern drifts up the screen every 3-5 minutes and stays 16 s; ~2.5 minutes of income, at least 60); LIGHT IT NOW (under a lantern step the player stands on with 40% or less left to pay, on steps of 150+; once per 4 minutes); FREE in the upgrade sheet (an upgrade of 100+ the player has half the koban for; once per 3 minutes). Nothing is offered before the first lantern is lit.
+
+**Short ads**: at most one per 5 minutes of play, none in the first 15 minutes of a player's life or the first 5 minutes of a session, none within 2 minutes of a chosen video, none for players under 13, and only within 8 s after a natural break (the upgrade sheet or a card closes, a lantern's celebration ends), at a calm moment (no card, banner, stage reveal, festival, story note, steering finger or lantern payment).
+
+**The age question** (`64_age.js`): a cute-animal game will be read as appealing to children whatever its listing says, so it is built as a mixed-audience game. At first launch the store app asks the birth year neutrally (a decade, then a year; no default, no reason given) before any ad loads; only the year is kept, on the phone, and the younger possible age counts. Under 13: child-directed requests, general-audience ads, nothing personalised, no consent or tracking prompts, no short ads. Under 16: under-age-of-consent requests and no tracking prompt. Everyone else: PG at most.
+
+**Reminders** (`63_reminders.js`): asked once, after the first Welcome-back card (a player who came back), and switchable in Settings: at most two local notes while away, "your inn is full of koban" when offline earnings stop growing and "new Guestbook goals" the next morning at 10. Cancelled the moment the game opens.

@@ -1,0 +1,138 @@
+# Capy Springs - iOS build in the cloud, no Mac needed (docs/NATIVE_BUILD.md).
+# Push to main (iOS files): a compile check for the simulator, no Apple account needed.
+# Run it by hand (Actions > iOS build > Run workflow) with the App Store Connect secrets set: it signs the app in the cloud
+# (tools/asc.js makes the certificate and profile through Apple's API) and uploads it to TestFlight.
+# Secrets: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8, IOS_CERT_KEY (npm run store-keys -- ios ... sets all four)
+name: iOS build
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: 'Sign and upload to TestFlight (needs the App Store Connect secrets)'
+        type: boolean
+        default: true
+  push:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tools/asc.js'
+      - '.github/workflows/ios.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      HAS_ASC: ${{ secrets.ASC_KEY_ID != '' && secrets.ASC_ISSUER_ID != '' && secrets.ASC_KEY_P8 != '' && secrets.IOS_CERT_KEY != '' }}
+      RELEASE: ${{ github.event_name == 'workflow_dispatch' && inputs.upload && secrets.ASC_KEY_ID != '' && secrets.ASC_ISSUER_ID != '' && secrets.ASC_KEY_P8 != '' && secrets.IOS_CERT_KEY != '' }}
+      BUNDLE_ID: com.asmitdeshwal.capysprings
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build the game and copy it into the iOS project
+        run: |
+          node tools/pack.js
+          npx cap sync ios
+
+      - name: Ad settings check
+        run: |
+          if grep -q "test: true" src/02_data_ads.js; then
+            echo "::warning title=Test ads::This build shows Google's TEST ads and earns nothing. Put your real AdMob ids in src/02_data_ads.js and set test: false before a public release (docs/MONETIZATION.md)."
+          fi
+          if grep -q "ca-app-pub-3940256099942544" ios/App/App/Info.plist; then
+            echo "::warning title=Sample AdMob app id::ios/App/App/Info.plist still has Google's sample GADApplicationIdentifier (docs/MONETIZATION.md)."
+          fi
+
+      - name: Compile check (simulator, unsigned)
+        if: env.RELEASE != 'true'
+        run: |
+          xcodebuild -version
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO -quiet build
+
+      - name: Sign in the cloud, archive, upload to TestFlight
+        if: env.RELEASE == 'true'
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          IOS_CERT_KEY: ${{ secrets.IOS_CERT_KEY }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          xcodebuild -version
+          W="$RUNNER_TEMP/sign"
+          node tools/asc.js signing "$W"
+          source "$W/signing.env"
+
+          # a throwaway keychain holding the distribution certificate and its key
+          KC="$RUNNER_TEMP/capy.keychain-db"; KP=$(openssl rand -hex 20); PP=$(openssl rand -hex 20)
+          security create-keychain -p "$KP" "$KC"
+          security set-keychain-settings -lut 7200 "$KC"
+          security unlock-keychain -p "$KP" "$KC"
+          /usr/bin/openssl x509 -inform DER -in "$W/cert.cer" -out "$W/cert.pem"
+          /usr/bin/openssl pkcs12 -export -inkey "$W/key.pem" -in "$W/cert.pem" -out "$W/cert.p12" -passout "pass:$PP"
+          security import "$W/cert.p12" -k "$KC" -P "$PP" -T /usr/bin/codesign -T /usr/bin/security
+          curl -fsSL https://www.apple.com/certificateauthority/AppleWWDRCAG3.cer -o "$W/wwdr.cer" && security import "$W/wwdr.cer" -k "$KC" || true
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KP" "$KC" > /dev/null
+          security list-keychains -d user -s "$KC" $(security list-keychains -d user | sed 's/"//g')
+          security find-identity -v -p codesigning "$KC"
+          for d in "$HOME/Library/MobileDevice/Provisioning Profiles" "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+            mkdir -p "$d"; cp "$W/profile.mobileprovision" "$d/$PROFILE_UUID.mobileprovision"
+          done
+          node tools/asc.js patch ios/App/App.xcodeproj/project.pbxproj "$TEAM_ID" "$PROFILE_NAME" "$IDENTITY"
+
+          # version from package.json; the build number grows with every run (Apple needs a new one per upload)
+          VER=$(node -p "require('./package.json').version")
+          BUILD=$(node -p "const v = require('./package.json').version.split('.').map(Number); v[0] * 10000 + v[1] * 100 + v[2]").$GITHUB_RUN_NUMBER
+          echo "Capy Springs $VER ($BUILD)"
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" MARKETING_VERSION="$VER" CURRENT_PROJECT_VERSION="$BUILD" -quiet archive
+
+          node tools/asc.js p8 "$W/AuthKey_$ASC_KEY_ID.p8"
+          AUTH=(-authenticationKeyPath "$W/AuthKey_$ASC_KEY_ID.p8" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID")
+          if ! xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" -exportOptionsPlist "$W/upload.plist" -exportPath "$RUNNER_TEMP/out" "${AUTH[@]}"; then
+            echo "::warning::The direct upload did not work; exporting the .ipa and uploading it with altool instead."
+            xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" -exportOptionsPlist "$W/export.plist" -exportPath "$RUNNER_TEMP/ipa"
+            mkdir -p "$HOME/.appstoreconnect/private_keys" && cp "$W/AuthKey_$ASC_KEY_ID.p8" "$HOME/.appstoreconnect/private_keys/"
+            xcrun altool --upload-app -t ios -f "$(ls "$RUNNER_TEMP"/ipa/*.ipa | head -1)" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+          fi
+          echo "UPLOADED=$VER ($BUILD)" >> "$GITHUB_ENV"
+
+      - name: Clean up the signing files
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/capy.keychain-db" 2>/dev/null || true
+          rm -rf "$RUNNER_TEMP/sign" "$HOME/.appstoreconnect"
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Capy Springs for iOS"
+            if [ -n "$UPLOADED" ]; then echo "- Uploaded **$UPLOADED** to App Store Connect. It shows up in TestFlight after Apple processes it (usually 10 to 30 minutes)."
+            elif [ "$HAS_ASC" != "true" ]; then echo "- Compile check only: the App Store Connect secrets are not set yet (docs/NATIVE_BUILD.md)."
+            else echo "- Compile check only. Run this workflow by hand with **upload** ticked to send a build to TestFlight."; fi
+          } >> "$GITHUB_STEP_SUMMARY"

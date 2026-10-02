@@ -69,7 +69,7 @@
   Baths.payout = function (S, g) {
     const bath = S.baths[g.bathId], base = DATA.GUESTS[g.kind].pay * (bath.def.payMult || 1);     // a season may price its stations differently
     const ev = (g.batch ? g.batch.mult : 1) * Math.max(g.yuzuHat ? C.YUZU_PAY : 1, g.golden ? C.GOLDEN_PAY : 1) * G.Heat.payMult(S, bath) * G.Events.nightPay(S) * (g.hotCold ? C.HOTCOLD_PAY : 1) * (g.fullHouse ? (bath.def.fullHouse || 1) : 1) * (g.burst ? C.BURST_PAY : 1);
-    return Math.round(base * G.Upgrades.payMult(S, bath.id) * G.Upgrades.famousMult(S) * G.Upgrades.starMult(S) * Math.min(C.MULT_CAP, ev));
+    return Math.round(base * G.Upgrades.payMult(S, bath.id) * G.Upgrades.famousMult(S) * G.Upgrades.starMult(S) * Math.min(C.MULT_CAP, ev) * (G.Offers ? G.Offers.mult(S) : 1));
   };
   Baths.applyYuzu = function (S, bath) {
     if (bath.yuzuT > 0 && bath.yuzuT >= C.YUZU_REFRESH_BELOW) return false;

@@ -103,6 +103,12 @@ console.log('sw.js: ' + precache.length + ' files precached, cache capy-springs-
 const dist = path.join(root, 'dist');
 fs.rmSync(dist, { recursive: true, force: true }); fs.mkdirSync(path.join(dist, 'src'), { recursive: true }); fs.mkdirSync(path.join(dist, 'icons'), { recursive: true });
 for (const f of ['index.html', 'manifest.webmanifest', 'sw.js'].concat(files, fs.readdirSync(path.join(root, 'icons')).map(f => 'icons/' + f))) fs.copyFileSync(path.join(root, f), path.join(dist, f));
+// the store apps load Capacitor's core script (plugins from plain JS); only dist/ needs it
+fs.mkdirSync(path.join(dist, 'vendor'), { recursive: true });
+fs.copyFileSync(path.join(root, 'node_modules/@capacitor/core/dist/capacitor.js'), path.join(dist, 'vendor/capacitor.js'));
 // the store build carries no developer mode (no cheat menu, no secret taps)
-fs.writeFileSync(path.join(dist, 'index.html'), fs.readFileSync(path.join(dist, 'index.html'), 'utf8').replace('window.CAPY_DEV_BUILD = true;', 'window.CAPY_DEV_BUILD = false;'));
+// node tools/pack.js --test-ads: a try-it-yourself build (the cloud's debug APK) that always shows Google's test ads, whatever ids src/02_data_ads.js holds
+const testAds = process.argv.includes('--test-ads');
+fs.writeFileSync(path.join(dist, 'index.html'), fs.readFileSync(path.join(dist, 'index.html'), 'utf8').replace('window.CAPY_DEV_BUILD = true;', 'window.CAPY_DEV_BUILD = false;' + (testAds ? ' window.CAPY_TEST_ADS = true;' : '')));
+if (testAds) console.log('dist/: test ads forced on');
 console.log('dist/: ' + (3 + files.length + 4) + ' files, version ' + version);

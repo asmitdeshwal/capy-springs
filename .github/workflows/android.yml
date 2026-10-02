@@ -1,0 +1,110 @@
+# Capy Springs - Android build in the cloud (docs/NATIVE_BUILD.md).
+# Every push to main that touches the game builds an installable debug APK (Actions > this run > Artifacts).
+# When the four upload-key secrets exist, it also builds the signed .aab bundle that goes to Google Play.
+# Secrets (Settings > Secrets and variables > Actions): CAPY_KEYSTORE_BASE64, CAPY_KEYSTORE_PASSWORD, CAPY_KEY_ALIAS, CAPY_KEY_PASSWORD
+name: Android build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'index.html'
+      - 'sw.js'
+      - 'manifest.webmanifest'
+      - 'icons/**'
+      - 'android/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tools/pack.js'
+      - '.github/workflows/android.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HAS_KEY: ${{ secrets.CAPY_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Install
+        run: npm ci
+
+      - name: Build the game (with Google's test ads) and copy it into the Android project
+        run: |
+          node tools/pack.js --test-ads
+          npx cap sync android
+
+      - name: Ad settings check
+        run: |
+          if grep -q "test: true" src/02_data_ads.js; then
+            echo "::warning title=Test ads::This build shows Google's TEST ads and earns nothing. Put your real AdMob ids in src/02_data_ads.js and set test: false before a public release (docs/MONETIZATION.md)."
+          fi
+          if grep -q "ca-app-pub-3940256099942544" android/app/src/main/res/values/strings.xml; then
+            echo "::warning title=Sample AdMob app id::android/app/src/main/res/values/strings.xml still has Google's sample app id (docs/MONETIZATION.md)."
+          fi
+
+      - name: Debug APK (installs on any Android phone, always shows test ads)
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: capy-springs-debug-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Signed bundle for Google Play (.aab, the ads from src/02_data_ads.js)
+        if: env.HAS_KEY == 'true'
+        env:
+          CAPY_KEYSTORE_BASE64: ${{ secrets.CAPY_KEYSTORE_BASE64 }}
+          CAPY_KEYSTORE_PASSWORD: ${{ secrets.CAPY_KEYSTORE_PASSWORD }}
+          CAPY_KEY_ALIAS: ${{ secrets.CAPY_KEY_ALIAS }}
+          CAPY_KEY_PASSWORD: ${{ secrets.CAPY_KEY_PASSWORD }}
+        run: |
+          node tools/pack.js
+          npx cap copy android
+          echo "$CAPY_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
+          export CAPY_KEYSTORE="$RUNNER_TEMP/upload.jks"
+          cd android && ./gradlew bundleRelease --no-daemon --stacktrace
+          rm -f "$RUNNER_TEMP/upload.jks"
+
+      - uses: actions/upload-artifact@v7
+        if: env.HAS_KEY == 'true'
+        with:
+          name: capy-springs-play-bundle
+          path: android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          {
+            echo "### Capy Springs $(node -p "require('./package.json').version") for Android"
+            echo "- **capy-springs-debug-apk**: download, unzip, install the .apk on an Android phone to try it (it always shows Google's test ads)."
+            if [ "$HAS_KEY" = "true" ]; then echo "- **capy-springs-play-bundle**: the signed .aab to upload in Google Play Console."; else echo "- No Play bundle: the upload-key secrets are not set yet (docs/NATIVE_BUILD.md)."; fi
+          } >> "$GITHUB_STEP_SUMMARY"

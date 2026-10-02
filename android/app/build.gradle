@@ -7,8 +7,8 @@ android {
         applicationId "com.asmitdeshwal.capysprings"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 11200
-        versionName "1.12.0"
+        versionCode 11300
+        versionName "1.13.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +16,21 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // release signing for the cloud build (.github/workflows/android.yml): the upload key comes from environment variables the workflow fills
+    // from GitHub secrets; without them the release build is simply left unsigned (the debug APK is always signed with the debug key)
+    signingConfigs {
+        release {
+            if (System.getenv('CAPY_KEYSTORE')) {
+                storeFile file(System.getenv('CAPY_KEYSTORE'))
+                storePassword System.getenv('CAPY_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('CAPY_KEY_ALIAS')
+                keyPassword System.getenv('CAPY_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
+            if (System.getenv('CAPY_KEYSTORE')) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

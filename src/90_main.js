@@ -11,7 +11,7 @@
     G.Coins.init(S); G.Lanterns.init(S); G.Helpers.init(S); G.Events.init(S); G.Kaa.init(S); G.Snow.init(S); G.Lift.init(S); G.Troupe.init(S); G.FX.init(S); G.Camera.init(S);
     G.Camera.script = null;
     if (!Game.revealSubscribed && !Game.headless) { Game.revealSubscribed = true; G.Bus.on('ridge:open', () => G.Camera.reveal(Game.S, G.DATA.MAP.RIDGE.camMinY)); G.Bus.on('summit:open', () => G.Camera.reveal(Game.S, G.DATA.MAP.SUMMIT.camMinY)); }
-    G.HUD.init(S); G.Sheet.init(S); G.Cards.init(S); G.Goals.init(S); G.Story.init(S); G.Golden.init(S); G.Render.init(S);
+    G.HUD.init(S); G.Sheet.init(S); G.Cards.init(S); G.Goals.init(S); G.Story.init(S); G.Golden.init(S); G.Offers.init(S); G.Render.init(S);
     G.Render.rebuildStatic(S);
     if (G.Audio.setEnabled) G.Audio.setEnabled(S, S.settings.sound);
   }
@@ -49,12 +49,14 @@
     if (Game.headless) return Game.S;
     Game.S.mode = 'title'; G.Title.t = 0;                // the browser always starts on the title screen
     if (Game.S.settings.lowFx) G.Canvas.resize();         // Low effects caps the pixel ratio: size the canvas for it now
+    G.Ads.init(); G.Reminders.init();                     // store apps only: consent, ads, reminders (the web build loads none of it)
     G.Loop.start(Game.step, Game.frame);
     try { const b = document.getElementById('boot'); if (b) { b.classList.add('gone'); setTimeout(() => { if (b.parentNode) b.parentNode.removeChild(b); }, 450); } } catch (e) { /* no boot screen */ }
     document.addEventListener('visibilitychange', () => {
       const S = Game.S; if (!S) return;
-      if (document.hidden) { if (S.mode !== 'paused') S.prevMode = S.mode; S.mode = 'paused'; G.Save.write(S); G.Loop.stop(); }
-      else Game.resume(S, Date.now());
+      if (G.Ads.showing) { if (document.hidden) G.Save.write(S); return; }          // an ad's own screen is not the player leaving
+      if (document.hidden) { if (S.mode !== 'paused') S.prevMode = S.mode; S.mode = 'paused'; G.Save.write(S); G.Loop.stop(); G.Reminders.onHide(S); }
+      else { G.Reminders.cancel(); Game.resume(S, Date.now()); }
     });
     window.addEventListener('pagehide', () => { if (Game.S) G.Save.write(Game.S); });
     window.addEventListener('beforeunload', () => { if (Game.S) G.Save.write(Game.S); });
@@ -68,6 +70,7 @@
     // an uncollected offline card is still up: keep it, never recompute over it
     if (S.ui.card && S.ui.card.kind === 'offline' && !(S.ui.card.closing > 0)) { S.mode = S.prevMode === 'paused' ? 'play' : S.prevMode; Game.syncMode(S); return; }
     if (S.prevMode === 'finale') { S.mode = 'finale'; return; }                          // the ending picks up where it was
+    if (S.prevMode === 'ad') { S.mode = 'play'; Game.syncMode(S); }                       // an ad ended while the game was away
     // earnings already waiting behind the title's PLAY: keep them (the stamp was not advanced), never recompute over them
     if (S.prevMode === 'title' && G.Title.pending && G.Title.pending.show) { S.mode = 'title'; return; }
     if (nowMs - S.savedAt >= C.OFFLINE_MIN * 1000) {
@@ -80,7 +83,7 @@
     Game.syncMode(S);
   };
   Game.syncMode = function (S) {
-    if (S.mode === 'intro' || S.mode === 'paused' || S.mode === 'title' || S.mode === 'finale') return;
+    if (S.mode === 'intro' || S.mode === 'paused' || S.mode === 'title' || S.mode === 'finale' || S.mode === 'ad') return;
     S.mode = S.ui.card ? 'card' : S.ui.settings ? 'settings' : S.ui.sheet ? 'sheet' : 'play';
   };
   Game.nudge = function (S) { S.kit.nudgeT = C.TAP_NUDGE_T; };
@@ -94,6 +97,7 @@
   Game.onTap = function (S, tap) {
     const x = tap.x, y = tap.y;
     if (S.mode === 'finale') { G.Finale.tap(S, x, y); return; }                     // the ending owns every tap
+    if (S.mode === 'ad') { G.Ads.tap(S); return; }                                   // an ad is playing (a tap here means it already closed)
     if (G.Camera.script) { G.Camera.script = null; return; }                         // a tap skips a stage reveal
     if (S.mode === 'intro') { S.mode = 'play'; S.introT = C.INTRO_T; Game.syncMode(S); }
     if (G.Cards.tap(S, x, y)) return;
@@ -102,9 +106,11 @@
     if (G.Sheet.tap(S, x, y)) return;
     if (G.HUD.tapGear(S, x, y)) return;
     if (G.Goals.tapChip(S, x, y)) return;
+    if (G.Offers.tapScreen(S, x, y)) return;
     if (G.Dev.tapChip(S, x, y)) return;
     G.Camera.toWorld(x, y, W);
     if (G.Kaa.tap(S, W.x, W.y)) return;
+    if (G.Offers.tapWorld(S, W.x, W.y)) return;
     const id = G.Sheet.stationAt(S, W.x, W.y);
     if (id) { G.Hints.stationPoint(S, id, P); if (U.dist(S.kit.x, S.kit.y, P.x, P.y) <= C.STATION_TAP_DIST) G.Sheet.open(S, id); else G.HUD.farTap(S, id); return; }
     if (tap.zone === 'joy' && !S.tutorial.DRAG) Game.nudge(S);     // a tapper still gets a hop until the first real drag
@@ -131,6 +137,7 @@
     const Loop = G.Loop;
     if (S.mode === 'title') { G.Title.update(S, dt); G.Cards.update(S, dt); G.FX.update(S, dt); G.HUD.update(S, dt); return; }
     if (S.mode === 'finale') { G.Finale.update(S, dt); G.FX.update(S, dt); return; }       // the ending: the sim waits, the scene plays
+    if (S.mode === 'ad') { G.Ads.update(S, dt); return; }                                    // an ad: everything waits
     if (G.Camera.script) { G.Camera.update(S, dt); G.FX.update(S, dt); G.HUD.update(S, dt); G.Cards.update(S, dt); return; }   // a stage reveal: the sim waits for the camera
     if (Loop.hitstop > 0) { Loop.hitstop -= dt; G.FX.update(S, dt); G.HUD.update(S, dt); G.Camera.update(S, dt); return; }
     // cards, the settings popover and a hidden tab pause the simulation (the upgrade sheet does not: you steer with it open)
@@ -139,7 +146,7 @@
     S.t += dt;
     G.Player.update(S, dt); G.Trail.update(S, dt); G.CableCar.update(S, dt); G.Lift.update(S, dt); G.Troupe.update(S, dt); G.Guests.update(S, dt); G.Baths.update(S, dt); G.Heat.update(S, dt);
     G.Grove.update(S, dt); G.Stall.update(S, dt); G.Coins.update(S, dt); G.Lanterns.update(S, dt); G.Helpers.update(S, dt); G.Events.update(S, dt); G.Kaa.update(S, dt); G.Snow.update(S, dt);
-    G.Goals.update(S, dt); G.Story.update(S, dt); G.Golden.update(S, dt);
+    G.Goals.update(S, dt); G.Story.update(S, dt); G.Golden.update(S, dt); G.Offers.update(S, dt);
     G.Hints.update(S, dt); G.FX.update(S, dt); G.Camera.update(S, dt); G.HUD.update(S, dt); G.Sheet.update(S, dt); G.Cards.update(S, dt);
     G.Save.tick(S, dt);
   };

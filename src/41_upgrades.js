@@ -33,12 +33,21 @@
     if (!Upgrades.canBuy(S, id, key)) return false;
     const c = Upgrades.cost(S, id, key);
     if (!G.Coins.spend(S, c, 'upgrade')) return false;
+    levelUp(S, id, key);
+    return true;
+  };
+  // the same level, paid for by a video the player chose to watch (62_offers.js)
+  Upgrades.grant = function (S, id, key) {
+    if (!S.built[id] || !Upgrades.visible(S, id, key) || Upgrades.cost(S, id, key) === null) return false;
+    levelUp(S, id, key);
+    return true;
+  };
+  function levelUp(S, id, key) {
     S.levels[id][key]++;
     if (id === 'boiler' && key === 'slots') S.heat.max = Upgrades.heatMax(S);
     evUpgrade.id = id; evUpgrade.key = key; evUpgrade.level = S.levels[id][key];
     G.Bus.emit('upgrade', evUpgrade);
-    return true;
-  };
+  }
   function cheapest(S, affordableOnly) {
     let bestCost = Infinity; best.id = null; best.key = null; best.cost = 0;
     for (let i = 0; i < DATA.SHEET_STATIONS.length; i++) {

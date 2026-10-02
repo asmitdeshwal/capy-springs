@@ -115,13 +115,15 @@
       for (let i = 0; i < tl.length; i++) { const d = tl[i]; d.draw(ctx, d, S); }
       G.FX.drawPops(ctx, S);
       G.Hints.drawWorld(ctx, S);
+      G.Offers.drawWorld(ctx, S);                                                   // "light it now" under a step
     }
     Cam.unapply(ctx);
     // 7. screen space
     if (title) { G.Title.draw(ctx, S); G.Cards.draw(ctx, S); }
     else if (finale) G.Finale.drawScreen(ctx, S);
-    else { G.HUD.draw(ctx, S); G.Goals.drawChip(ctx, S); G.Dev.drawChip(ctx, S); G.Sheet.draw(ctx, S); G.Story.draw(ctx, S); G.Cards.draw(ctx, S); G.HUD.drawJoystick(ctx, S); }
+    else { G.HUD.draw(ctx, S); G.Offers.drawScreen(ctx, S); G.Goals.drawChip(ctx, S); G.Dev.drawChip(ctx, S); G.Sheet.draw(ctx, S); G.Story.draw(ctx, S); G.Cards.draw(ctx, S); G.HUD.drawJoystick(ctx, S); }
     if (S.fx.flash > 0) { ctx.globalAlpha = S.fx.flash; ctx.fillStyle = PAL.cream; ctx.fillRect(0, 0, MAP.W, H); ctx.globalAlpha = 1; }
+    G.Ads.draw(ctx, S);                                                             // developer mode's stand-in ad
     if (S.ui.debug) G.HUD.drawDebug(ctx, S);
     Cv.end(ctx);
   };
