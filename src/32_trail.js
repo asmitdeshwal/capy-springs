@@ -86,6 +86,7 @@
     }
   };
   Trail.collect = function (S, list) {
+    if (G.Finale && G.Finale.active) return;
     const cam = G.Camera, H = G.Canvas.H;
     for (let i = 0; i < S.trail.length; i++) { const n = S.trail[i]; if (n.kind === 'guest') continue; if (n.y < cam.y - 60 || n.y > cam.y + H + 60) continue; n.sortY = n.y; list.push(n); }
   };

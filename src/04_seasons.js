@@ -56,14 +56,14 @@
   // completion: lantern levels + upgrade levels over their maxima (what the Seasons card shows, so nobody is stuck at 96 % wondering why)
   Seasons.progress = function (S) {
     const D = G.DATA; let have = 0, max = 0;
-    for (let i = 0; i < D.LANTERNS.length; i++) { const d = D.LANTERNS[i]; max += d.costs.length; have += Math.min(d.costs.length, S.lanterns[d.id].level); }
+    for (let i = 0; i < D.LANTERNS.length; i++) { const d = D.LANTERNS[i], m = d.endless ? 1 : d.costs.length; max += m; have += Math.min(m, S.lanterns[d.id].level); }   // an endless lantern counts once
     for (let i = 0; i < D.SHEET_STATIONS.length; i++) { const id = D.SHEET_STATIONS[i], t = D.UPGRADES[id], l = S.levels[id]; if (!t) continue; for (const k in t) { max += t[k].max; have += Math.min(t[k].max, l[k] || 0); } }
     return max > 0 ? have / max : 0;
   };
   // what is still missing, for the Seasons card: [{ label, n }] of unlit lantern levels and unbought upgrades
   Seasons.missing = function (S, out) {
     const D = G.DATA; out.length = 0;
-    for (let i = 0; i < D.LANTERNS.length; i++) { const d = D.LANTERNS[i], n = d.costs.length - S.lanterns[d.id].level; if (n > 0) out.push({ label: d.label, n }); }
+    for (let i = 0; i < D.LANTERNS.length; i++) { const d = D.LANTERNS[i], n = (d.endless ? 1 : d.costs.length) - S.lanterns[d.id].level; if (n > 0) out.push({ label: d.label, n }); }
     for (let i = 0; i < D.SHEET_STATIONS.length; i++) { const id = D.SHEET_STATIONS[i], t = D.UPGRADES[id]; if (!t) continue; let n = 0; for (const k in t) n += Math.max(0, t[k].max - (S.levels[id][k] || 0)); if (n > 0) out.push({ label: (S.baths[id] ? S.baths[id].def.name : id) + ' upgrades', n }); }
     return out;
   };

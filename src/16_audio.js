@@ -53,6 +53,11 @@
     lap: (ac, d, t, o) => { const n = [110, 147, 196]; for (let i = 0; i < 3; i++) { tone(ac, d, 'sine', n[i], n[i] * 0.6, 0.16, 0.22 * o.gain, t + i * 0.1); } },
     sizzle: (ac, d, t, o) => noise(ac, d, 0.35, 'highpass', 2600, 0.22 * o.gain, t, 5000),
     wind: (ac, d, t, o) => noise(ac, d, 2.2, 'lowpass', 500, 0.18 * o.gain, t, 900),
+    // the Summit: a snow monkey's chatter, the troupe's whistle, the geyser, the Source waking
+    chatter: (ac, d, t, o) => { tone(ac, d, 'square', 700, 760, 0.05, 0.05 * o.gain, t); tone(ac, d, 'square', 900, 980, 0.05, 0.05 * o.gain, t + 0.07); },
+    whistle: (ac, d, t, o) => { tone(ac, d, 'sine', 1800, 2400, 0.22, 0.11 * o.gain, t); tone(ac, d, 'sine', 1800, 2500, 0.26, 0.09 * o.gain, t + 0.3); },
+    geyser: (ac, d, t, o) => { noise(ac, d, 1.2, 'bandpass', 500, 0.28 * o.gain, t, 2200); tone(ac, d, 'sine', 70, 32, 1.0, 0.28 * o.gain, t); },
+    rumble: (ac, d, t, o) => { noise(ac, d, 2.2, 'lowpass', 120, 0.3 * o.gain, t, 90); tone(ac, d, 'sine', 45, 30, 2.2, 0.3 * o.gain, t); },
     stamp: (ac, d, t, o) => { noise(ac, d, 0.08, 'lowpass', 700, 0.3 * o.gain, t); tone(ac, d, 'sine', 140, 70, 0.14, 0.25 * o.gain, t); tone(ac, d, 'sine', 1568, 0, 0.25, 0.1 * o.gain, t + 0.08); },
     scrape: (ac, d, t, o) => { noise(ac, d, 0.18, 'bandpass', 2200, 0.2 * o.gain, t, 900); tone(ac, d, 'triangle', 1400, 1800, 0.08, 0.08 * o.gain, t + 0.1); },
     gong: (ac, d, t, o) => { tone(ac, d, 'sine', 196, 0, 1.8, 0.25 * o.gain, t); tone(ac, d, 'sine', 294, 0, 1.4, 0.12 * o.gain, t); tone(ac, d, 'triangle', 392, 0, 0.9, 0.08 * o.gain, t); noise(ac, d, 0.08, 'bandpass', 1800, 0.12 * o.gain, t); },
@@ -84,6 +89,10 @@
     Bus.on('lap:step', e => Audio.play('tick', 1 + e.i * 0.3)); Bus.on('lap:done', () => Audio.play('lap'));
     Bus.on('plunge', e => { Audio.play('splash', 0.8); Audio.play('sizzle'); if (e.hot) { Audio.play('chime'); Audio.haptic(cur(), 25); } });
     Bus.on('ridge:open', () => { Audio.play('fanfare'); Audio.play('chime'); });
+    Bus.on('summit:open', () => { Audio.play('fanfare'); Audio.play('chime'); Audio.play('gong', 0.8, 0.6); });
+    Bus.on('troupe:warn', () => Audio.play('whistle'));
+    Bus.on('geyser', () => { Audio.play('geyser'); Audio.haptic(cur(), 25); });
+    Bus.on('geyser:tick', e => Audio.play('tick', 1 + (3 - e.n) * 0.2, 0.7));
     Bus.on('gong', e => { Audio.play('gong'); if (e.full) { Audio.play('fanfare', 1, 0.7); Audio.haptic(cur(), 25); } });
     Bus.on('snow:start', () => { Audio.play('wind'); Audio.play('chime', 0.7, 0.5); }); Bus.on('snow:clear', () => Audio.play('scrape'));
     Bus.on('lift:warn', () => Audio.play('chime', 1.2, 0.6));

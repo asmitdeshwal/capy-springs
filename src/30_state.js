@@ -13,7 +13,7 @@
   function guestFactory() {
     return { id: 0, kind: 'capy', x: 0, y: 0, face: 1, state: 'gone', carId: 0, golden: false,
       patience: 0, patienceMax: 0, want: null, bathId: null, slot: -1, soakT: 0, soakMax: 0, batch: null, yuzuHat: false,
-      area: 'platform', millRect: null, plungeT: 0, hotCold: false, fullHouse: false, inSession: false,     // the Ridge: where this guest waits, the hot-cold window since the sauna, the pavilion's gong
+      area: 'platform', millRect: null, plungeT: 0, hotCold: false, fullHouse: false, inSession: false, burst: false,     // the Ridge: where this guest waits, the hot-cold window since the sauna, the pavilion's gong
       node: null, sx: 1, sy: 1, squashT: 0, bobPhase: 0, hop: null, route: null, routeI: 0, nextState: null, walk: 110,
       millT: 0, waveT: 0, heartT: 0, sleepy: 0, shiver: false, queueSpot: -1, queueT: 0, paid: 0, sortY: 0, draw: null, alpha: 1, tutorial: false,
       hopObj: { x0: 0, y0: 0, x1: 0, y1: 0, t: 0, dur: 0.25, h: 18 }, routeArr: [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }], routeN: 0, mx: 0, my: 0, moving: false, coldOnce: false };
@@ -23,6 +23,7 @@
     const slots = new Array(def.maxSlots); for (let i = 0; i < def.maxSlots; i++) slots[i] = null;
     return { id: def.id, def, slots, yuzuT: 0, warm: true, occupied: false, rippleT: 0, steamT: 0, lastPlop: -99, coldOnce: false, refusedOnce: false,
              gongT: def.gong || 0, session: false, sparkT: 0,          // the pavilion's gong countdown and whether a massage is running
+             geyserT: def.geyser ? def.geyser.every : 0, burstT: 0, tick: 0,   // the Source's geyser: countdown to the next burst, the burst itself
              sortY: def.deck.y + def.deck.h / 2, draw: null };
   };
 
@@ -40,7 +41,7 @@
     const cap = C.TRAIL_PATH_CAP;
     const ph = DATA.HELPERS.pon.home, kh = DATA.HELPERS.kero.home;
     // built is DERIVED from lanterns (Save.apply re-runs the effects); the station ids are the engine's fixed roles, the baths come from the pack
-    const built = { boiler: false, woodpile: false, grove: false, stall: false, bridge: false, ridge: false };
+    const built = { boiler: false, woodpile: false, grove: false, stall: false, bridge: false, ridge: false, summit: false, shrine: false, awake: false };
     for (let i = 0; i < DATA.BATHS.length; i++) built[DATA.BATHS[i].id] = !!DATA.BATHS[i].prebuilt;
     const S = {
       v: 2, season: G.SEASON.id, mode: 'intro', prevMode: 'play', introT: 0, t: 0, coins: 0, earned: 0,
@@ -65,17 +66,23 @@
       helpers: { pon:  { hired: false, x: ph.x, y: ph.y, face: 1, state: 'rest', t: 0, hasLog: false, sx: 1, sy: 1, squashT: 0, yawn: 0, walk: 0, moving: false },
                  kero: { hired: false, x: kh.x, y: kh.y, face: 1, state: 'wait', t: 0, hasYuzu: false, hop: null, tx: 0, ty: 0, sx: 1, sy: 1, squashT: 0, tree: null,
                          hopObj: { x0: 0, y0: 0, x1: 0, y1: 0, t: 0, dur: C.KERO_HOP_T, h: C.KERO_HOP_H }, z: 0 } },
-      night: { active: false, t: 0, next: C.NIGHT_FIRST, fade: 0, count: 0, lit: {}, momo: false },
+      night: { active: false, t: 0, next: C.NIGHT_FIRST, fade: 0, count: 0, lit: {}, momo: false, festival: false, wasFestival: false },
       // the Ridge Lift (GDD 19.4): the second arrival rhythm, running once the Ridge is open
       lift: { index: 0, timer: 0, phase: 'away', phaseT: 0, x: MAP.LIFT ? MAP.LIFT.enterX : 0, swing: 0, n: 0, toSpawn: 0, spawnT: 0, carId: 0, golden: false, vip: false, warned: false, pulse: 0 },
+      // the Summit (GDD 20): the snow-monkey troupe's rhythm; Grandma's notes; the ending; the Golden Age's festivals
+      troupe: { index: 0, timer: 6, phase: 'away', phaseT: 0, n: 0, toSpawn: 0, spawnT: 0, spawned: 0, carId: 0, golden: false, vip: false, empty: false, warned: false, pulse: 0 },
+      story: { seen: {}, queue: [], showT: 0, delayT: 0, cur: null },
+      ending: { seen: false },
+      festival: { count: 0, best: 0, start: 0, pending: false },
       // season mechanics (GDD 17.3): the Pounding Lap around the burner and Kaa the crow; both idle unless the pack defines DATA.LAP / DATA.KAA
       lap: { i: 0, t: 0, armed: false, glow: [0, 0, 0], laps: 0 },
       kaa: { state: 'away', t: DATA.KAA ? DATA.KAA.every : 0, x: 0, y: 0, trayId: null, timer: 0, leaveT: 0, won: 0 },
       snow: { next: 0, active: false, t: 0, count: 0, dropT: 0, dropped: 0, drifts: [] },     // snowfall (GDD 19.3); drifts are runtime only
       goals: { day: 0, ids: [], done: [false, false, false], base: {}, stamps: 0, allDone: false },     // the Guestbook (GDD 20), persisted
       tutorial: { LEAD: 0, SOAK: 0, COLLECT: 0, LIGHT: 0, STOKE: 0, YUZU: 0, TAP: 0, DRAG: 0, LAP: 0, PLUNGE: 0, CLEAR: 0,
-                  HELP: 0, X_GOLDEN: 0, X_VIP: 0, X_FULLCAR: 0, X_NIGHT: 0, X_RUSH: 0, X_SNOW: 0, X_COLD: 0, X_GAUGE: 0, X_LINE: 0 },   // X_*: one-time banner explanations
-      stats: { served: 0, ducks: 0, combos: [0, 0, 0, 0, 0, 0], rushes: 0, chains: 0, fullCars: 0, nights: 0, golden: 0, mochi: 0, lost: 0, vip: 0, laps: 0, kaa: 0, plunges: 0, hotCold: 0, massages: 0, fullHouses: 0, squalls: 0, cleared: 0, liftCars: 0, yuzu: 0 },
+                  HELP: 0, X_GOLDEN: 0, X_VIP: 0, X_FULLCAR: 0, X_NIGHT: 0, X_RUSH: 0, X_SNOW: 0, X_COLD: 0, X_GAUGE: 0, X_LINE: 0, X_TROUPE: 0, ROLL: 0 },   // X_*: one-time banner explanations
+      stats: { served: 0, ducks: 0, combos: [0, 0, 0, 0, 0, 0], rushes: 0, chains: 0, fullCars: 0, nights: 0, golden: 0, mochi: 0, lost: 0, vip: 0, laps: 0, kaa: 0, plunges: 0, hotCold: 0, massages: 0, fullHouses: 0, squalls: 0, cleared: 0, liftCars: 0, yuzu: 0,
+               monkeys: 0, troupes: 0, momoTroupes: 0, geysers: 0, bursts: 0, notes: 0, finales: 0, festivals: 0, bests: 0, stars: 0, bestSplash: 0 },
       settings: { sound: true, haptics: null, shakeFlash: true, lowFx: false },
       fx: { steam: U.pool(C.STEAM_CAP, steamItem), ripples: U.pool(C.RIPPLE_CAP, rippleItem), parts: U.pool(C.PARTICLE_CAP, partItem), pops: U.pool(C.POP_CAP, popItem), flash: 0, wash: 0 },
       ui: { sheet: null, card: null, settings: false, banner: null, pill: null, pillT: 0, arrow: null, lastRule: 0, arrowFlash: null,
@@ -95,7 +102,7 @@
     g.patience = d.patienceWait; g.patienceMax = d.patienceWait; g.want = 'bath'; g.bathId = null; g.slot = -1; g.soakT = 0; g.soakMax = 0; g.batch = null; g.yuzuHat = false;
     g.node = null; g.sx = 1; g.sy = 1; g.squashT = 0; g.bobPhase = U.rand() * 6.28; g.hop = null; g.route = null; g.routeI = 0; g.routeN = 0; g.nextState = null; g.walk = d.walk;
     g.lost = false; g.millT = 0; g.waveT = 0; g.heartT = 0; g.sleepy = 0; g.shiver = false; g.queueSpot = -1; g.queueT = 0; g.paid = 0; g.sortY = 0; g.alpha = 1; g.tutorial = false; g.moving = false; g.coldOnce = false;
-    g.area = 'platform'; g.millRect = null; g.plungeT = 0; g.hotCold = false; g.fullHouse = false; g.inSession = false;
+    g.area = 'platform'; g.millRect = null; g.plungeT = 0; g.hotCold = false; g.fullHouse = false; g.inSession = false; g.burst = false;
     g.draw = G.Guests.draw;
     S.guests.push(g);
     return g;
@@ -115,7 +122,7 @@
     S.trail.length = 0; S.trailMeta.joinT = -99; S.trailMeta.compress = 1;
     S.coinPool.clear();
     for (const id in S.trays) { S.trays[id].value = 0; S.trays[id].bounce = 0; }
-    for (const id in S.baths) { const b = S.baths[id]; for (let i = 0; i < b.slots.length; i++) b.slots[i] = null; b.occupied = false; b.lastPlop = -99; b.refusedOnce = false; b.session = false; b.gongT = b.def.gong || 0; }
+    for (const id in S.baths) { const b = S.baths[id]; for (let i = 0; i < b.slots.length; i++) b.slots[i] = null; b.occupied = false; b.lastPlop = -99; b.refusedOnce = false; b.session = false; b.gongT = b.def.gong || 0; b.burstT = 0; b.geyserT = b.def.geyser ? b.def.geyser.every : 0; }
     S.splash.count = 0; S.splash.t = -99; S.splash.mult = 1; S.splash.bathId = null;
     S.carLog = {};
     for (const k in S.unwrapping) delete S.unwrapping[k];
@@ -126,12 +133,14 @@
     k.x = DATA.HELPERS.kero.home.x; k.y = DATA.HELPERS.kero.home.y; k.state = 'wait'; k.t = 0; k.hasYuzu = false; k.hop = null; k.tree = null; k.z = 0;
     S.fx.steam.clear(); S.fx.ripples.clear(); S.fx.parts.clear(); S.fx.pops.clear(); S.fx.flash = 0; S.fx.wash = 0;
     S.kit.path.n = 0; S.kit.path.head = 0; S.kit.vx = S.kit.vy = 0; S.kit.moving = false; S.kit.nudgeT = 0;
-    S.night.active = false; S.night.t = 0; S.night.fade = 0; S.night.lit = {};
+    S.night.active = false; S.night.t = 0; S.night.fade = 0; S.night.lit = {}; S.night.festival = false; S.night.wasFestival = false;
     S.heat.rush = false; S.heat.rushT = 0; S.heat.chain = 0;
     S.lap.i = 0; S.lap.t = 0; S.lap.armed = false; S.lap.glow[0] = S.lap.glow[1] = S.lap.glow[2] = 0;
     S.snow.active = false; S.snow.t = 0; S.snow.next = 0; S.snow.drifts.length = 0; S.snow.dropped = S.snow.count * (DATA.MAP.SNOW ? DATA.MAP.SNOW.perSquall : 0);
     const lf = S.lift; lf.phase = 'away'; lf.timer = C.CAR_RESUME_T; lf.phaseT = 0; lf.toSpawn = 0; lf.x = DATA.MAP.LIFT ? DATA.MAP.LIFT.enterX : 0; lf.golden = false; lf.vip = false; lf.warned = false; S.night.momo = false;
     S.kaa.state = 'away'; S.kaa.t = DATA.KAA ? DATA.KAA.every : 0; S.kaa.trayId = null; S.car.vip = false;
+    const tr = S.troupe; tr.phase = 'away'; tr.timer = 6; tr.phaseT = 0; tr.toSpawn = 0; tr.golden = false; tr.vip = false; tr.warned = false;
+    S.story.queue.length = 0; S.story.cur = null; S.story.showT = 0; S.story.delayT = 0;
     S.ui.sheet = null; S.ui.card = null; S.ui.settings = false; S.ui.banner = null; S.ui.arrow = null; S.ui.lastRule = 0; S.ui.arrowFlash = null; S.ui.chevron = null;
   };
 })(window.G);

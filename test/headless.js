@@ -76,13 +76,14 @@ function invariants() {
   if (!(S.heat.v >= 0 && S.heat.v <= S.heat.max)) fail('heat out of range at ' + t + ': ' + S.heat.v + '/' + S.heat.max);
   const cam = G.Camera; if (cam.y < G.Camera.minY(S) - 0.01 || cam.y + G.Canvas.H > MAP.H + 0.01) fail('camera out of clamp at ' + t + ': y=' + cam.y + ' H=' + G.Canvas.H);
   if (S.trail.length > S.trailCap) fail('trail over cap at ' + t);
+  if (S.mode === 'finale') fail('the harness entered the ending scene at ' + t);
   let trailGuests = 0;
   for (const n of S.trail) { if (n.kind === 'guest') { trailGuests++; if (!n.ref || n.ref.state !== 'trail' || n.ref.node !== n) fail('trail node/guest mismatch at ' + t); } }
   let gTrail = 0; for (const g of S.guests) { if (g.state === 'trail') { gTrail++; if (!g.node) fail('trail guest without node at ' + t); } else if (g.node) fail('non-trail guest ' + g.state + ' has a node at ' + t); }
   if (gTrail !== trailGuests) fail('trail guest count mismatch at ' + t + ': ' + gTrail + ' vs ' + trailGuests);
   // trail clog
   const seen = new Set();
-  for (const n of S.trail) { seen.add(n); if (!enterT.has(n)) enterT.set(n, { t: simT, fullT: 0 }); const e = enterT.get(n); if (n.kind === 'log') { if (S.heat.v >= S.heat.max) e.fullT += 1; else e.fullT = 0; if (e.fullT > 20) fail('log clogged the trail for 20 s with a full tank at ' + t); } if (n.kind === 'yuzu' && simT - e.t > 30) fail('yuzu clogged the trail for 30 s at ' + t); }
+  for (const n of S.trail) { seen.add(n); if (!enterT.has(n) || enterT.get(n).kind !== n.kind || enterT.get(n).ref !== n.ref) enterT.set(n, { t: simT, fullT: 0, kind: n.kind, ref: n.ref }); /* trail nodes are pooled: a reused node starts a new clock */ const e = enterT.get(n); if (n.kind === 'log') { if (S.heat.v >= S.heat.max) e.fullT += 1; else e.fullT = 0; if (e.fullT > 20) fail('log clogged the trail for 20 s with a full tank at ' + t); } if (n.kind === 'yuzu' && simT - e.t > 30) fail('yuzu clogged the trail for 30 s at ' + t); }
   for (const n of Array.from(enterT.keys())) if (!seen.has(n)) enterT.delete(n);
   for (const id in S.baths) {
     const b = S.baths[id]; if (!S.built[id]) continue;
@@ -132,7 +133,17 @@ const DECK_CHECKS = [
   [2700, () => { if (!S.built.sauna) fail('2700 s: Sauna Hut not built'); if (!S.built.plunge) fail('2700 s: Cold Plunge not built'); if (S.stats.hotCold < 1) fail('2700 s: no hot-cold plunge (plunges ' + S.stats.plunges + ')'); }],
   [3000, () => { if (!S.built.pavilion) fail('3000 s: Massage Pavilion not built'); if (S.stats.massages < 2) fail('3000 s: massages ' + S.stats.massages + ' < 2'); if (S.stats.fullHouses < 1) fail('3000 s: no full house');
                  if (S.stats.squalls < 1) fail('3000 s: no snow squall'); if (S.stats.cleared < 1) fail('3000 s: no drift cleared (' + S.snow.drifts.length + ' lying)');
-                 if (S.stats.liftCars < 10) fail('3000 s: lift cars ' + S.stats.liftCars + ' < 10'); if (S.stats.vip < 1) fail('3000 s: Momo never served'); }]
+                 if (S.stats.liftCars < 10) fail('3000 s: lift cars ' + S.stats.liftCars + ' < 10'); if (S.stats.vip < 1) fail('3000 s: Momo never served'); }],
+  // the Summit (GDD 20): the stairs, the Source with its troupe and geyser, Grandma's shrine and Kaa, the Snow Roll, then the ending and the Golden Age
+  [3300, () => { if (!S.built.summit) fail('3300 s: the Summit did not open (stairs level ' + S.lanterns.stairs.level + ')'); }],
+  [3600, () => { if (!S.built.source) fail('3600 s: the Source not built'); if (S.stats.monkeys < 1) fail('3600 s: no snow monkey served'); if (S.stats.geysers < 5) fail('3600 s: geysers ' + S.stats.geysers + ' < 5');
+                 if (S.stats.notes < 4) fail('3600 s: Grandma notes ' + S.stats.notes + ' < 4'); }],
+  [4300, () => { if (!S.built.shrine) fail("4300 s: Grandma's Shrine not built"); if (!S.built.snowroll) fail('4300 s: Snow Roll not built'); if (S.stats.kaa < 1) fail('4300 s: Kaa never tapped');
+                 if (S.stats.monkeys < 40) fail('4300 s: monkeys served ' + S.stats.monkeys + ' < 40'); if (S.stats.bursts < 1) fail('4300 s: no guest landed in a geyser burst'); }],
+  [4800, () => { if (!S.built.awake || !S.ending.seen) fail('4800 s: the Source never woke (wake level ' + S.lanterns.wake.level + ', coins ' + S.coins + ')'); if (S.stats.finales !== 1) fail('4800 s: finales ' + S.stats.finales);
+                 if (S.stats.festivals < 1) fail('4800 s: no Festival Night after the ending'); }],
+  [6000, () => { if (S.lanterns.wake.level < 2) fail('6000 s: no Source Star'); if (S.stats.festivals < 2) fail('6000 s: festivals ' + S.stats.festivals + ' < 2'); if (S.stats.troupes < 50) fail('6000 s: troupes ' + S.stats.troupes + ' < 50');
+                 const r = S.stats.lost / Math.max(1, S.stats.served + S.stats.lost); if (r > 0.15) fail('6000 s: lost ratio ' + r.toFixed(2) + ' > 0.15'); }]
 ];
 // Season 2 (the Mochi Terrace): floors = 70 % of the measured curve (seed 7, build 1.3.0): 243 / 1259 / 4635 / 16803 / 32397 / 49909 at 2 / 5 / 10 / 20 / 30 / 40 min
 const TERRACE_CHECKS = [
@@ -173,7 +184,7 @@ if (!fails.length) {
   try {
     G.State.resetRuntime(S);
     const a = JSON.stringify(G.Save.serialize(S)), b = JSON.stringify(G.Save.serialize(G.Save.apply(G.State.create(), G.Save.serialize(S))));
-    if (a !== b) fail('save round trip differs:\n' + a.slice(0, 400) + '\n' + b.slice(0, 400));
+    if (a !== b) { let i = 0; while (i < a.length && a[i] === b[i]) i++; fail('save round trip differs at char ' + i + ':\n' + a.slice(Math.max(0, i - 200), i + 160) + '\n' + b.slice(Math.max(0, i - 200), i + 160)); }
     const obj = G.Save.serialize(S); obj.savedAt = obj.savedAt || Date.now();
     const o1 = G.Save.offline(obj, obj.savedAt + 3600e3); if (!(Number.isInteger(o1.coins) && o1.coins >= 0 && o1.coins <= C.RATE_CAP_PER_S * 0.25 * 3600)) fail('offline 1 h coins out of range: ' + o1.coins);
     const o2 = G.Save.offline(obj, obj.savedAt + 10 * 3600e3); if (o2.away !== C.OFFLINE_CAP) fail('offline 10 h away not capped: ' + o2.away);
@@ -203,6 +214,7 @@ if (!fails.length) {
 if (opt.csv) { try { fs.mkdirSync(path.dirname(path.resolve(root, opt.csv)), { recursive: true }); fs.writeFileSync(path.resolve(root, opt.csv), csvRows.join('\n') + '\n'); log('csv written: ' + opt.csv); } catch (e) { warns.push('csv write failed: ' + e.message); } }
 const st = S.stats;
 log('season ' + G.SEASON.id + ' (' + G.SEASON.name + ') | ' + (fuzz ? 'fuzz ' : 'bot ') + total + ' s in ' + wall.toFixed(1) + ' s wall | earned ' + S.earned + ' coins ' + S.coins + ' | served ' + st.served + ' lost ' + st.lost + ' | combos x3/x4/x5 ' + st.combos[3] + '/' + st.combos[4] + '/' + st.combos[5] + ' | rushes ' + st.rushes + ' chains ' + st.chains + ' | fullCars ' + st.fullCars + ' nights ' + st.nights + ' golden ' + st.golden + ' mochi ' + st.mochi + ' | vip ' + st.vip + ' laps ' + st.laps + ' kaa ' + st.kaa + ' | plunges ' + st.plunges + ' hotCold ' + st.hotCold + ' massages ' + st.massages + ' fullHouses ' + st.fullHouses + ' | squalls ' + st.squalls + ' cleared ' + st.cleared + ' | lift ' + st.liftCars + ' | goals ' + S.goals.ids.join('/') + ' stamps ' + S.goals.stamps + ' | trailCap ' + S.trailCap + ' car L' + S.car.level + ' | buys ' + bot.buys());
+if (S.built.summit) log('summit | monkeys ' + S.stats.monkeys + ' troupes ' + S.stats.troupes + ' (Momo ' + S.stats.momoTroupes + ') | geysers ' + S.stats.geysers + ' bursts ' + S.stats.bursts + ' | notes ' + S.stats.notes + ' kaa ' + S.stats.kaa + ' | ending ' + (S.ending.seen ? 'seen' : '-') + ' stars ' + Math.max(0, S.lanterns.wake.level - 1) + ' festivals ' + S.stats.festivals + ' best ' + Math.round(S.festival.best) + ' | best splash x' + S.stats.bestSplash);
 log('lanterns: ' + DATA.LANTERNS.map(d => d.id + ':' + S.lanterns[d.id].level).join(' '));
 if (opt.beats) {
   log('\nBEATS (first time, seconds):');

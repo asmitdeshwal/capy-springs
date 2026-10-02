@@ -38,6 +38,7 @@
     const W = G.Art.W;
     W.terrain(c, MAP.STATIC_Y0, MAP.H); W.valley(c); W.lane(c); W.rocks(c); W.pines(c); W.stoneLanterns(c, false); W.platform(c); W.cable(c); W.bridge(c);
     if (MAP.RIDGE && W.ridgeDecor) W.ridgeDecor(c);
+    if (MAP.SUMMIT && W.summitDecor) W.summitDecor(c, S);
     for (let i = 0; i < DATA.BATHS.length; i++) { const d = DATA.BATHS[i]; if (S.built[d.id]) W.deckPlate(c, d); }
     if (S.built.woodpile) W.woodpile(c, DATA.STATIONS.woodpile.x, DATA.STATIONS.woodpile.y);
     if (S.built.stall) W.stallBody(c, DATA.STATIONS.stall.x, DATA.STATIONS.stall.y);
@@ -76,7 +77,7 @@
     list.length = 0;
     G.Player.collect(S, list); G.Trail.collect(S, list); G.Guests.collect(S, list); G.CableCar.collect(S, list); G.Baths.collect(S, list);
     G.Heat.collect(S, list); G.Grove.collect(S, list); G.Stall.collect(S, list); G.Coins.collect(S, list); G.Lanterns.collect(S, list);
-    G.Helpers.collect(S, list); G.Events.collect(S, list); G.Kaa.collect(S, list); G.Lift.collect(S, list); G.FX.collect(S, list);
+    G.Helpers.collect(S, list); G.Events.collect(S, list); G.Kaa.collect(S, list); G.Lift.collect(S, list); G.Summit.collect(S, list); G.Finale.collect(S, list); G.FX.collect(S, list);
     list.sort(byY);
     for (let i = 0; i < list.length; i++) { const d = list[i]; d.draw(ctx, d, S); }
     // 4. FX pass
@@ -88,6 +89,7 @@
     const fade = S.night.fade;
     if (fade > 0) {
       if (low) { ctx.fillStyle = PAL.rgba(PAL.skyNight, 0.36 * fade); ctx.fillRect(0, Cam.y, MAP.W, H); }      // one ordinary blended quad on weak GPUs
+      else if (G.Finale.active) { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = PAL.rgba(PAL.amberDeep, 0.22 * fade); ctx.fillRect(0, Cam.y, MAP.W, H); ctx.globalCompositeOperation = 'source-over'; }   // the Source wakes: a golden dusk
       else { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = PAL.rgba(PAL.skyNight, C.NIGHT_TINT * fade); ctx.fillRect(0, Cam.y, MAP.W, H); ctx.globalCompositeOperation = 'source-over'; }
     }
     if (fade > 0 && G.Art.W.nightExtra) G.Art.W.nightExtra(ctx, Cam.y, H, fade, S.t, low);     // a season's moon / drifting leaves
@@ -104,9 +106,10 @@
       if (fade > 0) { const SL = MAP.STONE_LANTERNS; for (let i = 0; i < SL.length; i++) { const y = SL[i][1]; if (y < Cam.y - 60 || y > Cam.y + H + 60) continue; G.Art.S.circle(ctx, SL[i][0], y - 30, 14, PAL.rgba(PAL.amber, 0.35 * fade)); } }
       ctx.globalCompositeOperation = 'source-over';
     }
-    const title = S.mode === 'title';
-    // 6. world text (after the tint so it stays readable); none on the title screen
-    if (!title) {
+    const title = S.mode === 'title', finale = S.mode === 'finale';
+    // 6. world text (after the tint so it stays readable); none on the title screen or during the ending (pops still fly)
+    if (finale) G.FX.drawPops(ctx, S);
+    else if (!title) {
       tl.length = 0;
       G.Guests.collectText(S, tl); G.Lanterns.collectText(S, tl); G.HUD.collectWorld(S, tl);
       for (let i = 0; i < tl.length; i++) { const d = tl[i]; d.draw(ctx, d, S); }
@@ -116,7 +119,8 @@
     Cam.unapply(ctx);
     // 7. screen space
     if (title) { G.Title.draw(ctx, S); G.Cards.draw(ctx, S); }
-    else { G.HUD.draw(ctx, S); G.Goals.drawChip(ctx, S); G.Dev.drawChip(ctx, S); G.Sheet.draw(ctx, S); G.Cards.draw(ctx, S); G.HUD.drawJoystick(ctx, S); }
+    else if (finale) G.Finale.drawScreen(ctx, S);
+    else { G.HUD.draw(ctx, S); G.Goals.drawChip(ctx, S); G.Dev.drawChip(ctx, S); G.Sheet.draw(ctx, S); G.Story.draw(ctx, S); G.Cards.draw(ctx, S); G.HUD.drawJoystick(ctx, S); }
     if (S.fx.flash > 0) { ctx.globalAlpha = S.fx.flash; ctx.fillStyle = PAL.cream; ctx.fillRect(0, 0, MAP.W, H); ctx.globalAlpha = 1; }
     if (S.ui.debug) G.HUD.drawDebug(ctx, S);
     Cv.end(ctx);

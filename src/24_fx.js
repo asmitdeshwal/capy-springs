@@ -141,7 +141,7 @@
       FX.ripple(S, g.x, g.y, b.yuzuT > 0);
       FX.droplets(S, g.x, g.y - 4, 6);
       if (e.count >= 3) {
-        const text = e.count === 3 ? G.Seasons.text('splash3', 'SPLASH x3!') : e.count === 4 ? 'x4!' : 'x' + e.count + '!!';
+        const text = g.burst ? 'SOURCE x' + e.count + '!!' : e.count === 3 ? G.Seasons.text('splash3', 'SPLASH x3!') : e.count === 4 ? 'x4!' : 'x' + e.count + '!!';   // a chain inside the geyser burst
         FX.pop(S, text, w.x, w.y - w.h / 2 - 34, C.SPLASH_TEXT[n], PAL.coin, 'chain', g.batch);
         if (C.SPLASH_PUNCH[n] > 0) Cam.punch(C.SPLASH_PUNCH[n], C.PUNCH_T);
         if (e.count === 3) FX.hitStop(S, C.HITSTOP_X3);
@@ -165,6 +165,8 @@
     });
     // snowfall: a cleared drift bursts into white puffs (its koban rain to Kit on their own)
     Bus.on('snow:clear', e => { const S = cur(); for (let i = 0; i < 8; i++) FX.puff(S, e.x + (U.hash(i, e.x) - 0.5) * 50, e.y + (U.hash(i, e.y) - 0.5) * 20, 'puff', 8 + U.hash(i, 5) * 8); FX.sparkle(S, e.x, e.y - 10, 4); FX.pop(S, '+' + e.bonus, e.x, e.y - 30, 20, PAL.coin, 'plus'); });
+    Bus.on('summit:open', () => { const S = cur(), st = DATA.MAP.SUMMIT.stairs; FX.confetti(S, st.x, st.y0 - 10, C.CONFETTI_BIG); FX.confetti(S, st.x, st.y1, C.CONFETTI_BIG); FX.flash(S, 0.3); Cam.shake(6, 0.4); });
+    Bus.on('geyser', e => { const S = cur(), c = e.bath.def.coneAt, w = e.bath.def.water; FX.droplets(S, c.x, c.y - 50, 12); FX.droplets(S, w.x, w.y - 10, 8); FX.ring(S, w.x, w.y, 120); if (G.Camera.visibleY(c.y, 100)) Cam.shake(4, 0.3); });
     Bus.on('ridge:open', () => { const S = cur(), b = DATA.MAP.BRIDGE; FX.confetti(S, b.x, b.y0 + 40, C.CONFETTI_BIG); FX.confetti(S, b.x, b.y1, C.CONFETTI_BIG); FX.flash(S, 0.3); Cam.shake(6, 0.4); });
     Bus.on('guest:mochi', e => { const S = cur(); FX.pop(S, '+' + e.value, e.g.x, e.g.y - 40, 20, PAL.coin, 'plus'); });
     Bus.on('guest:lost', e => { const S = cur(); FX.droplets(S, e.g.x, e.g.y - 30, 3); FX.pop(S, 'waited too long', e.g.x, e.g.y - 48, 15, PAL.stoneDark, 'label'); });

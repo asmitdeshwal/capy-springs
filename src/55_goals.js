@@ -26,6 +26,13 @@
     { id: 'momo',      label: 'Serve Momo the VIP', how: 'He rides the lift on Lantern Nights',         get: s => s.vip,          target: 1,  reward: 250, icon: 'momo',        needs: 'sauna' }
   ];
   const PAD = ['x3', 'served', 'golden', 'rush', 'fullcar', 'x5'];
+  POOL.push(
+    { id: 'monkeys',  label: 'Serve snow monkeys',          how: 'They hop down onto their ledge', get: s => s.monkeys,     target: 30, reward: 200, icon: 'monkey', needs: 'source' },
+    { id: 'bursts',   label: 'Catch geyser bursts',         how: 'Land guests while the geyser blows', get: s => s.bursts, target: 8, reward: 250, icon: 'source', needs: 'source' },
+    { id: 'troupe',   label: "Welcome Momo's Troupe",       how: 'Every 5th troupe is golden', get: s => s.momoTroupes,  target: 1,  reward: 300, icon: 'momo',   needs: 'source' },
+    { id: 'kaa',      label: 'Catch Kaa on a tray',         how: 'Tap the crow before he flies off', get: s => s.kaa,      target: 3,  reward: 150, icon: 'koban',  needs: 'shrine' },
+    { id: 'festival', label: 'Play a Festival Night',       how: 'After a Source Star, or every 3rd night', get: s => s.festivals, target: 1, reward: 500, icon: 'lantern', needs: 'awake' },
+    { id: 'best',     label: 'Beat your best festival',     how: 'Earn more koban in one festival', get: s => s.bests,    target: 1,  reward: 600, icon: 'check',  needs: 'awake' });
   const BY_ID = {}; for (let i = 0; i < POOL.length; i++) BY_ID[POOL[i].id] = POOL[i];
 
   // the calendar day as a number (local time), and the key stored in the save

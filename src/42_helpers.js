@@ -75,6 +75,7 @@
   }
   Helpers.update = function (S, dt) { updatePon(S, dt); updateKero(S, dt); };
   Helpers.collect = function (S, list) {
+    if (G.Finale && G.Finale.active) return;
     const p = S.helpers.pon, k = S.helpers.kero;
     if (p.hired && G.Camera.visibleY(p.y, 100)) { ponD.sortY = p.y; list.push(ponD); }
     if (k.hired && G.Camera.visibleY(k.y, 100)) { keroD.sortY = k.y; list.push(keroD); }

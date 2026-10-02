@@ -3,7 +3,7 @@
   'use strict';
   G.DATA = G.DATA || {};
   G.DATA.MAP = {
-    W: 540, H: 2400, CAM_MIN_Y: 1100, STATIC_Y0: -120,      // the static cache covers the Ridge too; the camera clamp moves up when the bridge opens
+    W: 540, H: 2400, CAM_MIN_Y: 1100, STATIC_Y0: -1340,     // the static cache covers the Ridge and the Summit too; the camera clamp moves up as each stage opens
     // THE RIDGE (GDD 19): a full stage above the bridge (1220 px, a whole phone screen). Opens with Ridge Bridge level 1; Kit's bounds, the camera
     // clamp, the lane and the mist move up, and while Kit is up there the camera never shows the Deck.
     RIDGE: { y0: -120, y1: 1100, camMinY: -120, boundsY0: -60, laneY0: -60, mist: { y0: -200, y1: -40 },
@@ -12,6 +12,20 @@
              pines: [[40, 620], [30, 760], [510, 760], [150, 600], [40, 960], [500, 960], [200, 690], [60, 120], [480, 100], [150, -20], [400, -10], [500, 320], [30, 340], [340, 190], [180, 400], [470, 470]],
              rocks: [[90, 700], [220, 620], [160, 990], [500, 990], [120, 260], [430, 230], [200, 40], [60, 520]],
              pond: { x: 300, y: 330, w: 190, h: 100 } },                                // a frozen pond, decor only
+    // THE SUMMIT (GDD 20): the third stage, above the clouds (1220 px, a whole screen). Opens with the Pilgrim Stairs at the top of the Ridge; the cliff
+    // either side of the stairs is solid, the stairs are the only way up. The Source pool and its geyser on the right, Grandma Yuzu's hut on the left,
+    // the snow monkeys' ledge under the cliff at the top, the Snow Roll below.
+    SUMMIT: { y0: -1340, y1: -120, camMinY: -1340, boundsY0: -1230, mist: { y0: -1420, y1: -1262 }, exit: { x: 270, y: -1250 },
+              chasm: [[0, -262, 238, -112], [302, -262, 540, -112]], stairs: { x: 270, y0: -262, y1: -112, w: 60 }, torii: { x: 270, y: -268 },
+              mill: { x0: 330, x1: 430, y0: -796, y1: -762 },                                   // Source guests wait here for the Snow Roll
+              hut: { x: 120, y: -900, w: 124, h: 92, solid: { x0: 62, y0: -930, x1: 178, y1: -862 }, door: { x: 150, y: -858 }, perch: { x: 104, y: -992 }, seat: { x: 296, y: -930 } },
+              waterfall: { x: 470, y: -600, w: 70, h: 150 }, vents: [[95, -1100], [215, -1118]],
+              pines: [[40, -380], [500, -380], [160, -330], [420, -330], [30, -720], [515, -742], [55, -1060], [500, -1262], [40, -1270]],
+              rocks: [[470, -470], [400, -420], [140, -425], [175, -1010], [527, -1100], [60, -1135], [392, -1252]],
+              stoneLanterns: [[215, -700], [325, -700]] },
+    // the snow-monkey troupe (GDD 20.2): no cabin, they hop down the cliff onto their ledge every `period` s once the Source is built
+    TROUPE: { platform: { x: 270, y: -1176, w: 300, h: 56, cap: 10, mill: { x0: 140, x1: 400, y0: -1196, y1: -1160 } }, from: { x: 270, y: -1300 },
+              whistle: { x: 468, y: -1160 }, period: 20, periodNight: 12, guests: 6, goldenEvery: 5, warn: 3, hopGap: 0.3 },
     // the Ridge Lift (GDD 19.4): a gondola across the gorge that brings guests to a platform on the Ridge once it is open
     LIFT: { y: 1020, pylons: [40, 500], pylonTop: 985, dockX: 130, enterX: -80, exitX: 620, doorDY: 44, sortY: 1080,
             platform: { x: 130, y: 962, w: 180, h: 46, cap: 8, mill: { x0: 55, x1: 205, y0: 945, y1: 980 }, exit: { x: 130, y: 940 } },

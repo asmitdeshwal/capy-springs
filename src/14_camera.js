@@ -4,13 +4,15 @@
   const C = G.C, U = G.U, MAP = G.DATA.MAP;
   const Camera = G.Camera = { x: 0, y: 1440, look: 0, shakeX: 0, shakeY: 0, shakeMag: 0, shakeT: 0, shakeDur: 0, shakeOn: true, z: 1, punchMag: 0, punchT: 0, punchDur: 0 };
 
-  Camera.minY = S => (G.Ridge ? G.Ridge.minY(S) : MAP.CAM_MIN_Y);                 // the clamp moves up when the Ridge opens
+  Camera.minY = S => (G.Summit ? G.Summit.minY(S) : G.Ridge ? G.Ridge.minY(S) : MAP.CAM_MIN_Y);   // the clamp moves up as each stage opens
   // the Ridge is a stage of its own: while Kit is up there the view never shows the Deck (the clamp's upper limit blends across the bridge)
   Camera.maxY = function (S) {
     const H = G.Canvas.H, R = MAP.RIDGE, full = MAP.H - H;
     if (!R || !S.built.ridge) return full;
     const t = U.clamp((S.kit.y - (R.y1 - 100)) / 150, 0, 1);                        // 0 on the Ridge, 1 once Kit is down past the bridge foot
-    return Math.max(Camera.minY(S), U.lerp(R.y1 - H, full, t));
+    let m = U.lerp(R.y1 - H, full, t);
+    const SU = MAP.SUMMIT; if (SU && S.built.summit) { const t2 = U.clamp((S.kit.y - (SU.y1 - 100)) / 150, 0, 1); m = U.lerp(SU.y1 - H, m, t2); }   // the same across the stairs
+    return Math.max(Camera.minY(S), m);
   };
   function clampY(S, y) { const lo = Camera.minY(S); return U.clamp(y, lo, Math.max(lo, Camera.maxY(S))); }
   function target(S) { return S.kit.y - C.CAM_KIT_FRAC * G.Canvas.H + Camera.look; }
@@ -22,6 +24,10 @@
     Camera.y += (target(S) - Camera.y) * (1 - Math.exp(-C.CAM_FOLLOW * dt));
     Camera.y = clampY(S, Camera.y);
     Camera.shakeOn = !S.settings || S.settings.shakeFlash !== false;
+    Camera.tickShake(dt);
+  };
+  // shake and zoom-punch decay on their own (the ending drives Camera.y itself and still needs these)
+  Camera.tickShake = function (dt) {
     if (Camera.shakeT > 0) {
       Camera.shakeT -= dt;
       const k = Camera.shakeMag * Math.max(0, Camera.shakeT / Camera.shakeDur);

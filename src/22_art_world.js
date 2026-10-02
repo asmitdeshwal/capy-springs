@@ -11,23 +11,25 @@
   // ---------- static layer ----------
   W.terrain = function (ctx, y0, y1) {
     const S_ = A();
+    if (MAP.SUMMIT && y0 < MAP.SUMMIT.y1) { if (W.summitTerrain) W.summitTerrain(ctx, y0, MAP.SUMMIT.y1); y0 = MAP.SUMMIT.y1; }   // the Summit above the clouds (26_art_summit.js)
     if (MAP.RIDGE && y0 < MAP.RIDGE.y1) { W.ridgeTerrain(ctx, y0, MAP.RIDGE.y1); y0 = MAP.RIDGE.y1; }   // the snowy ridge above, the green deck below
-    ctx.fillStyle = PAL.pine; ctx.fillRect(0, y0, MAP.W, y1 - y0);
+    const g0 = PAL.ground || PAL.pine, g1 = PAL.groundDark || PAL.pineDark, gm = PAL.groundMoss || PAL.moss;   // the season's ground (60_golden.js)
+    ctx.fillStyle = g0; ctx.fillRect(0, y0, MAP.W, y1 - y0);
     for (let i = 0; i < 26; i++) {                                  // darker patches
       const x = U.hash(i, 1) * 540, y = y0 + U.hash(i, 2) * (y1 - y0), rx = 40 + U.hash(i, 3) * 70, ry = 14 + U.hash(i, 4) * 22;
-      S_.ellipse(ctx, x, y, rx, ry, PAL.pineDark);
+      S_.ellipse(ctx, x, y, rx, ry, g1);
     }
     for (let i = 0; i < 30; i++) {                                  // moss
       const x = U.hash(i, 5) * 540, y = y0 + U.hash(i, 6) * (y1 - y0), rx = 18 + U.hash(i, 7) * 40, ry = 6 + U.hash(i, 8) * 12;
-      S_.ellipse(ctx, x, y, rx, ry, PAL.moss);
+      S_.ellipse(ctx, x, y, rx, ry, gm);
     }
     for (let i = 0; i < 34; i++) {                                  // grass tufts
-      const x = U.hash(i, 41) * 540, y = y0 + U.hash(i, 42) * (y1 - y0), c = (i & 1) ? PAL.pineDark : PAL.mix(PAL.moss, PAL.cream, 0.25);
+      const x = U.hash(i, 41) * 540, y = y0 + U.hash(i, 42) * (y1 - y0), c = (i & 1) ? g1 : PAL.mix(gm, PAL.cream, 0.25);
       for (let k = -1; k <= 1; k++) A().line(ctx, x + k * 4, y, x + k * 7, y - 7 - (k === 0 ? 3 : 0), c, 2);
     }
     for (let i = 0; i < 14; i++) {                                  // flower patches: three blooms and a leaf
       const x = U.hash(i, 43) * 540, y = y0 + U.hash(i, 44) * (y1 - y0), col = (i % 3 === 0) ? '#F2A7B6' : (i % 3 === 1) ? PAL.cream : '#F6D27A';
-      S_.ellipse(ctx, x + 6, y + 3, 7, 3, PAL.pineDark);
+      S_.ellipse(ctx, x + 6, y + 3, 7, 3, g1);
       for (let k = 0; k < 3; k++) { const fx = x + (k - 1) * 9, fy = y - (k & 1) * 5; S_.circle(ctx, fx, fy, 4, col); S_.circle(ctx, fx, fy, 1.5, PAL.amberDeep); }
     }
   };
@@ -127,7 +129,13 @@
     const S_ = A(), n = 9;
     for (let i = 0; i < n; i++) {
       const sp = 10 + U.hash(i, 51) * 10, x = ((U.hash(i, 52) * 540) + Math.sin(t * 0.6 + i * 1.3) * 26 + 540) % 540, y = camY + (((U.hash(i, 53) * H) + t * sp) % (H + 40)) - 20;
-      ctx.save(); ctx.translate(x, y); ctx.rotate(t * 1.5 + i); ctx.globalAlpha = 0.75; S_.ellipse(ctx, 0, 0, 5, 2.6, (i & 1) ? '#F2A7B6' : PAL.cream); ctx.restore();
+      const sea = G.Golden ? G.Golden.cur : 0;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(t * 1.5 + i); ctx.globalAlpha = 0.75;
+      if (sea === 2) S_.ellipse(ctx, 0, 0, 7, 3.2, (i & 1) ? '#C9622F' : '#E0A040');                    // autumn leaves
+      else if (sea === 3) S_.circle(ctx, 0, 0, 2.6, '#FFFFFF');                                          // winter flakes
+      else if (sea === 1) S_.circle(ctx, 0, 0, 2, PAL.cream);                                            // summer fluff
+      else S_.ellipse(ctx, 0, 0, 5, 2.6, (i & 1) ? '#F2A7B6' : PAL.cream);                             // spring petals
+      ctx.restore();
     }
     ctx.globalAlpha = 1;
   };
@@ -152,10 +160,11 @@
     const S_ = A();
     S_.shadow(ctx, x, y, 18, 6);
     S_.fillRRect(ctx, x - 3, y - 10, 6, 10, 2, PAL.cedarDark);
-    S_.tri(ctx, x - 20, y - 8, x + 20, y - 8, x, y - 46, PAL.pineDark); S_.tri(ctx, x - 20, y - 8, x, y - 8, x, y - 46, PAL.pine);
-    S_.tri(ctx, x - 15, y - 30, x + 15, y - 30, x, y - 62, PAL.pineDark); S_.tri(ctx, x - 15, y - 30, x, y - 30, x, y - 62, PAL.pine);
+    const f0 = PAL.foliage || PAL.pine, f1 = PAL.foliageDark || PAL.pineDark;
+    S_.tri(ctx, x - 20, y - 8, x + 20, y - 8, x, y - 46, f1); S_.tri(ctx, x - 20, y - 8, x, y - 8, x, y - 46, f0);
+    S_.tri(ctx, x - 15, y - 30, x + 15, y - 30, x, y - 62, f1); S_.tri(ctx, x - 15, y - 30, x, y - 30, x, y - 62, f0);
   };
-  W.pines = function (ctx) { for (let i = 0; i < MAP.PINES.length; i++) W.pine(ctx, MAP.PINES[i][0], MAP.PINES[i][1]); };
+  W.pines = function (ctx) { const snow = G.Golden && G.Golden.cur === 3; for (let i = 0; i < MAP.PINES.length; i++) (snow ? W.snowPine : W.pine)(ctx, MAP.PINES[i][0], MAP.PINES[i][1]); };   // winter: snow on every pine
   W.stoneLantern = function (ctx, x, y, lit) {
     const S_ = A();
     S_.fillRRect(ctx, x - 9, y - 8, 18, 8, 3, PAL.stoneDark); S_.fillRRect(ctx, x - 4, y - 26, 8, 18, 2, PAL.stone);
@@ -182,18 +191,20 @@
   // mist over the Ridge (dynamic: only when the camera sees it); gradient built once
   let mistG = null, mistCtx = null, mistKey = 0;
   W.mist = function (ctx, camY, H) {
-    const m = (MAP.RIDGE && G.S && G.S.built.ridge) ? MAP.RIDGE.mist : MAP.MIST;      // the mist lifts to the top of the Ridge once it opens
+    const m = (MAP.SUMMIT && G.S && G.S.built.summit) ? MAP.SUMMIT.mist : (MAP.RIDGE && G.S && G.S.built.ridge) ? MAP.RIDGE.mist : MAP.MIST;      // the mist lifts to the top of each stage as it opens
     if (camY > m.y1 + 10) return;
     if (!mistG || mistCtx !== ctx || mistKey !== m.y0) { mistCtx = ctx; mistKey = m.y0; mistG = ctx.createLinearGradient(0, m.y1, 0, m.y0); mistG.addColorStop(0, PAL.rgba(PAL.mist, 0)); mistG.addColorStop(1, PAL.rgba(PAL.mist, 0.95)); }
     ctx.fillStyle = mistG; ctx.fillRect(0, m.y0 - 200, MAP.W, m.y1 - m.y0 + 200);
   };
-  W.sign = function (ctx, x, y) { const S_ = A(); S_.fillRRect(ctx, x - 3, y - 30, 6, 30, 2, PAL.cedarDark); S_.plate(ctx, x - 40, y - 52, 80, 26, 5, PAL.cedar, PAL.cedarDark, 4); S_.text(ctx, 'RIDGE', x, y - 39, 14, PAL.cream); };
+  W.sign = function (ctx, x, y, text) { const S_ = A(); S_.fillRRect(ctx, x - 3, y - 30, 6, 30, 2, PAL.cedarDark); S_.plate(ctx, x - 44, y - 52, 88, 26, 5, PAL.cedar, PAL.cedarDark, 4); S_.text(ctx, text || 'RIDGE', x, y - 39, 14, PAL.cream); };
 
   // ---------- decks and water ----------
   W.deckPlate = function (ctx, def) {
     const S_ = A(), d = def.deck, x0 = d.x - d.w / 2, y0 = d.y - d.h / 2;
     if (def.look === 'sauna') return W.saunaBody(ctx, def);
     if (def.look === 'pavilion') return W.pavilionBody(ctx, def);
+    if (def.look === 'source' && W.sourceBody) return W.sourceBody(ctx, def);
+    if (def.look === 'snow' && W.snowBody) return W.snowBody(ctx, def);
     S_.shadow(ctx, d.x, y0 + d.h + 8, d.w / 2 + 4, 12, 0.16);                                   // the deck sits on the ground
     if (def.look === 'plunge') {                                                                 // a stone rim pool in the snow
       S_.plate(ctx, x0, y0, d.w, d.h, 14, PAL.stone, PAL.stoneDark, 10);
@@ -228,6 +239,8 @@
       for (let i = 0; i < 4; i++) S_.fillRRect(ctx, x0 + 10 + i * (w.w - 20) / 4 + 4, y0 + w.h - 26, (w.w - 20) / 4 - 8, 18, 7, i & 1 ? PAL.red : PAL.cream);
       return;
     }
+    if (def.look === 'source' && W.sourceWater) return W.sourceWater(ctx, def, state, t);
+    if (def.look === 'snow' && W.snowWater) return W.snowWater(ctx, def, state, t);
     if (def.look === 'plunge') {                                                                  // ice-blue water, white rim, bobbing ice
       S_.strokeRRect(ctx, x0, y0, w.w, w.h, 18, PAL.stone, 6);
       S_.fillRRect(ctx, x0, y0, w.w, w.h, 18, state.yuzu ? PAL.waterYuzu : '#BFE3EC');
@@ -332,7 +345,7 @@
     const S_ = A();
     S_.shadow(ctx, x, y, 22, 7);
     S_.fillRRect(ctx, x - 5, y - 26, 10, 26, 3, PAL.cedarDark);
-    S_.circle(ctx, x - 14, y - 36, 18, PAL.pine); S_.circle(ctx, x + 14, y - 36, 18, PAL.pine); S_.circle(ctx, x, y - 44, 22, PAL.pine);
+    const f0 = PAL.foliage || PAL.pine; S_.circle(ctx, x - 14, y - 36, 18, f0); S_.circle(ctx, x + 14, y - 36, 18, f0); S_.circle(ctx, x, y - 44, 22, f0);
     S_.circle(ctx, x - 8, y - 50, 10, PAL.moss);
   };
   W.treeFruit = function (ctx, x, y, progress, ripe, t) {

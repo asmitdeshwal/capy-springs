@@ -36,16 +36,19 @@
     Bus.on('coins:collect', e => { G.Camera.toScreen(e.wx, e.wy, P); HUD.flight(P.x, P.y, e.value, 0); });
     Bus.on('trail:join', () => { pipPulse = 0.3; });
     const T = G.Seasons.text;
-    Bus.on('car:arrive', e => { if (e.golden && !e.empty) HUD.banner(HUD.S, e.lift ? 'GOLDEN LIFT!' : T('golden', 'GOLDEN CAR!'), explain(HUD.S, 'X_GOLDEN', 'twice the guests, x1.5 pay: seat them all')); });
-    Bus.on('vip:arrive', () => HUD.banner(HUD.S, 'MOMO THE VIP!', explain(HUD.S, 'X_VIP', 'he pays x10 wherever he soaks')));
+    Bus.on('car:arrive', e => { if (e.golden && !e.empty) HUD.banner(HUD.S, e.troupe ? "MOMO'S TROUPE!" : e.lift ? 'GOLDEN LIFT!' : T('golden', 'GOLDEN CAR!'), explain(HUD.S, 'X_GOLDEN', 'twice the guests, x1.5 pay: seat them all')); else if (e.troupe && !e.empty && !HUD.S.tutorial.X_TROUPE) { HUD.S.tutorial.X_TROUPE = 1; HUD.banner(HUD.S, 'SNOW MONKEYS!', 'they hop down every 20 s: lead them to the Source'); } });
+    Bus.on('vip:arrive', e => { if (!e.troupe) HUD.banner(HUD.S, 'MOMO THE VIP!', explain(HUD.S, 'X_VIP', 'he pays x10 wherever he soaks')); });
     Bus.on('goal:new', () => HUD.banner(HUD.S, 'NEW GUESTBOOK GOALS')); Bus.on('goal:done', e => HUD.banner(HUD.S, 'GOAL DONE  +' + e.reward)); Bus.on('goal:all', () => HUD.banner(HUD.S, 'ALL GOALS DONE!')); Bus.on('goal:card', () => HUD.banner(HUD.S, 'STAMP CARD FULL!', 'the next car is golden'));
-    Bus.on('fullcar', () => HUD.banner(HUD.S, T('fullcar', 'FULL CAR!'), explain(HUD.S, 'X_FULLCAR', 'a whole car seated: +2 koban per guest')));
+    Bus.on('fullcar', e => HUD.banner(HUD.S, e.carId >= 200000 ? 'FULL TROUPE!' : T('fullcar', 'FULL CAR!'), explain(HUD.S, 'X_FULLCAR', 'a whole car seated: +2 koban per guest')));
     Bus.on('famous', () => HUD.banner(HUD.S, T('famous', 'FAMOUS INN!'), '+25% pay on everything'));
     Bus.on('fame', e => HUD.banner(HUD.S, T('fame', 'INN FAME ' + (ROMAN[e.level] || '')), '+5% pay on everything'));
     Bus.on('night:start', () => HUD.banner(HUD.S, T('night', 'LANTERN NIGHT'), explain(HUD.S, 'X_NIGHT', 'cars every 12 s and everyone pays x1.2')));
     Bus.on('heat:rush:start', e => { if (e.chain === 0 && !rushBannerShown) { rushBannerShown = true; HUD.banner(HUD.S, T('rush', 'STEAM RUSH'), explain(HUD.S, 'X_RUSH', 'hot baths soak twice as fast at x1.5 pay. Keep stoking!')); } });
     Bus.on('season:unlock', e => HUD.banner(HUD.S, 'SEASON ' + e.id + ' OPEN!'));
     Bus.on('ridge:open', () => HUD.banner(HUD.S, 'THE RIDGE OPENS!', 'walk up the bridge: the lift brings guests there'));
+    Bus.on('summit:open', () => HUD.banner(HUD.S, 'THE SUMMIT OPENS!', 'climb the stairs above the clouds'));
+    Bus.on('festival:start', () => HUD.banner(HUD.S, 'FESTIVAL NIGHT', 'x1.5 pay for 90 s: beat your best!'));
+    Bus.on('geyser', e => { if (e.first) HUD.banner(HUD.S, 'THE GEYSER!', 'guests who land while it blows pay x2'); });
     Bus.on('snow:start', () => HUD.banner(HUD.S, 'SNOW SQUALL', explain(HUD.S, 'X_SNOW', 'drifts slow everyone: walk through them to clear')));
     Bus.on('heat:cold', () => { if (!HUD.S.tutorial.X_COLD) { HUD.S.tutorial.X_COLD = 1; HUD.banner(HUD.S, 'THE BOILER IS COLD', 'carry logs from the woodpile to the boiler'); } });
   };
@@ -126,6 +129,7 @@
     const pulse = S.trail.length >= S.trailCap ? 1 + 0.08 * Math.sin(S.t * 8) : 1;
     for (let i = 0; i < S.trailCap; i++) A.circle(ctx, R.pips.x + i * 15, R.pips.y, 6 * (i < S.trail.length ? pulse : 1), i < S.trail.length ? PAL.amber : PAL.rgba(PAL.ink, 0.3));
     if (lineCapT > 0) A.text(ctx, 'guests in line', R.pips.x + S.trailCap * 15 + 6, R.pips.y + 1, 13, PAL.cream, CAPTION);
+    if (S.night.active && S.night.festival) A.pill(ctx, R.coinPill.x + 85, R.pips.y + 30, 170, 28, 'FESTIVAL +' + A.fmtCoins(S.earned - S.festival.start), 14, PAL.rgba(PAL.cta, 0.92), PAL.cream, null);
     // flights
     const fp = HUD.fly;
     for (let i = 0; i < fp.n; i++) { const f = fp.items[i]; if (f.delay > 0) continue; const u = U.easeInOutQuad(Math.min(1, f.t)); G.Art.FX.kobanAt(ctx, f.x0 + (R.coinIcon.x - f.x0) * u, f.y0 + (R.coinIcon.y - f.y0) * u - Math.sin(u * Math.PI) * 30, 1); }

@@ -13,7 +13,7 @@
       water: { x: 120, y: 1430, w: 150, h: 90 }, deck: { x: 120, y: 1430, w: 210, h: 150 },
       exit: { x: 236, y: 1470 }, tray: { x: 212, y: 1492 }, lane: 250 },
     // the Ridge (GDD 19): the sauna sends its guests out wanting a plunge; the plunge takes only those, and pays x2 if they arrive within the hot-cold window
-    { id: 'sauna',  name: 'Sauna Hut',   heated: true,  slots: 4, maxSlots: 6, soak: 6, lantern: 'sauna', payMult: 1.25, look: 'sauna', sauna: true,
+    { id: 'sauna',  name: 'Sauna Hut',   heated: true,  slots: 4, maxSlots: 6, soak: 6, lantern: 'sauna', payMult: 1.25, look: 'sauna', sauna: true, sends: 'plunge',
       water: { x: 420, y: 800, w: 150, h: 90 }, deck: { x: 420, y: 800, w: 210, h: 150 },
       exit: { x: 309, y: 840 }, tray: { x: 328, y: 860 }, lane: 290 },
     { id: 'plunge', name: 'Cold Plunge', heated: false, slots: 3, maxSlots: 6, soak: 4, lantern: 'plunge', payMult: 1.5, look: 'plunge', plungeOnly: true,
@@ -22,7 +22,16 @@
     // Madame Tsuru's pavilion works to a gong: seated guests wait for it, then all are massaged together; every chair full at the gong = FULL HOUSE
     { id: 'pavilion', name: 'Massage Pavilion', heated: false, slots: 2, maxSlots: 4, soak: 10, lantern: 'pavilion', payMult: 5, look: 'pavilion', gong: 20, fullHouse: 1.5,
       water: { x: 420, y: 650, w: 150, h: 70 }, deck: { x: 420, y: 640, w: 210, h: 150 },     // chairs end 20 px above the deck's foot so Kit can stand there
-      exit: { x: 309, y: 680 }, tray: { x: 328, y: 700 }, lane: 290, gongAt: { x: 330, y: 712 }, tsuruAt: { x: 420, y: 614 } }
+      exit: { x: 309, y: 680 }, tray: { x: 328, y: 700 }, lane: 290, gongAt: { x: 330, y: 712 }, tsuruAt: { x: 420, y: 614 } },
+    // the Summit (GDD 20): the Source never goes cold; its geyser bursts every geyser.every s and a guest who lands during the burst pays x2;
+    // its guests come out wanting snow (sends: the Snow Roll, a plunge-only bank where the hot-cold window pays x2 again)
+    { id: 'source', name: 'The Source', heated: false, slots: 8, maxSlots: 12, soak: 8, lantern: 'source', payMult: 3, look: 'source', sends: 'snowroll', hintValue: 4.5,
+      guestKind: 'monkey', geyser: { every: 24, dur: 6 }, mill: 'SUMMIT', area: 'summit',
+      water: { x: 420, y: -905, w: 196, h: 116 }, deck: { x: 420, y: -900, w: 230, h: 176 },
+      exit: { x: 296, y: -850 }, tray: { x: 322, y: -826 }, lane: 290, coneAt: { x: 470, y: -1030 } },
+    { id: 'snowroll', name: 'Snow Roll', heated: false, slots: 3, maxSlots: 6, soak: 4, lantern: 'snowroll', payMult: 1.5, look: 'snow', plungeOnly: true, word: 'ROLL', guestKind: 'monkey',
+      water: { x: 120, y: -585, w: 150, h: 90 }, deck: { x: 120, y: -580, w: 210, h: 150 },
+      exit: { x: 236, y: -540 }, tray: { x: 212, y: -518 }, lane: 250 }
   ];
   // drop zone = deck rect; Kit collides with the water rect; koban land in the tray (lane-side deck strip); guests reappear at exit when climbing out.
   G.DATA.STATIONS = {
@@ -34,7 +43,7 @@
     platform: { x: 270, y: 2060, w: 320, h: 80 }
   };
   // Sheet-capable stations (a tap opens the upgrade sheet)
-  G.DATA.SHEET_STATIONS = ['rock', 'cedar', 'bamboo', 'boiler', 'grove', 'stall', 'sauna', 'plunge', 'pavilion'];
+  G.DATA.SHEET_STATIONS = ['rock', 'cedar', 'bamboo', 'boiler', 'grove', 'stall', 'sauna', 'plunge', 'pavilion', 'source', 'snowroll'];
   // cost(level) = round5(base * 1.6 ** level), level = current level (0-based). title / blurb = what the upgrade sheet says in plain words (GDD 10.4)
   const BATH_TRACKS = {
     speed: { title: 'Quicker soaks', blurb: 'Guests finish sooner, so more fit in between cars' },
@@ -62,6 +71,10 @@
               pay:   { label: 'Tips',    base: 180, max: 6, title: 'Better tips',   blurb: 'Every plunge pays more' } },
     pavilion: { speed: { label: 'Hands', base: 250, max: 6, title: 'Quicker hands', blurb: 'Each massage takes less time' },
                 slots: { label: 'Chairs', base: 350, max: 2, title: 'Another chair', blurb: 'More guests per gong, bigger full houses' },
-                pay:   { label: 'Tips',   base: 300, max: 6, title: 'Better tips',   blurb: 'Every massage pays more' } }
+                pay:   { label: 'Tips',   base: 300, max: 6, title: 'Better tips',   blurb: 'Every massage pays more' } },
+    source: { speed: { label: 'Soak',  base: 300, max: 6, ...BATH_TRACKS.speed }, slots: { label: 'Seats', base: 400, max: 4, ...BATH_TRACKS.slots }, pay: { label: 'Tips', base: 350, max: 6, ...BATH_TRACKS.pay } },
+    snowroll: { speed: { label: 'Snow', base: 200, max: 4, title: 'Fluffier snow', blurb: 'Rolling in the snow is over quicker' },
+                slots: { label: 'Bank', base: 250, max: 3, title: 'Wider bank',    blurb: 'More monkeys roll at once' },
+                pay:   { label: 'Tips', base: 200, max: 6, title: 'Better tips',   blurb: 'Every roll pays more' } }
   };
 })(window.G);

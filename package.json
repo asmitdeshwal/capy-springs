@@ -7,7 +7,7 @@
     "start": "node tools/serve.js 5173",
     "share": "node tools/share.js 5173",
     "pack": "node tools/pack.js",
-    "test": "node test/headless.js --seconds 3000 && node test/headless.js --season 2 --seconds 2400 && node test/headless.js --fuzz 300 && node test/headless.js --fuzz 300 --season 2",
+    "test": "node test/headless.js --seconds 6000 && node test/headless.js --season 2 --seconds 2400 && node test/headless.js --fuzz 300 && node test/headless.js --fuzz 300 --season 2",
     "deploy": "node tools/deploy.js",
     "native": "node tools/pack.js && node tools/native_assets.js && npx capacitor-assets generate --ios --android --iconBackgroundColor \"#FFC857\" --iconBackgroundColorDark \"#FFC857\" --splashBackgroundColor \"#F6F1E7\" --splashBackgroundColorDark \"#F6F1E7\" && npx cap sync",
     "sync": "node tools/pack.js && npx cap sync"

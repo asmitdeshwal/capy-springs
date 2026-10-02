@@ -4,7 +4,7 @@
   const C = G.C, U = G.U, DATA = G.DATA, MAP = DATA.MAP;
   const Player = G.Player = {};
   const SOLIDS = [];                      // reused rect list {x0,y0,x1,y1}
-  const RECT_POOL = []; for (let i = 0; i < 24; i++) RECT_POOL.push({ x0: 0, y0: 0, x1: 0, y1: 0 });
+  const RECT_POOL = []; for (let i = 0; i < 40; i++) RECT_POOL.push({ x0: 0, y0: 0, x1: 0, y1: 0 });
   let solidsDirty = true;
   const drawable = { sortY: 0, draw: null };
   const evNone = {};
@@ -19,6 +19,7 @@
     if (S.built.grove) { const n = G.Upgrades.treeCount(S), tr = DATA.STATIONS.grove.trunk; for (let i = 0; i < n && i < S.grove.trees.length; i++) { const t = S.grove.trees[i]; addRect(t.x - tr.w / 2, t.y - tr.h, t.x + tr.w / 2, t.y); } }
     const cb = MAP.CABLE; for (let i = 0; i < cb.pylons.length; i++) addRect(cb.pylons[i] - 5, cb.pylonTop, cb.pylons[i] + 5, cb.y);
     if (MAP.RIDGE && S.built.ridge) { const ch = MAP.RIDGE.chasm; for (let i = 0; i < ch.length; i++) addRect(ch[i][0], ch[i][1], ch[i][2], ch[i][3]); }   // only the bridge crosses
+    if (G.Summit) G.Summit.addSolids(S, addRect);                                                                                                       // the cliff and Grandma's hut
     return SOLIDS;
   };
   Player.markSolidsDirty = function () { solidsDirty = true; };
@@ -48,7 +49,7 @@
     const sp = Player.speed(S), kk = 1 - Math.exp(-dt / C.KIT_ACCEL_T * 3);
     k.vx += (ix * sp - k.vx) * kk; k.vy += (iy * sp - k.vy) * kk;
     if (Math.abs(k.vx) < 0.5 && !ix) k.vx = 0; if (Math.abs(k.vy) < 0.5 && !iy) k.vy = 0;
-    const solids = Player.solids(S), r = C.KIT_RADIUS, B = MAP.BOUNDS, y0 = G.Ridge ? G.Ridge.boundsY0(S) : B.y0;
+    const solids = Player.solids(S), r = C.KIT_RADIUS, B = MAP.BOUNDS, y0 = G.Summit ? G.Summit.boundsY0(S) : G.Ridge ? G.Ridge.boundsY0(S) : B.y0;
     // x then y, resolving against expanded rects
     k.x += k.vx * dt;
     for (let i = 0; i < solids.length; i++) { const s = solids[i]; if (k.x > s.x0 - r && k.x < s.x1 + r && k.y > s.y0 - r && k.y < s.y1 + r) { k.x = k.vx > 0 ? s.x0 - r : s.x1 + r; k.vx = 0; } }
@@ -73,7 +74,7 @@
     if (k.pose) { k.poseT += dt; if (k.poseT >= k.poseDur) k.pose = null; }
     if (k.squashT > 0) { k.squashT -= dt; const u = Math.max(0, k.squashT / C.SQUASH_T); k.sx = 1 + (C.SQUASH_X - 1) * u; k.sy = 1 - (1 - C.SQUASH_Y) * u; } else { k.sx = 1; k.sy = 1; }
   };
-  Player.collect = function (S, list) { drawable.sortY = S.kit.y + 0.5; list.push(drawable); };
+  Player.collect = function (S, list) { if (G.Finale && G.Finale.active) return; drawable.sortY = S.kit.y + 0.5; list.push(drawable); };
   Player.draw = function (ctx, o, S) {
     const k = S.kit, Ch = G.Art.Ch, p = Ch.resetPose(Ch.POSE);
     p.x = k.x; p.y = k.y; p.face = k.face; p.dir = k.dir; p.walk = k.walk; p.moving = k.moving; p.sx = k.sx; p.sy = k.sy; p.t = S.t;

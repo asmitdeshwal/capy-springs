@@ -9,7 +9,7 @@
   const ROW_H = 74, ROWS_MAX = 3, MISSING = [];
   let pendingTravel = 0, pendingT = 0, versionTaps = 0, versionTapT = 0;
   // the popover's buttons under the toggles (Developer only in dev mode); height follows
-  function settingsButtons() { const b = SET.buttons; b.length = 0; b.push('How to play'); b.push('Guestbook'); if (G.Seasons.list.length > 1) b.push('Seasons'); b.push('About'); b.push('Main menu'); if (G.Dev.on) b.push('Developer'); b.push('Reset save'); SET.h = 8 + 4 * 56 + 12 + b.length * 48 + 16; return b; }
+  function settingsButtons() { const b = SET.buttons; b.length = 0; b.push('How to play'); b.push('Guestbook'); if (G.Game.S && G.Game.S.ending.seen) b.push('Watch the ending'); if (G.Seasons.list.length > 1) b.push('Seasons'); b.push('About'); b.push('Main menu'); if (G.Dev.on) b.push('Developer'); b.push('Reset save'); SET.h = 8 + 4 * 56 + 12 + b.length * 48 + 16; return b; }
 
   Cards.init = function (S) {
     pendingTravel = 0; pendingT = 0;
@@ -98,6 +98,7 @@
         if (b === 'Guestbook') { Cards.showGoals(S); }
         else if (b === 'How to play') { Cards.showHelp(S, null); }
         else if (b === 'About') { Cards.showAbout(S); }
+        else if (b === 'Watch the ending') { S.ui.settings = false; G.Game.syncMode(S); G.Finale.start(S, { replay: true }); }
         else if (b === 'Seasons') { S.ui.settings = false; Cards.showSeasons(S); }
         else if (b === 'Main menu') { S.ui.settings = false; G.Game.syncMode(S); G.Title.show(S); }
         else if (b === 'Developer') { Cards.showDev(S); }

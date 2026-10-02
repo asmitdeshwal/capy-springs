@@ -9,7 +9,10 @@
   const WORDS = { 1: 'SOAK', 2: 'SOAK', 3: 'STOKE', 4: 'YUZU', 5: 'STOKE', 6: 'LIGHT', 7: 'LEAD', 8: 'COLLECT', 9: 'YUZU', 10: 'TAP', 11: 'YUZU', 12: null, 13: 'LAP', 14: 'PLUNGE', 15: 'CLEAR' };
   const wantsPlunge = g => g.want === 'plunge', wantsBath = g => g.want !== 'plunge';
   // what a bath is worth per seat when the arrow picks one: pay, or the whole sauna -> plunge chain once the plunge exists
-  function worth(S, b) { return b.def.sauna && S.built.plunge ? (b.def.hintValue || 3.5) : (b.def.payMult || 1); }
+  function worth(S, b) { return b.def.sends && S.built[b.def.sends] ? (b.def.hintValue || 3.5) : (b.def.payMult || 1); }
+  const stage = y => (G.Summit ? G.Summit.stage(y) : (MAP.RIDGE && y < MAP.RIDGE.y1) ? 1 : 0);
+  // the cold bath for guests who want one: the nearest built plunge-only bath, preferring Kit's own stage
+  function coldBath(S, baths, kit) { let best = null, bd = Infinity; const ks = stage(kit.y); for (let i = 0; i < baths.length; i++) { const b = baths[i]; if (!b.def.plungeOnly) continue; const d = U.dist2(kit.x, kit.y, b.def.deck.x, b.def.deck.y) + (stage(b.def.deck.y) === ks ? 0 : 4e6); if (d < bd) { bd = d; best = b; } } return best; }
 
   function set(out, rule, kind, id, x, y, ref) { out.rule = rule; out.kind = kind; out.id = id; out.x = x; out.y = y; out.word = WORDS[rule]; out.dim = rule === 12; out.ref = ref || null; out.hide = false; return out; }
   function bathCentre(bath, out) { out.x = bath.def.deck.x; out.y = bath.def.deck.y; return out; }
@@ -27,10 +30,10 @@
     if (hasGuest && S.t - S.splash.t < C.SPLASH_WINDOW) {
       let best = null, bd = Infinity;
       for (let i = 0; i < baths.length; i++) { const b = baths[i]; if (!Baths.isWarm(S, b) || Baths.freeSlot(S, b) < 0) continue; if (b.def.plungeOnly ? nPlunge === 0 : nBath === 0) continue; const d = U.dist2(kit.x, kit.y, b.def.deck.x, b.def.deck.y); if (d < bd) { bd = d; best = b; } }
-      if (best) { bathCentre(best, P); set(out, best.def.plungeOnly ? 14 : 1, 'bath', best.id, P.x, P.y); out.hide = Baths.inZone(best, kit.x, kit.y); return out; }
+      if (best) { bathCentre(best, P); set(out, best.def.plungeOnly ? 14 : 1, 'bath', best.id, P.x, P.y); if (best.def.plungeOnly) out.word = best.def.word || 'PLUNGE'; out.hide = Baths.inZone(best, kit.x, kit.y); return out; }
     }
     // 14. PLUNGE: sauna guests in the line, their hot-cold window ticking -> the Cold Plunge
-    if (nPlunge > 0 && S.built.plunge && S.baths.plunge) { const b = S.baths.plunge; bathCentre(b, P); set(out, 14, 'bath', 'plunge', P.x, P.y); out.hide = Baths.inZone(b, kit.x, kit.y) && Baths.freeSlot(S, b) >= 0; return out; }
+    if (nPlunge > 0) { const b = coldBath(S, baths, kit); if (b) { bathCentre(b, P); set(out, 14, 'bath', b.id, P.x, P.y); out.word = b.def.word || 'PLUNGE'; out.hide = Baths.inZone(b, kit.x, kit.y) && Baths.freeSlot(S, b) >= 0; return out; } }
     // 2. SOAK: the warm bath worth the most for the line (seats that fit x what a seat pays here, discounted by distance so a far station
     //    must be clearly better); else the one whose next seat frees soonest
     if (nBath > 0) {
@@ -52,8 +55,8 @@
     // 4. YUZU: yuzu in the trail
     if (Trail.hasKind(S, 'yuzu')) {
       let best = null, bd = Infinity;
-      const up = MAP.RIDGE && kit.y < MAP.RIDGE.y1;                   // a yuzu goes to a bath on Kit's side of the bridge; never to the plunge
-      for (let i = 0; i < baths.length; i++) { const b = baths[i]; if (b.yuzuT > 0 || b.def.plungeOnly) continue; const d = U.dist2(kit.x, kit.y, b.def.deck.x, b.def.deck.y) + ((MAP.RIDGE && (b.def.deck.y < MAP.RIDGE.y1) !== up) ? 1e9 : 0); if (d < bd) { bd = d; best = b; } }
+      const ks = stage(kit.y);                                          // a yuzu goes to a bath on Kit's own stage; never to a plunge
+      for (let i = 0; i < baths.length; i++) { const b = baths[i]; if (b.yuzuT > 0 || b.def.plungeOnly) continue; const d = U.dist2(kit.x, kit.y, b.def.deck.x, b.def.deck.y) + (stage(b.def.deck.y) !== ks ? 1e9 : 0); if (d < bd) { bd = d; best = b; } }
       if (best && bd >= 1e9) best = null;
       if (best) { bathCentre(best, P); set(out, 4, 'bath', best.id, P.x, P.y); out.hide = Baths.inZone(best, kit.x, kit.y); return out; }
       if (S.built.stall && G.Stall.room(S)) return set(out, 4, 'stall', 'stall', ST.stall.home.x, ST.stall.home.y);

@@ -73,7 +73,8 @@
   Upgrades.counter = S => C.COUNTER_BASE + lvl(S, 'stall').slots;
   Upgrades.mochiPay = S => C.MOCHI_PAY * (1 + C.PAY_STEP * lvl(S, 'stall').pay);
   Upgrades.famousMult = S => { const L = S.lanterns[G.SEASON.finale]; return C.FAMOUS_PAY[Math.min(L ? L.level : 0, C.FAMOUS_PAY.length - 1)]; };
-  Upgrades.starMult = S => 1 + C.STAR_PAY * G.Seasons.stars();        // fame from OTHER finished seasons (GDD 17.4)
+  // fame from OTHER finished seasons (GDD 17.4) + the Source Stars after the ending (+10% each, ten at most; GDD 20.6)
+  Upgrades.starMult = S => 1 + C.STAR_PAY * G.Seasons.stars() + 0.10 * Math.min(10, Math.max(0, (S.lanterns.wake ? S.lanterns.wake.level : 0) - 1));
 
   // 'Soak 8.0 s -> 7.5 s' style text (allocates a string; UI only)
   Upgrades.effectText = function (S, id, key) {
@@ -87,7 +88,7 @@
     if (b) {
       if (key === 'speed') return U.fmt1(b.def.soak - C.SOAK_STEP * l) + ' s';
       if (key === 'slots') return (b.def.slots + l) + ' seats';
-      return Math.round(DATA.GUESTS.capy.pay * (b.def.payMult || 1) * (1 + C.PAY_STEP * l)) + ' koban each';
+      return Math.round(DATA.GUESTS[b.def.guestKind || 'capy'].pay * (b.def.payMult || 1) * (1 + C.PAY_STEP * l)) + ' koban each';
     }
     if (id === 'boiler') { if (key === 'speed') return '+' + (C.LOG_HEAT + C.STOKE_STEP * l) + ' ' + G.Seasons.text('gaugeUnit', 'heat'); if (key === 'slots') return (C.HEAT_MAX + C.TANK_STEP * l) + ' max'; return '+' + Math.round(C.PON_SPEED_STEP * l * 100) + '% speed'; }
     if (id === 'grove') { if (key === 'speed') return U.fmt1(C.REGROW - C.REGROW_STEP * l) + ' s'; if (key === 'slots') return (C.TREES_BASE + l) + ' trees'; return U.fmt1(C.YUZU_DUR + C.YUZU_DUR_STEP * l) + ' s'; }

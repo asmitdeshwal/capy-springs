@@ -31,7 +31,8 @@
     return {
       v: Save.VERSION, savedAt: S.savedAt, t: S.t, coins: S.coins, earned: S.earned,
       income: { buckets: S.income.buckets.slice(), head: S.income.head, bucketT: S.income.bucketT },
-      car: { index: S.car.index }, lift: { index: S.lift.index },
+      car: { index: S.car.index }, lift: { index: S.lift.index }, troupe: { index: S.troupe.index },
+      story: { seen: Object.assign({}, S.story.seen) }, ending: { seen: S.ending.seen }, festival: { count: S.festival.count, best: S.festival.best },
       lanterns, levels,
       heat: { v: S.heat.v, rushSeen: S.heat.rushSeen },
       kit: { x: S.kit.x, y: S.kit.y },
@@ -52,10 +53,14 @@
     if (obj.income && Array.isArray(obj.income.buckets)) { for (let i = 0; i < C.INCOME_BUCKETS; i++) S.income.buckets[i] = Number(obj.income.buckets[i]) || 0; S.income.head = (obj.income.head | 0) % C.INCOME_BUCKETS; S.income.bucketT = Number(obj.income.bucketT) || 0; }
     if (obj.car && typeof obj.car.index === 'number') S.car.index = Math.max(1, obj.car.index | 0);
     if (obj.lift && typeof obj.lift.index === 'number') S.lift.index = Math.max(0, obj.lift.index | 0);
+    if (obj.troupe && typeof obj.troupe.index === 'number') S.troupe.index = Math.max(0, obj.troupe.index | 0);
+    if (obj.story && obj.story.seen && typeof obj.story.seen === 'object') for (const k in obj.story.seen) if (obj.story.seen[k]) S.story.seen[k] = true;
+    if (obj.ending) S.ending.seen = !!obj.ending.seen;
+    if (obj.festival) { S.festival.count = Math.max(0, obj.festival.count | 0); S.festival.best = Math.max(0, Number(obj.festival.best) || 0); }
     if (obj.lanterns) for (const id in S.lanterns) if (obj.lanterns[id]) { S.lanterns[id].level = Math.max(0, obj.lanterns[id].level | 0); S.lanterns[id].sunk = Math.max(0, obj.lanterns[id].sunk | 0); }
     if (obj.levels) for (const id in S.levels) if (obj.levels[id]) { S.levels[id].speed = obj.levels[id].speed | 0; S.levels[id].slots = obj.levels[id].slots | 0; S.levels[id].pay = obj.levels[id].pay | 0; }
     if (obj.heat) { if (typeof obj.heat.v === 'number') S.heat.v = obj.heat.v; S.heat.rushSeen = !!obj.heat.rushSeen; }
-    if (obj.kit && typeof obj.kit.x === 'number') { S.kit.x = U.clamp(obj.kit.x, DATA.MAP.BOUNDS.x0, DATA.MAP.BOUNDS.x1); S.kit.y = U.clamp(obj.kit.y, (DATA.MAP.RIDGE ? DATA.MAP.RIDGE.boundsY0 : DATA.MAP.BOUNDS.y0), DATA.MAP.BOUNDS.y1); }
+    if (obj.kit && typeof obj.kit.x === 'number') { S.kit.x = U.clamp(obj.kit.x, DATA.MAP.BOUNDS.x0, DATA.MAP.BOUNDS.x1); S.kit.y = U.clamp(obj.kit.y, (DATA.MAP.SUMMIT ? DATA.MAP.SUMMIT.boundsY0 : DATA.MAP.RIDGE ? DATA.MAP.RIDGE.boundsY0 : DATA.MAP.BOUNDS.y0), DATA.MAP.BOUNDS.y1); }
     if (obj.baths) for (const id in S.baths) if (obj.baths[id]) S.baths[id].yuzuT = Math.max(0, Number(obj.baths[id].yuzuT) || 0);
     if (obj.grove && Array.isArray(obj.grove.trees)) for (let i = 0; i < S.grove.trees.length && i < obj.grove.trees.length; i++) { const t = obj.grove.trees[i]; S.grove.trees[i].progress = U.clamp(Number(t.progress) || 0, 0, 1); S.grove.trees[i].ripe = !!t.ripe; }
     if (obj.stall) { S.stall.stock = Math.max(0, obj.stall.stock | 0); S.stall.pending = Math.max(0, obj.stall.pending | 0); }
@@ -72,7 +77,7 @@
     S.heat.max = G.Upgrades.heatMax(S); S.heat.v = U.clamp(S.heat.v, 0, S.heat.max);
     if (S.stall.stock > G.Upgrades.counter(S)) S.stall.stock = G.Upgrades.counter(S);
     if (G.Seasons.finaleLit(S)) G.Seasons.markDone(S);
-    if (G.Ridge) S.kit.y = Math.max(S.kit.y, G.Ridge.boundsY0(S) + C.KIT_RADIUS);     // a Kit saved on a Ridge that is not open (should not happen) comes down
+    if (G.Summit) S.kit.y = Math.max(S.kit.y, G.Summit.boundsY0(S) + C.KIT_RADIUS);   // a Kit saved on a stage that is not open (should not happen) comes down
     // runtime after a load: empty platform and trail, the car slides in after CAR_RESUME_T
     const c = S.car; c.phase = 'away'; c.timer = C.CAR_RESUME_T; c.phaseT = 0; c.warned = false; c.toSpawn = 0; c.x = DATA.MAP.CABLE.enterX; c.golden = false; c.empty = false; c.vip = false;
     S.mode = 'play'; S.introT = C.INTRO_T;

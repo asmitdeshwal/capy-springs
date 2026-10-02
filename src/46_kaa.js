@@ -16,7 +16,7 @@
       if (!Kaa.active(S)) return;
       k.t -= dt;
       if (k.t <= 0) {
-        const tray = G.Coins.richestTray(S, 270, 1600, 1e9, null);
+        const tray = K.near ? G.Coins.richestTray(S, S.kit.x, S.kit.y, K.near, null) : G.Coins.richestTray(S, 270, 1600, 1e9, null);   // near Kit, so he can be tapped
         if (!tray || G.Loop.hitstop > 0) { k.t = 2; return; }                 // nothing to land on yet: look again in 2 s
         k.state = 'land'; k.x = tray.x; k.y = tray.y - 4; k.trayId = tray.id; k.timer = K.stay;
         ev.x = k.x; ev.y = k.y; ev.value = 0; G.Bus.emit('kaa:land', ev);
@@ -46,7 +46,7 @@
     leave(S);
     return true;
   };
-  Kaa.collect = function (S, list) { if (!K || S.kaa.state === 'away') return; drawable.sortY = S.kaa.y + 1; if (G.Camera.visibleY(S.kaa.y, 200)) list.push(drawable); };
+  Kaa.collect = function (S, list) { if (!K || S.kaa.state === 'away' || (G.Finale && G.Finale.active)) return; drawable.sortY = S.kaa.y + 1; if (G.Camera.visibleY(S.kaa.y, 200)) list.push(drawable); };
   function draw(ctx, o, S) {
     const k = S.kaa, fly = k.state === 'leave' ? Math.min(1, k.leaveT / LEAVE_T) : 0;
     G.Art.Ch.kaa(ctx, k.x, k.y - fly * fly * 180, fly, S.t, k.state === 'land' ? k.timer / K.stay : 0);

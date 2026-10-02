@@ -40,10 +40,11 @@
   // area 'ridge' = stepped off the Ridge Lift onto its platform; otherwise the cable car's platform
   Guests.spawn = function (S, kind, carId, golden, x0, y0, area) {
     const g = G.State.newGuest(S, kind, carId); if (!g) return null;
-    const ridge = area === 'ridge' && MAP.LIFT;
-    g.golden = !!golden; g.tutorial = carId === 1; g.x = x0; g.y = y0; g.state = 'arrive'; g.walking = false; g.area = ridge ? 'ridge' : 'platform'; g.millRect = ridge ? MAP.LIFT.platform.mill : MAP.PLATFORM.mill;
+    const ridge = area === 'ridge' && MAP.LIFT, summit = area === 'summit' && MAP.TROUPE;
+    g.golden = !!golden; g.tutorial = carId === 1; g.x = x0; g.y = y0; g.state = 'arrive'; g.walking = false;
+    g.area = summit ? 'summit' : ridge ? 'ridge' : 'platform'; g.millRect = summit ? MAP.TROUPE.platform.mill : ridge ? MAP.LIFT.platform.mill : MAP.PLATFORM.mill;
     const m = g.millRect, h = g.hopObj;
-    h.x0 = x0; h.y0 = y0; h.x1 = U.rand(m.x0, m.x1); h.y1 = U.rand(m.y0, m.y1); h.t = 0; h.dur = C.HOP_OUT_T; h.h = 18; g.hop = h;
+    h.x0 = x0; h.y0 = y0; h.x1 = U.rand(m.x0, m.x1); h.y1 = U.rand(m.y0, m.y1); h.t = 0; h.dur = summit ? 0.55 : C.HOP_OUT_T; h.h = summit ? 46 : 18; g.hop = h;   // monkeys leap down the cliff
     faceTo(g, h.x1);
     return g;
   };
@@ -60,10 +61,10 @@
   };
   // area: 'platform' (the cable car's cap) | 'ridge' | undefined = everyone waiting anywhere
   Guests.countWaiting = function (S, area, mill) { let n = 0; for (let i = 0; i < S.guests.length; i++) { const g = S.guests[i], s = g.state; if ((s === 'wait' || s === 'arrive') && (!area || g.area === area) && (!mill || g.millRect === mill)) n++; } return n; };
-  // out of the sauna: this guest now wants the Cold Plunge, waits beside the hut and the hot-cold window starts ticking (GDD 19)
-  Guests.wantPlunge = function (S, g) {
-    const m = MAP.RIDGE.mill;
-    g.want = 'plunge'; g.plungeT = 0; g.hotCold = false; g.yuzuHat = false; g.area = 'ridge'; g.millRect = m;
+  // out of the sauna (or the Source): this guest now wants the cold (the plunge, the snow), waits nearby and the hot-cold window starts ticking (GDD 19 / 20)
+  Guests.wantPlunge = function (S, g, bath) {
+    const summit = bath && bath.def.mill === 'SUMMIT' && MAP.SUMMIT, m = summit ? MAP.SUMMIT.mill : MAP.RIDGE.mill;
+    g.want = 'plunge'; g.plungeT = 0; g.hotCold = false; g.yuzuHat = false; g.area = summit ? 'summit' : 'ridge'; g.millRect = m;
     g.state = 'wait'; g.walking = false; g.moving = false; g.hop = null; g.batch = null; g.bathId = null; g.slot = -1; g.sleepy = 0;
     g.patienceMax = C.PLUNGE_PATIENCE; g.patience = g.patienceMax;
     g.millT = U.rand(C.MILL_MIN, C.MILL_MAX); g.mx = U.rand(m.x0, m.x1); g.my = U.rand(m.y0, m.y1); faceTo(g, g.mx);
@@ -80,7 +81,7 @@
     // a paid sauna guest who tires of waiting for the plunge was served: bored, not lost (no tally, no FULL CAR spoiled)
     if (g.want === 'plunge' && g.paid > 0) { g.want = null; evG.g = g; G.Bus.emit('guest:bored', evG); }
     else { g.want = null; g.lost = true; S.stats.lost++; evG.g = g; G.Bus.emit('guest:lost', evG); }
-    const ex = G.Ridge.exitFor(S, g); Guests.startWalk(S, g, ex.x, ex.y, 'leave');
+    const ex = G.Summit.exitFor(S, g); Guests.startWalk(S, g, ex.x, ex.y, 'leave');
   };
   Guests.remove = function (S, g) { evG.g = g; G.Bus.emit('guest:gone', evG); G.State.freeGuest(S, g); };
 
@@ -96,6 +97,7 @@
       }
     }
     const arrow = S.ui.arrow, stokeRule = arrow && (arrow.rule === 3 || arrow.rule === 5);
+    const ks = G.Summit ? G.Summit.stage(kit.y) : 0;      // guests only lose patience on Kit's own stage: exploring the mountain is never punished
     for (let i = S.guests.length - 1; i >= 0; i--) {
       const g = S.guests[i];
       if (g.squashT > 0) { g.squashT -= dt; const u = Math.max(0, g.squashT / C.SQUASH_T); g.sx = 1 + (C.SQUASH_X - 1) * u; g.sy = 1 - (1 - C.SQUASH_Y) * u; } else { g.sx = 1; g.sy = 1; }
@@ -116,7 +118,7 @@
           if (g.millT <= 0) { const m = g.millRect || MAP.PLATFORM.mill; g.millT = U.rand(C.MILL_MIN, C.MILL_MAX); g.mx = U.rand(m.x0, m.x1); g.my = U.rand(m.y0, m.y1); faceTo(g, g.mx); }
           if (Math.abs(g.mx - g.x) > 1 || Math.abs(g.my - g.y) > 1) { g.moving = true; g.bobPhase += dt * g.walk / 30; U.moveToward(g, g.mx, g.my, g.walk * 0.6, dt); } else g.moving = false;
           if (g.want === 'plunge') g.plungeT += dt;
-          if (g.patienceMax !== Infinity) { g.patience -= dt; if (g.patience <= 0) { Guests.leaveImpatient(S, g); } }
+          if (g.patienceMax !== Infinity && (!G.Summit || G.Summit.stage(g.y) === ks)) { g.patience -= dt; if (g.patience <= 0) { Guests.leaveImpatient(S, g); } }
           break;
         }
         case 'trail': {
@@ -133,12 +135,12 @@
               const bath = S.baths[g.bathId], value = G.Baths.payout(S, g);
               g.paid = value; G.Coins.burst(S, value, g.x, g.y, bath.id);
               evPaid.g = g; evPaid.value = value; G.Bus.emit('guest:paid', evPaid);
-              S.stats.served++; if (g.kind === 'duck') S.stats.ducks++; if (DATA.GUESTS[g.kind].vip) S.stats.vip++;
-              if (bath.def.sauna && S.built.plunge) { Guests.wantPlunge(S, g); break; }       // the Ridge chain: sauna -> plunge
+              S.stats.served++; if (g.kind === 'duck') S.stats.ducks++; if (g.kind === 'monkey') S.stats.monkeys++; if (DATA.GUESTS[g.kind].vip) S.stats.vip++;
+              if (bath.def.sends && S.built[bath.def.sends]) { Guests.wantPlunge(S, g, bath); break; }       // the chains: sauna -> plunge, Source -> Snow Roll
               let spot = -1;
-              if (S.built.stall && g.kind === 'capy' && g.area !== 'ridge' && U.rand() < C.STALL_WANT) spot = G.Stall.reserve(S, g);
+              if (S.built.stall && g.kind === 'capy' && g.area === 'platform' && U.rand() < C.STALL_WANT) spot = G.Stall.reserve(S, g);
               if (spot >= 0) { g.want = 'mochi'; g.queueT = 0; const q = DATA.STATIONS.stall.queue[spot]; Guests.startWalk(S, g, q[0], q[1], 'stall'); }
-              else { g.want = null; const ex = G.Ridge.exitFor(S, g); Guests.startWalk(S, g, ex.x, ex.y, 'leave'); }
+              else { g.want = null; const ex = G.Summit.exitFor(S, g); Guests.startWalk(S, g, ex.x, ex.y, 'leave'); }
             }
           }
           break;
@@ -146,7 +148,7 @@
         case 'stall': {
           if (advanceWalk(g, dt) && g.queueSpot >= 0) {
             g.queueT += dt;
-            if (g.queueT >= C.STALL_PATIENCE) { G.Stall.release(S, g); g.want = null; evG.g = g; G.Bus.emit('guest:bored', evG); const ex = G.Ridge.exitFor(S, g); Guests.startWalk(S, g, ex.x, ex.y, 'leave'); }
+            if (g.queueT >= C.STALL_PATIENCE) { G.Stall.release(S, g); g.want = null; evG.g = g; G.Bus.emit('guest:bored', evG); const ex = G.Summit.exitFor(S, g); Guests.startWalk(S, g, ex.x, ex.y, 'leave'); }
           }
           break;
         }
@@ -163,6 +165,7 @@
   };
 
   Guests.collect = function (S, list) {
+    if (G.Finale && G.Finale.active) return;            // the ending's cast takes the stage
     const cam = G.Camera, H = G.Canvas.H;
     for (let i = 0; i < S.guests.length; i++) { const g = S.guests[i]; if (g.state === 'soak' || g.state === 'gone') continue; if (g.y < cam.y - 120 || g.y > cam.y + H + 60) continue; g.sortY = g.y; list.push(g); }
   };

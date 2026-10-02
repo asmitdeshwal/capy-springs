@@ -19,9 +19,11 @@ module.exports = function makeBot(G) {
   }
   // a straight line is "blocked" by solids, and - while guests ride in the trail to the other side of the bridge - by any built deck other
   // than the destination's: walking across a deck drops the guests there (stations react to proximity), so a careful player takes the lane
+  // two points on different stages (Deck / Ridge / Summit): the way between them is a bridge or the stairs
+  const R0 = MAP.RIDGE, crosses = (ya, yb) => G.Summit ? G.Summit.stage(ya) !== G.Summit.stage(yb) : (!!R0 && (ya < R0.y1) !== (yb < R0.y1));
   function blocked(S, x0, y0, x1, y1) {
     const rects = G.Player.solids(S), r = C.KIT_RADIUS + 1, n = Math.max(1, Math.ceil(U.dist(x0, y0, x1, y1) / 8));
-    const R = MAP.RIDGE, crossing = !!R && ((y0 < R.y1) !== (y1 < R.y1));
+    const crossing = crosses(y0, y1);
     const carrying = crossing && G.Trail.hasKind(S, 'guest'), baths = carrying ? G.Baths.list(S) : null;
     for (let i = 1; i <= n; i++) {
       const t = i / n, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t;
@@ -52,7 +54,7 @@ module.exports = function makeBot(G) {
       const a = aim(S, h);
       if (Math.abs(a.x - aimX) > 12 || Math.abs(a.y - aimY) > 12) { aimX = a.x; aimY = a.y; stuckT = 0; plan(S, a.x, a.y, false); }
       // carrying guests to the other side of the bridge: take the lane once, so no deck on the way steals the line
-      const R = MAP.RIDGE, cross = !!R && S.built.ridge && ((kit.y < R.y1) !== (a.y < R.y1));
+      const cross = S.built.ridge && crosses(kit.y, a.y);
       if (cross && !crossPlanned && G.Trail.hasKind(S, 'guest') && mode === 'direct') { plan(S, a.x, a.y, false); crossPlanned = true; }
       if (!cross) crossPlanned = false;
       if (S.t < escUntil) { In.vec.x = escX; In.vec.y = escY; In.mag = 1; return; }

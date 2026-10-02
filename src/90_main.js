@@ -8,8 +8,8 @@
   function initSystems(S) {
     Game.S = S; G.S = S;
     G.Player.init(S); G.Trail.init(S); G.CableCar.init(S); G.Guests.init(S); G.Baths.init(S); G.Heat.init(S); G.Grove.init(S); G.Stall.init(S);
-    G.Coins.init(S); G.Lanterns.init(S); G.Helpers.init(S); G.Events.init(S); G.Kaa.init(S); G.Snow.init(S); G.Lift.init(S); G.FX.init(S); G.Camera.init(S);
-    G.HUD.init(S); G.Sheet.init(S); G.Cards.init(S); G.Goals.init(S); G.Render.init(S);
+    G.Coins.init(S); G.Lanterns.init(S); G.Helpers.init(S); G.Events.init(S); G.Kaa.init(S); G.Snow.init(S); G.Lift.init(S); G.Troupe.init(S); G.FX.init(S); G.Camera.init(S);
+    G.HUD.init(S); G.Sheet.init(S); G.Cards.init(S); G.Goals.init(S); G.Story.init(S); G.Golden.init(S); G.Render.init(S);
     G.Render.rebuildStatic(S);
     if (G.Audio.setEnabled) G.Audio.setEnabled(S, S.settings.sound);
   }
@@ -62,6 +62,7 @@
     if (S.mode !== 'paused') return;
     // an uncollected offline card is still up: keep it, never recompute over it
     if (S.ui.card && S.ui.card.kind === 'offline' && !(S.ui.card.closing > 0)) { S.mode = S.prevMode === 'paused' ? 'play' : S.prevMode; Game.syncMode(S); return; }
+    if (S.prevMode === 'finale') { S.mode = 'finale'; return; }                          // the ending picks up where it was
     // earnings already waiting behind the title's PLAY: keep them (the stamp was not advanced), never recompute over them
     if (S.prevMode === 'title' && G.Title.pending && G.Title.pending.show) { S.mode = 'title'; return; }
     if (nowMs - S.savedAt >= C.OFFLINE_MIN * 1000) {
@@ -74,7 +75,7 @@
     Game.syncMode(S);
   };
   Game.syncMode = function (S) {
-    if (S.mode === 'intro' || S.mode === 'paused' || S.mode === 'title') return;
+    if (S.mode === 'intro' || S.mode === 'paused' || S.mode === 'title' || S.mode === 'finale') return;
     S.mode = S.ui.card ? 'card' : S.ui.settings ? 'settings' : S.ui.sheet ? 'sheet' : 'play';
   };
   Game.nudge = function (S) { S.kit.nudgeT = C.TAP_NUDGE_T; };
@@ -87,8 +88,10 @@
   };
   Game.onTap = function (S, tap) {
     const x = tap.x, y = tap.y;
+    if (S.mode === 'finale') { G.Finale.tap(S, x, y); return; }                     // the ending owns every tap
     if (S.mode === 'intro') { S.mode = 'play'; S.introT = C.INTRO_T; Game.syncMode(S); }
     if (G.Cards.tap(S, x, y)) return;
+    if (S.mode === 'play' && G.Story.tap(S, x, y)) return;
     if (S.mode === 'title') { G.Title.tap(S, x, y); return; }
     if (G.Sheet.tap(S, x, y)) return;
     if (G.HUD.tapGear(S, x, y)) return;
@@ -121,14 +124,15 @@
     G.Dev.update(S, dt);
     const Loop = G.Loop;
     if (S.mode === 'title') { G.Title.update(S, dt); G.Cards.update(S, dt); G.FX.update(S, dt); G.HUD.update(S, dt); return; }
+    if (S.mode === 'finale') { G.Finale.update(S, dt); G.FX.update(S, dt); return; }       // the ending: the sim waits, the scene plays
     if (Loop.hitstop > 0) { Loop.hitstop -= dt; G.FX.update(S, dt); G.HUD.update(S, dt); G.Camera.update(S, dt); return; }
     // cards, the settings popover and a hidden tab pause the simulation (the upgrade sheet does not: you steer with it open)
     if (S.mode === 'card' || S.mode === 'paused' || S.mode === 'settings') { G.Cards.update(S, dt); G.HUD.update(S, dt); G.FX.update(S, dt); return; }
     if (S.mode === 'intro') { S.introT += dt; if (S.introT >= C.INTRO_T) { S.mode = 'play'; Game.syncMode(S); } }
     S.t += dt;
-    G.Player.update(S, dt); G.Trail.update(S, dt); G.CableCar.update(S, dt); G.Lift.update(S, dt); G.Guests.update(S, dt); G.Baths.update(S, dt); G.Heat.update(S, dt);
+    G.Player.update(S, dt); G.Trail.update(S, dt); G.CableCar.update(S, dt); G.Lift.update(S, dt); G.Troupe.update(S, dt); G.Guests.update(S, dt); G.Baths.update(S, dt); G.Heat.update(S, dt);
     G.Grove.update(S, dt); G.Stall.update(S, dt); G.Coins.update(S, dt); G.Lanterns.update(S, dt); G.Helpers.update(S, dt); G.Events.update(S, dt); G.Kaa.update(S, dt); G.Snow.update(S, dt);
-    G.Goals.update(S, dt);
+    G.Goals.update(S, dt); G.Story.update(S, dt); G.Golden.update(S, dt);
     G.Hints.update(S, dt); G.FX.update(S, dt); G.Camera.update(S, dt); G.HUD.update(S, dt); G.Sheet.update(S, dt); G.Cards.update(S, dt);
     G.Save.tick(S, dt);
   };

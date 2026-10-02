@@ -96,7 +96,7 @@
   // 'build:a,b,c' | 'trailCap:5,8,12' | 'carLevel:1,2,3' | 'hire:pon' | 'famous:...' | 'travel:2'; opts.silent = no fx, no bus (Save.apply)
   Lanterns.applyEffect = function (S, def, level, opts) {
     const silent = !!(opts && opts.silent);
-    const c = def.effect.indexOf(':'), kind = def.effect.slice(0, c), rest = def.effect.slice(c + 1), vals = rest.split(',');
+    const c = def.effect.indexOf(':'), kind = c < 0 ? def.effect : def.effect.slice(0, c), rest = c < 0 ? '' : def.effect.slice(c + 1), vals = rest.split(',');
     if (kind === 'build') {
       for (let i = 0; i < vals.length; i++) {
         const id = vals[i]; S.built[id] = true;
@@ -108,6 +108,8 @@
     else if (kind === 'hire') { G.Helpers.hire(S, rest, opts); }
     else if (kind === 'famous') { if (!silent) G.Events.famous(S, level); if (level === 1 && G.Ridge) G.Ridge.open(S, opts); }   // the finale also opens the Ridge
     else if (kind === 'travel') { G.Seasons.unlock(parseInt(rest, 10), opts); }
+    else if (kind === 'open') { if (rest === 'summit' && G.Summit) G.Summit.open(S, opts); }                 // the Pilgrim Stairs
+    else if (kind === 'wake') { if (G.Finale) G.Finale.wake(S, level, opts); else if (level >= 1) S.built.awake = true; }   // the ending, then Source Stars
   };
 
   // ---- drawing ----

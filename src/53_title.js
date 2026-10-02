@@ -35,6 +35,7 @@
     Title.begin(S);
   };
   Title.begin = function (S) {
+    if (G.Finale && G.Finale.pending(S)) { Title.pending = null; S.mode = 'play'; G.Finale.start(S, { resume: true }); return; }   // the ending was interrupted: pick it up at the gathering
     const info = Title.pending; Title.pending = null;
     if (info && info.show) { S.mode = 'play'; G.Cards.showOffline(S, info); return; }
     S.mode = 'intro'; S.introT = 0;
@@ -65,6 +66,7 @@
     ctx.globalAlpha = 1;
     A.text(ctx, 'CAPY', 270, R.logoY - 20, 78, PAL.cta, LOGO); A.text(ctx, 'SPRINGS', 270, R.logoY + 50, 64, PAL.amber, LOGO);
     if (G.Seasons.list.length > 1 || season.id !== 1) A.pill(ctx, 270, R.logoY + 104, 300, 30, 'Season ' + season.id + '  ·  ' + season.name, 16, PAL.rgba(PAL.cream, 0.92), PAL.ink, null);
+    else if (S.built.awake) A.pill(ctx, 270, R.logoY + 104, 400, 30, 'The Golden Age  ·  ' + G.Golden.seasonName(S) + (S.festival.best > 0 ? '  ·  best festival ' + A.fmtCoins(S.festival.best) : ''), 15, PAL.rgba(PAL.cream, 0.92), PAL.ink, null);
     else A.pill(ctx, 270, R.logoY + 104, 360, 30, season.teaser || 'Lead capybaras into steaming baths.', 15, PAL.rgba(PAL.cream, 0.92), PAL.ink, null);   // what the game is, in one line
     // Kit waving and a capy in a yuzu hat, bobbing
     const p = Ch.resetPose(Ch.POSE);

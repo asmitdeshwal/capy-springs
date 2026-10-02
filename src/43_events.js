@@ -7,7 +7,7 @@
   const sign = { sortY: MAP.BRIDGE.sign.y, draw: null };
 
   Events.isGolden = index => C.GOLDEN_EVERY > 0 && index % C.GOLDEN_EVERY === 0;
-  Events.nightPay = S => S.night.active ? C.NIGHT_PAY : 1;
+  Events.nightPay = S => S.night.active ? (S.night.festival ? C.FESTIVAL_PAY : C.NIGHT_PAY) : 1;      // a Festival Night (GDD 20.6) pays more
   Events.init = function (S) {
     Events.S = S; sign.draw = drawSign;
     if (Events.subscribed) return;
@@ -17,13 +17,16 @@
     G.Bus.on('guest:gone', e => Events.onGone(Events.S, e.g));
     G.Bus.on('car:arrive', e => { if (e.golden && !e.empty) Events.S.stats.golden++; });
   };
-  Events.startNight = function (S) {
+  Events.startNight = function (S, festival) {
     const n = S.night; n.active = true; n.t = 0; n.count++; n.lit = {}; n.momo = false; S.stats.nights++;
+    n.festival = !!festival || (G.Golden ? G.Golden.festivalTonight(S) : false); if (n.festival) Events.makeFestival(S);
     n.next = S.t + C.NIGHT_T + C.NIGHT_EVERY;      // set now (not only at the end): a reload mid-night waits a normal interval instead of starting the night over
     G.CableCar.onNight(S);
     G.Bus.emit('night:start', evNone);
   };
-  Events.endNight = function (S) { const n = S.night; n.active = false; n.next = S.t + C.NIGHT_EVERY; G.Bus.emit('night:end', evNone); };
+  Events.makeFestival = function (S) { const n = S.night; n.festival = true; n.wasFestival = true; n.t = 0; S.festival.pending = false; S.festival.start = S.earned; G.Bus.emit('festival:start', evNone); };
+  Events.endNight = function (S) { const n = S.night; n.active = false; n.festival = false; n.next = S.t + C.NIGHT_EVERY; G.Bus.emit('night:end', evNone); };
+  Events.nightLen = S => (S.night.festival ? C.FESTIVAL_T : C.NIGHT_T);
   Events.onSeated = function (S, g) {
     const log = S.carLog[g.carId]; if (!log || g.paid > 0) return;    // a sauna guest re-seated at the plunge or the pavilion counts once
     log.seated++;
@@ -51,11 +54,11 @@
         const d = L[i]; if (S.lanterns[d.id].level < 1 || n.lit[d.id]) continue;
         if (U.dist2(kit.x, kit.y, d.x, d.y) <= C.PAD_R * C.PAD_R) { n.lit[d.id] = true; G.Coins.rain(S, U.randInt(C.LANTERN_LIGHT), kit.x, kit.y, 'night'); evLight.id = d.id; G.Bus.emit('night:light', evLight); }
       }
-      if (n.t >= C.NIGHT_T) Events.endNight(S);
+      if (n.t >= Events.nightLen(S)) Events.endNight(S);
     } else if (n.fade > 0) n.fade = Math.max(0, n.fade - dt / C.NIGHT_FADE);
     // carLog sweep: no log outlives CARLOG_SWEEP
     for (const id in S.carLog) if (S.t - S.carLog[id].t > C.CARLOG_SWEEP) delete S.carLog[id];
   };
   Events.collect = function (S, list) { if (G.Seasons.finaleLit(S) && G.Camera.visibleY(MAP.BRIDGE.sign.y, 100)) list.push(sign); };
-  function drawSign(ctx, o, S) { G.Art.W.sign(ctx, MAP.BRIDGE.sign.x, MAP.BRIDGE.sign.y); }
+  function drawSign(ctx, o, S) { G.Art.W.sign(ctx, MAP.BRIDGE.sign.x, MAP.BRIDGE.sign.y, S.built.awake ? 'SOURCE' : S.built.summit ? 'SUMMIT' : 'RIDGE'); }
 })(window.G);

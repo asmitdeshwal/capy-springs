@@ -101,4 +101,5 @@
   const ICONS = { rock: ['bath', 'capy', 'koban'], cedar: ['bath', 'capy', 'koban'], bamboo: ['bath', 'capy', 'koban'], boiler: ['flame', 'kettle', 'pon'], grove: ['yuzu', 'yuzu', 'yuzu'], stall: ['mochi', 'mochi', 'koban'] };
   ICONS.bench = ICONS.table = ICONS.hearth = ICONS.rock;
   ICONS.sauna = ['flame', 'capy', 'koban']; ICONS.plunge = ['plunge', 'capy', 'koban']; ICONS.pavilion = ['heart', 'capy', 'koban'];
+  ICONS.source = ['source', 'monkey', 'koban']; ICONS.snowroll = ['snow', 'monkey', 'koban'];
 })(window.G);
